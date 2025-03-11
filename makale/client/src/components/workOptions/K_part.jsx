@@ -4,72 +4,54 @@ import { useState } from "react";
 // Kategoriler
 const categories = [
     {
-      code: "C",
-      description: "C. Uluslararası kitap",
+      code: "K",
+      description: "K.AR-GE Projeleri ve Araştırma",
       subcategories: [
         {
-          code: "C-1",
+          code: "K-1",
           description:
-            "Kitap yazarlığı",
+            "AB Çerçeve Programı (FP, Horizon 2020) / NIH / NSF / ERC bilimsel araştırma projeleri (Koordinatör/yürütücü / araştırmacı / bursiyer)",
           subcategories: [
-            { code: "C-1:1", description: "Çalışma-1" },
-            { code: "C-1:2", description: "Çalışma-2" },
+            { code: "K-1:1", description: "Çalışma-1" },
+            { code: "K-1:2", description: "Çalışma-2" }
           ],
         },
         {
-          code: "C-2",
+          code: "K-2",
           description:
-            "Kitap içinde bölüm yazarlığı",
+            "AB Çerçeve Programı / NIH / NSF / ERC bilimsel araştırma projeleri dışındaki Uluslararası destekli/ortaklı araştırma ve uygulama projeleri (Koordinatör/yürütücü / araştırmacı / bursiyer)",
           subcategories: [
-            { code: "C-2:1", description: "Çalışma-1" },
-            { code: "C-2:2", description: "Çalışma-2" },
-            {
-              code: "C-2.1",
-              description:
-                "Kongre ve sempozyum bildirilerinden seçilmiş kitap bölüm yazarlığı (Kongre kitapçığı hariç)",
-              subcategories: [
-                { code: "C-2.1:1", description: "Çalışma-1" },
-                { code: "C-2.1:2", description: "Çalışma-2" },
-              ],
-            },
+            { code: "K-2:1", description: "Çalışma-1" },
+            { code: "K-2:2", description: "Çalışma-2" },
           ],
         },
         {
-          code: "C-3",
-          description:
-            "Editörlük",
-          subcategories: [
-            { code: "C-3:1", description: "Çalışma-1" },
-            { code: "C-3:2", description: "Çalışma-2" },
-          ],
-        },
-        {
-          code: "C-4",
-          description:
-            "Yabancı dile çevrilmiş kitap yazarlığı",
-          subcategories: [
-            { code: "C-4:1", description: "Çalışma-1" },
-            { code: "C-4:2", description: "Çalışma-2" },
-            {
-              code: "C-4.1",
-              description:
-                "Yabancı dile kitap çeviri editörlüğü",
-              subcategories: [
-                { code: "C-4.1:1", description: "Çalışma-1" },
-                { code: "C-4.1:2", description: "Çalışma-2" },
-              ],
-            },
-            {
-              code: "C-4.2",
-              description:
-                "Yabancı dile kitap bölümü bölüm çevirisi",
-              subcategories: [
-                { code: "C-4.2:1", description: "Çalışma-1" },
-                { code: "C-4.2:2", description: "Çalışma-2" },
-              ],
-            },
-          ],
-        },
+            code: "K-3",
+            description:
+              "Ulusal destekli/ortaklı araştırma – geliştirme projeleri (yürütücü / araştırmacı / bursiyer)",
+            subcategories: [
+              { code: "K-3:1", description: "Çalışma-1" },
+              { code: "K-3:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "K-4",
+            description:
+              "Uluslararası / Ulusal projelerde danışmanlık",
+            subcategories: [
+              { code: "K-4:1", description: "Çalışma-1" },
+              { code: "K-4:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "K-5",
+            description:
+              "Uluslararası / Ulusal Araştırma (Ar-Ge projeler hariç) her ay için ",
+            subcategories: [
+              { code: "K-5:1", description: "Çalışma-1" },
+              { code: "K-5:2", description: "Çalışma-2" },
+            ],
+          },
       ],
     },
   ];
@@ -115,7 +97,7 @@ function CategoryItem({ category, onCategoryClick }) {
   );
 }
 
-export default function C_part() {
+export default function K_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);
@@ -140,7 +122,7 @@ export default function C_part() {
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center">
-        C. Uluslararası Kitap
+           K.AR-GE Projeleri ve Araştırma
       </h1>
       <div>
         {categories.map((category) => (

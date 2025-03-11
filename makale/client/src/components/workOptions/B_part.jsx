@@ -86,7 +86,7 @@ function CategoryItem({ category, onCategoryClick }) {
   );
 }
 
-export default function A_part() {
+export default function B_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);

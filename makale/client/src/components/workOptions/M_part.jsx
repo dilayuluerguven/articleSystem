@@ -4,72 +4,81 @@ import { useState } from "react";
 // Kategoriler
 const categories = [
     {
-      code: "C",
-      description: "C. Uluslararası kitap",
+      code: "M",
+      description: "M.Yarışmalar, Sergileme vb. (Uluslararası / Ulusal)",
       subcategories: [
         {
-          code: "C-1",
+          code: "M-1",
           description:
-            "Kitap yazarlığı",
+            "Derece (uluslararası / ulusal)",
           subcategories: [
-            { code: "C-1:1", description: "Çalışma-1" },
-            { code: "C-1:2", description: "Çalışma-2" },
+            { code: "M-1:1", description: "Çalışma-1" },
+            { code: "M-1:2", description: "Çalışma-2" }
           ],
         },
         {
-          code: "C-2",
+          code: "M-2",
           description:
-            "Kitap içinde bölüm yazarlığı",
+            "Jüri özel ödülü (uluslararası / ulusal)",
           subcategories: [
-            { code: "C-2:1", description: "Çalışma-1" },
-            { code: "C-2:2", description: "Çalışma-2" },
-            {
-              code: "C-2.1",
-              description:
-                "Kongre ve sempozyum bildirilerinden seçilmiş kitap bölüm yazarlığı (Kongre kitapçığı hariç)",
-              subcategories: [
-                { code: "C-2.1:1", description: "Çalışma-1" },
-                { code: "C-2.1:2", description: "Çalışma-2" },
-              ],
-            },
+            { code: "M-2:1", description: "Çalışma-1" },
+            { code: "M-2:2", description: "Çalışma-2" },
           ],
         },
         {
-          code: "C-3",
-          description:
-            "Editörlük",
-          subcategories: [
-            { code: "C-3:1", description: "Çalışma-1" },
-            { code: "C-3:2", description: "Çalışma-2" },
-          ],
-        },
-        {
-          code: "C-4",
-          description:
-            "Yabancı dile çevrilmiş kitap yazarlığı",
-          subcategories: [
-            { code: "C-4:1", description: "Çalışma-1" },
-            { code: "C-4:2", description: "Çalışma-2" },
-            {
-              code: "C-4.1",
-              description:
-                "Yabancı dile kitap çeviri editörlüğü",
-              subcategories: [
-                { code: "C-4.1:1", description: "Çalışma-1" },
-                { code: "C-4.1:2", description: "Çalışma-2" },
-              ],
-            },
-            {
-              code: "C-4.2",
-              description:
-                "Yabancı dile kitap bölümü bölüm çevirisi",
-              subcategories: [
-                { code: "C-4.2:1", description: "Çalışma-1" },
-                { code: "C-4.2:2", description: "Çalışma-2" },
-              ],
-            },
-          ],
-        },
+            code: "M-3",
+            description:
+              "Mansiyon (uluslararası / ulusal)",
+            subcategories: [
+              { code: "M-3:1", description: "Çalışma-1" },
+              { code: "M-3:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "M-4",
+            description:
+              "Sergileme (uluslararası / ulusal)",
+            subcategories: [
+              { code: "M-4:1", description: "Çalışma-1" },
+              { code: "M-4:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "M-5",
+            description:
+              "Satın alınmış proje (uluslararası / ulusal ",
+            subcategories: [
+              { code: "M-5:1", description: "Çalışma-1" },
+              { code: "M-5:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "M-6",
+            description:
+              "Yarışma jüri üyelikleri (Uluslararası / ulusal) (x sayı) ",
+            subcategories: [
+              { code: "M-6:1", description: "Çalışma-1" },
+              { code: "M-6:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "M-7",
+            description:
+              "Uluslararası / ulusal öğrenci etkinlikleri Koordinatörlüğü",
+            subcategories: [
+              { code: "M-7:1", description: "Çalışma-1" },
+              { code: "M-7:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "M-8",
+            description:
+              "Özgün eser, proje ya da tasarım çalışmalarıyla kişisel tasarım ve sanat etkinliğinde bulunmak ve uygulamak (Uluslararası/Ulusal)",
+            subcategories: [
+              { code: "M-8:1", description: "Çalışma-1" },
+              { code: "M-8:2", description: "Çalışma-2" },
+            ],
+          },
       ],
     },
   ];
@@ -115,7 +124,7 @@ function CategoryItem({ category, onCategoryClick }) {
   );
 }
 
-export default function C_part() {
+export default function M_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);
@@ -140,7 +149,7 @@ export default function C_part() {
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center">
-        C. Uluslararası Kitap
+           M.Yarışmalar, Sergileme vb. (Uluslararası / Ulusal)
       </h1>
       <div>
         {categories.map((category) => (

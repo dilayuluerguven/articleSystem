@@ -4,70 +4,61 @@ import { useState } from "react";
 // Kategoriler
 const categories = [
     {
-      code: "C",
-      description: "C. Uluslararası kitap",
+      code: "D",
+      description: "D. Ulusal Çalışmalar",
       subcategories: [
         {
-          code: "C-1",
+          code: "D-1",
           description:
-            "Kitap yazarlığı",
+            "Araştırma makalesi (TR Dizinlerde yer alan)",
           subcategories: [
-            { code: "C-1:1", description: "Çalışma-1" },
-            { code: "C-1:2", description: "Çalışma-2" },
+            { code: "D-1:1", description: "Çalışma-1" },
+            { code: "D-1:2", description: "Çalışma-2" },
+            {
+                code: "D-1.1",
+                description:
+                  "Derleme, Vaka takdimi, Teknik Not, Kısa Makale, Kitap veya Makale Tahlili, Editöre Mektup, Özet, Tartışma, TR dizinlerinde yeralan dergilerde yayımlanmış kongreye ait tam metin bildiriler",
+                subcategories: [
+                  { code: "D-1.1:1", description: "Çalışma-1" },
+                  { code: "D-1.1:2", description: "Çalışma-2" },
+                ],
+              },
           ],
         },
         {
-          code: "C-2",
+          code: "D-2",
           description:
-            "Kitap içinde bölüm yazarlığı",
+            "Araştırma makalesi (hakemli)",
           subcategories: [
-            { code: "C-2:1", description: "Çalışma-1" },
-            { code: "C-2:2", description: "Çalışma-2" },
+            { code: "D-2:1", description: "Çalışma-1" },
+            { code: "D-2:2", description: "Çalışma-2" },
             {
-              code: "C-2.1",
+              code: "D-2.1",
               description:
-                "Kongre ve sempozyum bildirilerinden seçilmiş kitap bölüm yazarlığı (Kongre kitapçığı hariç)",
+                "Derleme, Vaka takdimi, Teknik Not, Kısa Makale, Kitap veya Makale Tahlili, Editöre Mektup, Özet, Tartışma",
               subcategories: [
-                { code: "C-2.1:1", description: "Çalışma-1" },
-                { code: "C-2.1:2", description: "Çalışma-2" },
+                { code: "D-2.1:1", description: "Çalışma-1" },
+                { code: "D-2.1:2", description: "Çalışma-2" },
               ],
             },
           ],
         },
         {
-          code: "C-3",
+          code: "D-3",
           description:
-            "Editörlük",
+            "Mesleki veya Kurumsal dergilerde makale",
           subcategories: [
-            { code: "C-3:1", description: "Çalışma-1" },
-            { code: "C-3:2", description: "Çalışma-2" },
+            { code: "D-3:1", description: "Çalışma-1" },
+            { code: "D-3:2", description: "Çalışma-2" },
           ],
         },
         {
-          code: "C-4",
+          code: "D-4",
           description:
-            "Yabancı dile çevrilmiş kitap yazarlığı",
+            "Başvurulan bilim alanında Ulusal özgün tasarım çalışmaları ve sanat eserleri ile jürili olarak fuar, festival, çalıştay (workshop), gösteri, bienal, trienal gibi etkinliğe bir çalışma ile katılmak",
           subcategories: [
-            { code: "C-4:1", description: "Çalışma-1" },
-            { code: "C-4:2", description: "Çalışma-2" },
-            {
-              code: "C-4.1",
-              description:
-                "Yabancı dile kitap çeviri editörlüğü",
-              subcategories: [
-                { code: "C-4.1:1", description: "Çalışma-1" },
-                { code: "C-4.1:2", description: "Çalışma-2" },
-              ],
-            },
-            {
-              code: "C-4.2",
-              description:
-                "Yabancı dile kitap bölümü bölüm çevirisi",
-              subcategories: [
-                { code: "C-4.2:1", description: "Çalışma-1" },
-                { code: "C-4.2:2", description: "Çalışma-2" },
-              ],
-            },
+            { code: "D-4:1", description: "Çalışma-1" },
+            { code: "D-4:2", description: "Çalışma-2" },
           ],
         },
       ],
@@ -115,7 +106,7 @@ function CategoryItem({ category, onCategoryClick }) {
   );
 }
 
-export default function C_part() {
+export default function D_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);
@@ -140,7 +131,7 @@ export default function C_part() {
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center">
-        C. Uluslararası Kitap
+        D. Ulusal Çalışmalar
       </h1>
       <div>
         {categories.map((category) => (

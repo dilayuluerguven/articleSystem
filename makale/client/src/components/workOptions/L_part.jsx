@@ -4,72 +4,45 @@ import { useState } from "react";
 // Kategoriler
 const categories = [
     {
-      code: "C",
-      description: "C. Uluslararası kitap",
+      code: "L",
+      description: "L.Patentler / Tesciller",
       subcategories: [
         {
-          code: "C-1",
+          code: "L-1",
           description:
-            "Kitap yazarlığı",
+            "Alanında Uluslararası tescillenmiş patent / faydalı model / tasarım ",
           subcategories: [
-            { code: "C-1:1", description: "Çalışma-1" },
-            { code: "C-1:2", description: "Çalışma-2" },
+            { code: "L-1:1", description: "Çalışma-1" },
+            { code: "L-1:2", description: "Çalışma-2" }
           ],
         },
         {
-          code: "C-2",
+          code: "L-2",
           description:
-            "Kitap içinde bölüm yazarlığı",
+            "Alanında Ulusal tescillenmiş patent / faydalı model / tasarım ",
           subcategories: [
-            { code: "C-2:1", description: "Çalışma-1" },
-            { code: "C-2:2", description: "Çalışma-2" },
-            {
-              code: "C-2.1",
-              description:
-                "Kongre ve sempozyum bildirilerinden seçilmiş kitap bölüm yazarlığı (Kongre kitapçığı hariç)",
-              subcategories: [
-                { code: "C-2.1:1", description: "Çalışma-1" },
-                { code: "C-2.1:2", description: "Çalışma-2" },
-              ],
-            },
+            { code: "L-2:1", description: "Çalışma-1" },
+            { code: "L-2:2", description: "Çalışma-2" },
           ],
         },
         {
-          code: "C-3",
-          description:
-            "Editörlük",
-          subcategories: [
-            { code: "C-3:1", description: "Çalışma-1" },
-            { code: "C-3:2", description: "Çalışma-2" },
-          ],
-        },
-        {
-          code: "C-4",
-          description:
-            "Yabancı dile çevrilmiş kitap yazarlığı",
-          subcategories: [
-            { code: "C-4:1", description: "Çalışma-1" },
-            { code: "C-4:2", description: "Çalışma-2" },
-            {
-              code: "C-4.1",
-              description:
-                "Yabancı dile kitap çeviri editörlüğü",
-              subcategories: [
-                { code: "C-4.1:1", description: "Çalışma-1" },
-                { code: "C-4.1:2", description: "Çalışma-2" },
-              ],
-            },
-            {
-              code: "C-4.2",
-              description:
-                "Yabancı dile kitap bölümü bölüm çevirisi",
-              subcategories: [
-                { code: "C-4.2:1", description: "Çalışma-1" },
-                { code: "C-4.2:2", description: "Çalışma-2" },
-              ],
-            },
-          ],
-        },
+            code: "L-3",
+            description:
+              "Alanında Uluslararası/Ulusal  tescillenmiş Çeşit, Irk, Marka Tescili ",
+            subcategories: [
+              { code: "L-3:1", description: "Çalışma-1" },
+              { code: "L-3:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "L-4",
+            description:
+              "Başvurulan bilim alanında Uluslararası/Ulusal tescil edilmiş orijinal bilgisayar programı yazarlığı",
+            subcategories: [
+              { code: "L-4:1", description: "Çalışma-1" },
+              { code: "L-4:2", description: "Çalışma-2" },
+            ],
+          },
       ],
     },
   ];
@@ -115,7 +88,7 @@ function CategoryItem({ category, onCategoryClick }) {
   );
 }
 
-export default function C_part() {
+export default function L_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);
@@ -140,7 +113,7 @@ export default function C_part() {
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center">
-        C. Uluslararası Kitap
+          L.Patentler / Tesciller
       </h1>
       <div>
         {categories.map((category) => (

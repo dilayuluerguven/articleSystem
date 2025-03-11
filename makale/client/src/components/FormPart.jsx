@@ -3,33 +3,60 @@ import { Checkbox } from "antd";
 import A_part from "./workOptions/A_part";
 import B_part from "./workOptions/B_part";
 import C_part from "./workOptions/C_part";
+import D_part from "./workOptions/D_part";
+import E_part from "./workOptions/E_part";
+import F_part from "./workOptions/F_part";
+import G_part from "./workOptions/G_part";
+import H_part from "./workOptions/H_part";
+import I_part from "./workOptions/I_part";
+import J_part from "./workOptions/J_part";
+import K_part from "./workOptions/K_part";
+import L_part from "./workOptions/L_part";
+import M_part from "./workOptions/M_part";
+import N_part from "./workOptions/N_part";
+
+import P_part from "./workOptions/P_part";
+import R_part from "./workOptions/R_part";
+import S_part from "./workOptions/S_part";
+
+
+
+
+
+
+
+
+
+
+
+
 
 const data = [
   { key: "A", activity: "Uluslararası Çalışmalar",component: A_part },
   { key: "B", activity: "Uluslararası Bildiriler",component: B_part  },
   { key: "C", activity: "Uluslararası Kitap",component:C_part },
-  { key: "D", activity: "Ulusal Çalışmalar" },
-  { key: "E", activity: "Ulusal Bildiriler" },
-  { key: "F", activity: "Ulusal Kitap" },
-  { key: "G", activity: "Atıflar" },
-  { key: "H", activity: "Ön Lisans, Lisans ve Lisansüstü Eğitim-Öğretim" },
-  { key: "I", activity: "Bilim İnsanı Yetiştirmeye Yönelik Çabalar" },
-  { key: "J", activity: "Burslar" },
-  { key: "K", activity: "AR-GE Projeleri ve Araştırma" },
-  { key: "L", activity: "Patentler / Tesciller" },
-  { key: "M", activity: "Yarışmalar, Sergileme vb. (Uluslararası / Ulusal)" },
+  { key: "D", activity: "Ulusal Çalışmalar",component:D_part },
+  { key: "E", activity: "Ulusal Bildiriler",component:E_part },
+  { key: "F", activity: "Ulusal Kitap",component:F_part },
+  { key: "G", activity: "Atıflar",component:G_part },
+  { key: "H", activity: "Ön Lisans, Lisans ve Lisansüstü Eğitim-Öğretim",component:H_part },
+  { key: "I", activity: "Bilim İnsanı Yetiştirmeye Yönelik Çabalar",component:I_part },
+  { key: "J", activity: "Burslar",component:J_part },
+  { key: "K", activity: "AR-GE Projeleri ve Araştırma",component:K_part },
+  { key: "L", activity: "Patentler / Tesciller" ,component:L_part},
+  { key: "M", activity: "Yarışmalar, Sergileme vb. (Uluslararası / Ulusal)",component:M_part },
   {
     key: "N",
     activity:
-      "Danışmanlık (Mesleki) veya Üniversite-Sanayi İşbirliği Faaliyetleri",
+      "Danışmanlık (Mesleki) veya Üniversite-Sanayi İşbirliği Faaliyetleri", component:N_part
   },
   { key: "O", activity: "Bilimsel / Sanatsal Faaliyetlere Katkı" },
   {
     key: "P",
-    activity: "Bilimsel/Sanatsal Kuruluşlarda Görev (Uluslararası/Ulusal)",
+    activity: "Bilimsel/Sanatsal Kuruluşlarda Görev (Uluslararası/Ulusal)", component:P_part
   },
-  { key: "R", activity: "Ödüller" },
-  { key: "S", activity: "Üniversite Yönetimine ve İşleyişine Katkılar" },
+  { key: "R", activity: "Ödüller",component:R_part },
+  { key: "S", activity: "Üniversite Yönetimine ve İşleyişine Katkılar",component:S_part },
 ];
 
 const FormPart = () => {
@@ -52,8 +79,7 @@ const FormPart = () => {
           Çalışmanızın kod numarasını seçmek için kutucuğu işaretleyebilirsiniz
         </p>
         <p className="text-gray-600 text-sm">
-          Seçtiğiniz kodun hangi çalışmasını da işaretleyebilirsiniz..
-        </p>
+        İlgili kutucuğun alt seçimlerine eklemek istediğiniz belge türünü seçerek ilerleyiniz.        </p>
       </div>
 
       <div className="flex items-center mb-4 mt-3">

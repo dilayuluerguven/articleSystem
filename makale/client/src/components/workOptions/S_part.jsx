@@ -4,72 +4,72 @@ import { useState } from "react";
 // Kategoriler
 const categories = [
     {
-      code: "C",
-      description: "C. Uluslararası kitap",
+      code: "S",
+      description: "S.Üniversite Yönetimine ve İşleyişine Katkılar",
       subcategories: [
         {
-          code: "C-1",
+          code: "S-1",
           description:
-            "Kitap yazarlığı",
+            "Akademik yükseltilme ve atama jüri üyelikleri (x sayı)",
           subcategories: [
-            { code: "C-1:1", description: "Çalışma-1" },
-            { code: "C-1:2", description: "Çalışma-2" },
+            { code: "S-1:1", description: "Çalışma-1" },
+            { code: "S-1:2", description: "Çalışma-2" }
           ],
         },
         {
-          code: "C-2",
+          code: "S-2",
           description:
-            "Kitap içinde bölüm yazarlığı",
+            "Rektör, Rektör Yardımcısı, Dekan, Enstitü / Yüksekokul / Meslek Yüksekokulu Müdürü (x yıl)",
           subcategories: [
-            { code: "C-2:1", description: "Çalışma-1" },
-            { code: "C-2:2", description: "Çalışma-2" },
-            {
-              code: "C-2.1",
-              description:
-                "Kongre ve sempozyum bildirilerinden seçilmiş kitap bölüm yazarlığı (Kongre kitapçığı hariç)",
-              subcategories: [
-                { code: "C-2.1:1", description: "Çalışma-1" },
-                { code: "C-2.1:2", description: "Çalışma-2" },
-              ],
-            },
+            { code: "S-2:1", description: "Çalışma-1" },
+            { code: "S-2:2", description: "Çalışma-2" },
           ],
         },
         {
-          code: "C-3",
-          description:
-            "Editörlük",
-          subcategories: [
-            { code: "C-3:1", description: "Çalışma-1" },
-            { code: "C-3:2", description: "Çalışma-2" },
-          ],
-        },
-        {
-          code: "C-4",
-          description:
-            "Yabancı dile çevrilmiş kitap yazarlığı",
-          subcategories: [
-            { code: "C-4:1", description: "Çalışma-1" },
-            { code: "C-4:2", description: "Çalışma-2" },
-            {
-              code: "C-4.1",
-              description:
-                "Yabancı dile kitap çeviri editörlüğü",
-              subcategories: [
-                { code: "C-4.1:1", description: "Çalışma-1" },
-                { code: "C-4.1:2", description: "Çalışma-2" },
-              ],
-            },
-            {
-              code: "C-4.2",
-              description:
-                "Yabancı dile kitap bölümü bölüm çevirisi",
-              subcategories: [
-                { code: "C-4.2:1", description: "Çalışma-1" },
-                { code: "C-4.2:2", description: "Çalışma-2" },
-              ],
-            },
-          ],
-        },
+            code: "S-3",
+            description:
+              "Dekan Yardımcısı, Müdür Yardımcısı (x yıl)",
+            subcategories: [
+              { code: "S-3:1", description: "Çalışma-1" },
+              { code: "S-3:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "S-4",
+            description:
+              "Bölüm / Anabilim Dalı Başkanı / Uygulama Araştırma Merkezi Müdürü (x yıl)",
+            subcategories: [
+              { code: "S-4:1", description: "Çalışma-1" },
+              { code: "S-4:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "S-5",
+            description:
+              "Üniversite Yönetim Kurulu / Senato / Komisyon Üyeliği ve Koordinatörlük (x yıl)",
+            subcategories: [
+              { code: "S-5:1", description: "Çalışma-1" },
+              { code: "S-5:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "S-6",
+            description:
+              "Fakülte / Enstitü / Yüksekokul Yönetim Kurul Üyeliği (x yıl) ",
+            subcategories: [
+              { code: "S-6:1", description: "Çalışma-1" },
+              { code: "S-6:2", description: "Çalışma-2" },
+            ],
+          },
+          {
+            code: "S-7",
+            description:
+              "Bölüm Komisyon Üyeliği ve Koordinatörlük (x yıl)",
+            subcategories: [
+              { code: "S-7:1", description: "Çalışma-1" },
+              { code: "S-7:2", description: "Çalışma-2" },
+            ],
+          },
       ],
     },
   ];
@@ -115,7 +115,7 @@ function CategoryItem({ category, onCategoryClick }) {
   );
 }
 
-export default function C_part() {
+export default function S_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);
@@ -140,7 +140,7 @@ export default function C_part() {
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center">
-        C. Uluslararası Kitap
+           S.Üniversite Yönetimine ve İşleyişine Katkılar
       </h1>
       <div>
         {categories.map((category) => (
