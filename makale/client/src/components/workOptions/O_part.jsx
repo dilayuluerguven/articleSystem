@@ -3,47 +3,41 @@ import { useState } from "react";
 
 // Kategoriler
 const categories = [
-    {
-      code: "B",
-      description: "B. Uluslararası Bildiriler",
-      subcategories: [
-        {
-          code: "B-1",
-          description:
-            "Tam metinli bildiriler/Davetli konuşmacı bildirileri (Sözlü sunulan ve tam metni yayınlananlar)",
-          subcategories: [
-            { code: "B-1:1", description: "Çalışma-1" },
-            { code: "B-1:2", description: "Çalışma-2" },
-            {
-              code: "B-1.1",
-              description:
-                "Özet (Abstract) (Yabancı dilde sözlü sunulan ve özeti yayınlananlar)",
-              subcategories: [
-                { code: "B-1.1:1", description: "Çalışma-1" },
-                { code: "B-1.1:2", description: "Çalışma-2" },
-              ],
-            },
-          ],
-        },
-        {
-          code: "B-2",
-          description:
-            "Yabancı dilde poster olarak sunulan ve tam metin / poster olarak yayınlananlar",
-          subcategories: [
-            {
-              code: "B-2.1",
-              description:
-                "Yabancı dilde poster olarak sunulan ve özeti yayınlananlar",
-              subcategories: [
-                { code: "B-2.1:1", description: "Çalışma-1" },
-                { code: "B-2.1:2", description: "Çalışma-2" },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ];
+  {
+    code: "O",
+    description: "O.Bilimsel / Sanatsal Faaliyetlere Katkı",
+    subcategories: [
+      {
+        code: "O-1.1",
+        description:
+          "Q kategorisindeki dergilerde yapılan hakemlik (değerlendirilen makale başına)",
+        subcategories: [
+          { code: "O-1.1:1", description: "Çalışma-1" },
+          { code: "O-1.1:2", description: "Çalışma-2" },
+        ],
+      },
+      {
+        code: "O-1.2",
+        description:
+          "Q kategorisi dışındaki diğer uluslararası dergilerde yapılan hakemlik (değerlendirilen makale başına)",
+        subcategories: [
+          { code: "O-1.2:1", description: "Çalışma-1" },
+          { code: "O-1.2:2", description: "Çalışma-2" },
+        ],
+      },
+      {
+        code: "O-1.3",
+        description:
+          "Uluslararası Sanat ve Tasarım Etkinliklerinde Hakemlik veya Jüri Üyeliği",
+        subcategories: [
+          { code: "O-1.3:1", description: "Çalışma-1" },
+          { code: "O-1.3:2", description: "Çalışma-2" },
+        ],
+      },
+    ],
+  },
+];
+
 // Kategori Elemanı
 function CategoryItem({ category, onCategoryClick }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -86,7 +80,7 @@ function CategoryItem({ category, onCategoryClick }) {
   );
 }
 
-export default function B_part() {
+export default function D_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);
@@ -111,7 +105,7 @@ export default function B_part() {
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center select-none">
-        B. Uluslararası Bildiriler
+        O.Bilimsel / Sanatsal Faaliyetlere Katkı
       </h1>
       <div>
         {categories.map((category) => (

@@ -121,7 +121,7 @@ export default function K_part() {
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
-      <h1 className="text-xl font-semibold mb-6 text-center">
+      <h1 className="text-xl font-semibold mb-6 text-center select-none">
            K.AR-GE Projeleri ve Araştırma
       </h1>
       <div>

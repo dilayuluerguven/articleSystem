@@ -112,7 +112,7 @@ export default function L_part() {
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
-      <h1 className="text-xl font-semibold mb-6 text-center">
+      <h1 className="text-xl font-semibold mb-6 text-center select-none">
           L.Patentler / Tesciller
       </h1>
       <div>

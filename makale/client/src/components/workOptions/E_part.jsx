@@ -1,53 +1,40 @@
 import { Modal } from "antd";
 import { useState } from "react";
 
-// Kategoriler
-const categories = [
-    {
-      code: "E",
-      description: "E. Ulusal Bildiriler",
-      subcategories: [
-        {
-          code: "E-1",
-          description:
-            "Tam metinli bildiriler/Davetli konuşmacı bildirileri (Sözlü sunulan ve tam metin yayınlananlar)",
-          subcategories: [
-            { code: "E-1:1", description: "Çalışma-1" },
-            { code: "E-1:2", description: "Çalışma-2" },
-            {
-              code: "E-1.1",
-              description:
-                "Özet (Sözlü sunulan ve özeti yayınlananlar)",
-              subcategories: [
-                { code: "E-1.1:1", description: "Çalışma-1" },
-                { code: "E-1.1:2", description: "Çalışma-2" },
-              ],
-            },
-          ],
-        },
-        {
-          code: "E-2",
-          description:
-            " Poster olarak sunulan ve tam metin / poster olarak yayınlananlar",
-          subcategories: [
-            { code: "E-2:1", description: "Çalışma-1" },
-            { code: "E-2:2", description: "Çalışma-2" },
-            {
-              code: "E-2.1",
-              description:
-                "Poster olarak sunulan ve özeti yayınlananlar",
-              subcategories: [
-                { code: "E-2.1:1", description: "Çalışma-1" },
-                { code: "E-2.1:2", description: "Çalışma-2" },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  ];
-// Kategori Elemanı
-function CategoryItem({ category, onCategoryClick }) {
+const initialCategories = [
+  {
+    code: "E",
+    description: "E. Ulusal Bildiriler",
+    subcategories: [
+      {
+        code: "E-1",
+        description:
+          "Tam metinli bildiriler/Davetli konuşmacı bildirileri (Sözlü sunulan ve tam metin yayınlananlar)",
+        subcategories: [
+          {
+            code: "E-1.1",
+            description: "Özet (Sözlü sunulan ve özeti yayınlananlar)",
+            subcategories: [],
+          },
+        ],
+      },
+      {
+        code: "E-2",
+        description:
+          "Poster olarak sunulan ve tam metin / poster olarak yayınlananlar",
+        subcategories: [
+          {
+            code: "E-2.1",
+            description: "Poster olarak sunulan ve özeti yayınlananlar",
+            subcategories: [],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+function CategoryItem({ category, onAddWork }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -68,18 +55,14 @@ function CategoryItem({ category, onCategoryClick }) {
           </div>
           {category.subcategories && category.subcategories.length > 0 ? (
             category.subcategories.map((sub) => (
-              <CategoryItem
-                key={sub.code}
-                category={sub}
-                onCategoryClick={onCategoryClick}
-              />
+              <CategoryItem key={sub.code} category={sub} onAddWork={onAddWork} />
             ))
           ) : (
             <button
-              className="w-full bg-gray-200 p-2 rounded hover:bg-gray-300 mb-3 mr-8"
-              onClick={() => onCategoryClick(category)}
+              className="w-full bg-gray-200 p-2 rounded hover:bg-gray-300 mt-2"
+              onClick={() => onAddWork(category)}
             >
-              {category.description} Ekle
+              + Çalışma Ekle
             </button>
           )}
         </div>
@@ -89,19 +72,48 @@ function CategoryItem({ category, onCategoryClick }) {
 }
 
 export default function E_part() {
+  const [categories, setCategories] = useState(initialCategories);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);
   const [file, setFile] = useState(null);
 
-  const handleCategoryClick = (category) => {
-    setSelectedCategory(category);
+  // Çalışma eklemek için modal aç
+  const addWork = (parentCategory) => {
+    setSelectedCategory(parentCategory);
     setIsModalOpen(true);
   };
 
   const handleOk = () => {
     setIsModalOpen(false);
-    // Dosya ve yazar sayısını burada işleyebilirsiniz
+
+    // Yeni çalışma ekleme işlemi
+    setCategories((prevCategories) => {
+      const newCategories = JSON.parse(JSON.stringify(prevCategories));
+
+      const findAndAddWork = (categories) => {
+        for (let cat of categories) {
+          if (cat.code === selectedCategory.code) {
+            const nextNumber = (cat.works ? cat.works.length : 0) + 1;
+            const newWorkCode = `${cat.code}:${nextNumber}`;
+
+            if (!cat.works) cat.works = [];
+            cat.works.push({
+              code: newWorkCode,
+              description: `Çalışma-${nextNumber}`,
+            });
+            return;
+          }
+          if (cat.subcategories) {
+            findAndAddWork(cat.subcategories);
+          }
+        }
+      };
+
+      findAndAddWork(newCategories);
+      return newCategories;
+    });
+
     console.log("Yazar Sayısı:", count);
     console.log("Yüklenen Dosya:", file);
   };
@@ -112,21 +124,17 @@ export default function E_part() {
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
-      <h1 className="text-xl font-semibold mb-6 text-center">
+      <h1 className="text-xl font-semibold mb-6 text-center select-none">
         E. Ulusal Bildiriler
       </h1>
       <div>
         {categories.map((category) => (
-          <CategoryItem
-            key={category.code}
-            category={category}
-            onCategoryClick={handleCategoryClick}
-          />
+          <CategoryItem key={category.code} category={category} onAddWork={addWork} />
         ))}
       </div>
       <Modal
         title={selectedCategory ? selectedCategory.description : ""}
-        visible={isModalOpen}
+        open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}
       >

@@ -77,9 +77,9 @@ const categories = [
         ],
       },
       {
-        code:"A-2",
+        code: "A-2",
         description:
-        "Q3 veya Q4 çeyreklik dilimi kategorisine giren dergilerde yer alan makaleler ve diğer çalışmalar",
+          "Q3 veya Q4 çeyreklik dilimi kategorisine giren dergilerde yer alan makaleler ve diğer çalışmalar",
         subcategories: [
           {
             code: "A-2a",
@@ -135,15 +135,13 @@ const categories = [
               { code: "A-2f:2", description: "Çalışma-2" },
             ],
           },
-
-
         ],
       },
       {
-        code:"A-3",
+        code: "A-3",
         description:
-        "Emerging Sources Citation Index (ESCI) kapsamındaki makaleler ve diğer çalışmalar",
-        subcategories:[
+          "Emerging Sources Citation Index (ESCI) kapsamındaki makaleler ve diğer çalışmalar",
+        subcategories: [
           {
             code: "A-3a",
             description:
@@ -165,10 +163,10 @@ const categories = [
         ],
       },
       {
-        code:"A-4",
+        code: "A-4",
         description:
-        "Diğer uluslararası alan indeksleri kapsamındaki makaleler ve diğer çalışmalar ",
-        subcategories:[
+          "Diğer uluslararası alan indeksleri kapsamındaki makaleler ve diğer çalışmalar ",
+        subcategories: [
           {
             code: "A-4a",
             description:
@@ -190,19 +188,18 @@ const categories = [
         ],
       },
       {
-        code:"A-5",
-        description:"Diğer uluslararası alan indeksleri kategorisine girmeyen uluslararası dergiler ile Mesleki ve Kurumsal dergilerde yayımlanan makaleler",
+        code: "A-5",
+        description:
+          "Diğer uluslararası alan indeksleri kategorisine girmeyen uluslararası dergiler ile Mesleki ve Kurumsal dergilerde yayımlanan makaleler",
       },
       {
-        code:"A-6",
-        description:"Başvurulan bilim alanında Uluslararası özgün tasarım çalışmaları ve sanat eserleri ile jürili olarak fuar, festival, çalıştay (workshop), gösteri, bienal, trienal gibi etkinliğe bir çalışma ile katılmak",
+        code: "A-6",
+        description:
+          "Başvurulan bilim alanında Uluslararası özgün tasarım çalışmaları ve sanat eserleri ile jürili olarak fuar, festival, çalıştay (workshop), gösteri, bienal, trienal gibi etkinliğe bir çalışma ile katılmak",
       },
-     
     ],
   },
 ];
-
-
 
 // Kategori Elemanı
 function CategoryItem({ category, onCategoryClick }) {
@@ -246,12 +243,11 @@ function CategoryItem({ category, onCategoryClick }) {
   );
 }
 
-// Ana Bileşen
 export default function A_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [count, setCount] = useState(1); 
-  const [file, setFile] = useState(null); 
+  const [count, setCount] = useState(1);
+  const [file, setFile] = useState(null);
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
@@ -271,7 +267,7 @@ export default function A_part() {
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
-      <h1 className="text-xl font-semibold mb-6 text-center">
+      <h1 className="text-xl font-semibold mb-6 text-center select-none">
         A. Uluslararası Çalışmalar
       </h1>
       <div>
@@ -292,12 +288,14 @@ export default function A_part() {
         <div>
           {selectedCategory && (
             <>
-              <label className="block text-sm font-medium mb-2">Künyeyi giriniz:</label>
+              <label className="block text-sm font-medium mb-2">
+                Künyeyi giriniz:
+              </label>
               <textarea
                 className="w-full border p-2 rounded mb-3"
                 placeholder="Künyenizi buraya giriniz"
               />
-              
+
               <label className="block text-sm font-medium mb-2">
                 Yazar sayısını giriniz
               </label>
@@ -309,7 +307,9 @@ export default function A_part() {
                 min="1"
               />
 
-              <label className="block text-sm font-medium mb-2">Belge Yükleyin:</label>
+              <label className="block text-sm font-medium mb-2">
+                Belge Yükleyin:
+              </label>
               <input
                 type="file"
                 className="w-full border p-2 rounded mb-3"

@@ -139,7 +139,7 @@ export default function S_part() {
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
-      <h1 className="text-xl font-semibold mb-6 text-center">
+      <h1 className="text-xl font-semibold mb-6 text-center select-none">
            S.Üniversite Yönetimine ve İşleyişine Katkılar
       </h1>
       <div>

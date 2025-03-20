@@ -15,12 +15,12 @@ const UpperPart = () => {
           <img
             src="/images/formImage.png"
             alt="Form"
-            className="w-full max-w-xs md:max-w-md"
+            className="w-full max-w-xs md:max-w-md select-none"
           />
         </div>
 
         {/* Metin Alanı */}
-        <div className="text-center px-5 md:px-10">
+        <div className="text-center px-5 md:px-10 select-none">
           <h2 className="text-4xl md:text-5xl font-semibold italic">
             Formunuzu Biz Hazırlayalım
           </h2>
@@ -33,7 +33,7 @@ const UpperPart = () => {
           <img
             src="/images/sekil.png"
             alt="Form"
-            className="w-full max-w-xs md:max-w-md"
+            className="w-full max-w-xs md:max-w-md select-none"
           />
         </div>
       </div>
