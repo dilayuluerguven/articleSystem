@@ -1,5 +1,6 @@
 import { Modal } from "antd";
 import { useState } from "react";
+import { DeleteOutlined } from "@ant-design/icons";
 
 const initialCategories = [
   {
@@ -34,7 +35,28 @@ const initialCategories = [
   },
 ];
 
-function CategoryItem({ category, onAddWork }) {
+const handleDeleteWork = (workToDelete, category, setCategories) => {
+  setCategories((prevCategories) => {
+    const newCategories = JSON.parse(JSON.stringify(prevCategories)); // Deep clone
+
+    const findAndDeleteWork = (categories) => {
+      for (let cat of categories) {
+        if (cat.code === category.code) {
+          cat.works = cat.works.filter((work) => work !== workToDelete); // Çalışmayı sil
+          return;
+        }
+        if (cat.subcategories) {
+          findAndDeleteWork(cat.subcategories);
+        }
+      }
+    };
+
+    findAndDeleteWork(newCategories);
+    return newCategories;
+  });
+};
+
+function CategoryItem({ category, onAddWork, setCategories }) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Özel olarak çalışmaya izin verilen kodlar
@@ -61,22 +83,28 @@ function CategoryItem({ category, onAddWork }) {
             {category.description}
           </div>
 
-     {/* Çalışmaları listele */}
-{category.works &&
+          {/* Çalışmaları listele */}
+          {category.works &&
   category.works.map((work, idx) => (
-    <div key={idx} className="mt-2 text-sm text-blue-700">
-      {work.code}:{" "}
+    <div key={idx} className="mt-3 text-sm text-blue-700 flex items-center space-x-4">
+      <span className="w-1/4">{work.code}:</span> {/* Kodun genişliğini belirleyebilirsiniz */}
       <a
         href={work.fileName ? URL.createObjectURL(new Blob([work.fileName])) : "#"} // Dosyanın geçici URL'sini oluşturuyor
         download={work.fileName} // Dosya ismi üzerinden indirme yapılacak
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-600 underline"
+        className="text-blue-600 underline w-3/4" // Dosya adının genişliğini artırabiliriz
       >
         {work.fileName}
       </a>
+      {/* Çöp kutusu ikonu */}
+      <DeleteOutlined
+        className="ml-2 text-red-600 cursor-pointer"
+        onClick={() => handleDeleteWork(work, category, setCategories)} // Silme işlevi
+      />
     </div>
   ))}
+
 
           {/* Çalışma ekleme butonu sadece istenilen durumlarda */}
           {shouldAllowWorkAddition && (
@@ -96,6 +124,7 @@ function CategoryItem({ category, onAddWork }) {
                 key={sub.code}
                 category={sub}
                 onAddWork={onAddWork}
+                setCategories={setCategories}
               />
             ))}
         </div>
@@ -176,6 +205,7 @@ export default function E_part() {
             key={category.code}
             category={category}
             onAddWork={addWork}
+            setCategories={setCategories}
           />
         ))}
       </div>
