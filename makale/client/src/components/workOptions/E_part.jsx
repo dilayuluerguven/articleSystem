@@ -1,5 +1,5 @@
 import { Modal, Form, Input, Button } from "antd";
-import { useState, useRef } from "react";
+import { useState, useRef ,useEffect} from "react";
 import { DeleteOutlined } from "@ant-design/icons";
 
 const initialCategories = [
@@ -148,6 +148,7 @@ function CategoryItem({ category, onAddWork, setCategories }) {
   );
 }
 
+
 export default function E_part() {
   const [categories, setCategories] = useState(initialCategories);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -206,25 +207,31 @@ export default function E_part() {
   };
 
   const handleCancel = () => {
-    setIsModalOpen(false);
+    formRef.current.resetFields();  // Formu sıfırlayın
+    setIsModalOpen(false);  // Modal'ı kapatın
   };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      //setFile(selectedFile);
       setFileName(selectedFile.name);
     }
   };
 
   const onFinish = (values) => {
     console.log("Success:", values);
-    // Burada form submit işlemleri yapılabilir.
   };
 
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
+
+  // Modal açıldığında formu sıfırlamak için useEffect
+  useEffect(() => {
+    if (isModalOpen) {
+      formRef.current.resetFields();  // Modal açıldığında formu sıfırla
+    }
+  }, [isModalOpen]);  // `isModalOpen` state'i değiştiğinde tetiklenir
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
