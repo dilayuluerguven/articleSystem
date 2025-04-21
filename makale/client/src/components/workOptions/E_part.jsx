@@ -58,7 +58,7 @@ function CategoryItem({ category, onAddWork }) {
           {category.works &&
             category.works.map((work, idx) => (
               <div key={idx} className="mt-2 text-sm text-blue-700">
-                {work.code}: {work.fileName}
+                {work.code}:{work.fileName}
               </div>
             ))}
 
