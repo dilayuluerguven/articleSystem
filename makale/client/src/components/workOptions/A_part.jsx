@@ -221,6 +221,7 @@ function CategoryItem({ category, onCategoryClick }) {
           <div className="text-gray-600 text-sm italic mb-2">
             {category.description}
           </div>
+          
           {category.subcategories && category.subcategories.length > 0 ? (
             category.subcategories.map((sub) => (
               <CategoryItem
@@ -281,7 +282,7 @@ export default function A_part() {
       </div>
       <Modal
         title={selectedCategory ? selectedCategory.description : ""}
-        visible={isModalOpen}
+        open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}
       >

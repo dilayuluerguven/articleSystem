@@ -110,8 +110,8 @@ const FormPart = () => {
           ]}
         />
       </div>
-  
-      {/* Açıklama Metni */}
+        {/* Bilgi kutucuğu*/}
+
       <div className="bg-gray-100 p-4 rounded-lg shadow-md mt-6 w-full max-w-8xl text-center select-none">
         <p className="text-xl font-semibold text-gray-800 mb-2">
           Çalışmanızın kod numarasını seçmek için kutucuğu işaretleyebilirsiniz
@@ -122,7 +122,6 @@ const FormPart = () => {
         </p>
       </div>
   
-      {/* Checkbox Seçenekleri */}
       <div className="bg-white p-6 rounded-lg shadow-md mt-6 w-full max-w-8xl">
         <div className="flex items-center mb-4">
           <Checkbox
@@ -151,7 +150,7 @@ const FormPart = () => {
         </div>
       </div>
   
-      {/* Seçili Form Bileşenleri */}
+      {/* Seçili Form */}
       <div className="mt-6 w-full max-w-7xl">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {data.map(

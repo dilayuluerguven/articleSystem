@@ -53,9 +53,23 @@ function CategoryItem({ category, onAddWork }) {
           <div className="text-gray-600 text-sm italic mb-2">
             {category.description}
           </div>
+
+          {/* Çalışmaları listele */}
+          {category.works &&
+            category.works.map((work, idx) => (
+              <div key={idx} className="mt-2 text-sm text-blue-700">
+                {work.code}: {work.fileName}
+              </div>
+            ))}
+
+          {/* Alt kategoriler varsa devam et */}
           {category.subcategories && category.subcategories.length > 0 ? (
             category.subcategories.map((sub) => (
-              <CategoryItem key={sub.code} category={sub} onAddWork={onAddWork} />
+              <CategoryItem
+                key={sub.code}
+                category={sub}
+                onAddWork={onAddWork}
+              />
             ))
           ) : (
             <button
@@ -77,17 +91,19 @@ export default function E_part() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);
   const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState("");
 
-  // Çalışma eklemek için modal aç
   const addWork = (parentCategory) => {
     setSelectedCategory(parentCategory);
     setIsModalOpen(true);
+    setCount(1);
+    setFile(null);
+    setFileName("");
   };
 
   const handleOk = () => {
     setIsModalOpen(false);
 
-    // Yeni çalışma ekleme işlemi
     setCategories((prevCategories) => {
       const newCategories = JSON.parse(JSON.stringify(prevCategories));
 
@@ -101,7 +117,10 @@ export default function E_part() {
             cat.works.push({
               code: newWorkCode,
               description: `Çalışma-${nextNumber}`,
+              count: count,
+              fileName: fileName,
             });
+
             return;
           }
           if (cat.subcategories) {
@@ -113,13 +132,18 @@ export default function E_part() {
       findAndAddWork(newCategories);
       return newCategories;
     });
-
-    console.log("Yazar Sayısı:", count);
-    console.log("Yüklenen Dosya:", file);
   };
 
   const handleCancel = () => {
     setIsModalOpen(false);
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setFileName(selectedFile.name);
+    }
   };
 
   return (
@@ -129,7 +153,11 @@ export default function E_part() {
       </h1>
       <div>
         {categories.map((category) => (
-          <CategoryItem key={category.code} category={category} onAddWork={addWork} />
+          <CategoryItem
+            key={category.code}
+            category={category}
+            onAddWork={addWork}
+          />
         ))}
       </div>
       <Modal
@@ -138,39 +166,43 @@ export default function E_part() {
         onOk={handleOk}
         onCancel={handleCancel}
       >
-        <div>
-          {selectedCategory && (
-            <>
-              <label className="block text-sm font-medium mb-2">
-                Künyeyi giriniz:
-              </label>
-              <textarea
-                className="w-full border p-2 rounded mb-3"
-                placeholder="Künyenizi buraya giriniz"
-              />
+        {selectedCategory && (
+          <>
+            <label className="block text-sm font-medium mb-2">
+              Künyeyi giriniz:
+            </label>
+            <textarea
+              className="w-full border p-2 rounded mb-3"
+              placeholder="Künyenizi buraya giriniz"
+            />
 
-              <label className="block text-sm font-medium mb-2">
-                Yazar sayısını giriniz
-              </label>
-              <input
-                type="number"
-                className="w-full border p-2 rounded mb-3"
-                value={count}
-                onChange={(e) => setCount(e.target.value)}
-                min="1"
-              />
+            <label className="block text-sm font-medium mb-2">
+              Yazar sayısını giriniz
+            </label>
+            <input
+              type="number"
+              className="w-full border p-2 rounded mb-3"
+              value={count}
+              onChange={(e) => setCount(parseInt(e.target.value, 10))}
+              min="1"
+            />
 
-              <label className="block text-sm font-medium mb-2">
-                Belge Yükleyin:
-              </label>
-              <input
-                type="file"
-                className="w-full border p-2 rounded mb-3"
-                onChange={(e) => setFile(e.target.files[0])}
-              />
-            </>
-          )}
-        </div>
+            <label className="block text-sm font-medium mb-2">
+              Belge Yükleyin:
+            </label>
+            <input
+              type="file"
+              className="w-full border p-2 rounded mb-3"
+              onChange={handleFileChange}
+            />
+
+            {file && (
+              <div className="mt-3 text-sm text-blue-600">
+                {selectedCategory.code}:{count} - {fileName}
+              </div>
+            )}
+          </>
+        )}
       </Modal>
     </div>
   );
