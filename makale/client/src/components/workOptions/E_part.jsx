@@ -61,13 +61,22 @@ function CategoryItem({ category, onAddWork }) {
             {category.description}
           </div>
 
-          {/* Çalışmaları listele */}
-          {category.works &&
-            category.works.map((work, idx) => (
-              <div key={idx} className="mt-2 text-sm text-blue-700">
-                {work.code}: {work.fileName}
-              </div>
-            ))}
+     {/* Çalışmaları listele */}
+{category.works &&
+  category.works.map((work, idx) => (
+    <div key={idx} className="mt-2 text-sm text-blue-700">
+      {work.code}:{" "}
+      <a
+        href={work.fileName ? URL.createObjectURL(new Blob([work.fileName])) : "#"} // Dosyanın geçici URL'sini oluşturuyor
+        download={work.fileName} // Dosya ismi üzerinden indirme yapılacak
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 underline"
+      >
+        {work.fileName}
+      </a>
+    </div>
+  ))}
 
           {/* Çalışma ekleme butonu sadece istenilen durumlarda */}
           {shouldAllowWorkAddition && (
@@ -208,7 +217,15 @@ export default function E_part() {
 
             {file && (
               <div className="mt-3 text-sm text-blue-600">
-                {selectedCategory.code}:{count} - {fileName}
+                {selectedCategory.code}:{count} -{" "}
+                <a
+                  href={file ? URL.createObjectURL(file) : "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  {fileName}
+                </a>
               </div>
             )}
           </>
