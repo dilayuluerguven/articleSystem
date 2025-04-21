@@ -42,11 +42,19 @@ const handleDeleteWork = (workToDelete, category, setCategories) => {
     const findAndDeleteWork = (categories) => {
       for (let cat of categories) {
         if (cat.code === category.code) {
-          // `works` dizisinden ilgili çalışmayı sil
+          // Çalışmayı sil
           cat.works = cat.works.filter((work) => work.code !== workToDelete.code);
+          
+          // Kalan çalışmaları güncelle
+          cat.works.forEach((work, index) => {
+            // Yeni çalışma kodu, önceki çalışmalara göre sıralı olmalı
+            work.code = `${cat.code}:${index + 1}`;
+          });
+
           return true; // Çalışma silindi
         }
-        // Eğer alt kategoriler varsa, onları da kontrol et
+
+        // Alt kategorilerde çalışmayı sil
         if (cat.subcategories) {
           if (findAndDeleteWork(cat.subcategories)) {
             return true; // Alt kategoride çalışma silindi
@@ -56,10 +64,11 @@ const handleDeleteWork = (workToDelete, category, setCategories) => {
       return false; // Çalışma bulunamadı
     };
 
-    findAndDeleteWork(newCategories); // Çalışmayı sil
+    findAndDeleteWork(newCategories); // Çalışmayı sil ve güncelle
     return newCategories;
   });
 };
+
 
 function CategoryItem({ category, onAddWork, setCategories }) {
   const [isOpen, setIsOpen] = useState(false);
