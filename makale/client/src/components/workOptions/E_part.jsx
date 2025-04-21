@@ -1,5 +1,5 @@
-import { Modal } from "antd";
-import { useState } from "react";
+import { Modal, Form, Input, Button } from "antd";
+import { useState, useRef } from "react";
 import { DeleteOutlined } from "@ant-design/icons";
 
 const initialCategories = [
@@ -42,16 +42,21 @@ const handleDeleteWork = (workToDelete, category, setCategories) => {
     const findAndDeleteWork = (categories) => {
       for (let cat of categories) {
         if (cat.code === category.code) {
-          cat.works = cat.works.filter((work) => work !== workToDelete); // Çalışmayı sil
-          return;
+          // `works` dizisinden ilgili çalışmayı sil
+          cat.works = cat.works.filter((work) => work.code !== workToDelete.code);
+          return true; // Çalışma silindi
         }
+        // Eğer alt kategoriler varsa, onları da kontrol et
         if (cat.subcategories) {
-          findAndDeleteWork(cat.subcategories);
+          if (findAndDeleteWork(cat.subcategories)) {
+            return true; // Alt kategoride çalışma silindi
+          }
         }
       }
+      return false; // Çalışma bulunamadı
     };
 
-    findAndDeleteWork(newCategories);
+    findAndDeleteWork(newCategories); // Çalışmayı sil
     return newCategories;
   });
 };
@@ -83,28 +88,29 @@ function CategoryItem({ category, onAddWork, setCategories }) {
             {category.description}
           </div>
 
-          {/* Çalışmaları listele */}
           {category.works &&
   category.works.map((work, idx) => (
-    <div key={idx} className="mt-3 text-sm text-blue-700 flex items-center space-x-4">
-      <span className="w-1/4">{work.code}:</span> {/* Kodun genişliğini belirleyebilirsiniz */}
+    <div
+      key={idx}
+      className="mt-3 text-sm text-blue-700 flex items-center space-x-4 "
+    >
+      <span className="w-1/4">{work.code}:</span>
       <a
-        href={work.fileName ? URL.createObjectURL(new Blob([work.fileName])) : "#"} // Dosyanın geçici URL'sini oluşturuyor
-        download={work.fileName} // Dosya ismi üzerinden indirme yapılacak
+        href={work.fileName ? URL.createObjectURL(new Blob([work.fileName])) : "#"}
+        download={work.fileName}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-600 underline w-3/4" // Dosya adının genişliğini artırabiliriz
+        className="text-blue-600 underline flex-grow"
       >
         {work.fileName}
       </a>
       {/* Çöp kutusu ikonu */}
       <DeleteOutlined
-        className="ml-2 text-red-600 cursor-pointer"
+        className="ml-4 text-red-600 cursor-pointer"
         onClick={() => handleDeleteWork(work, category, setCategories)} // Silme işlevi
       />
     </div>
   ))}
-
 
           {/* Çalışma ekleme butonu sadece istenilen durumlarda */}
           {shouldAllowWorkAddition && (
@@ -138,48 +144,56 @@ export default function E_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [count, setCount] = useState(1);
-  const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
+  const formRef = useRef(null); // Form referansı
 
   const addWork = (parentCategory) => {
     setSelectedCategory(parentCategory);
     setIsModalOpen(true);
     setCount(1);
-    setFile(null);
     setFileName("");
   };
 
-  const handleOk = () => {
-    setIsModalOpen(false);
+  const handleOk = async () => {
+    try {
+      // Formu validate et
+      await formRef.current.validateFields();
 
-    setCategories((prevCategories) => {
-      const newCategories = JSON.parse(JSON.stringify(prevCategories));
+      // Validasyon başarılı ise, çalışma ekle
+      setIsModalOpen(false);
 
-      const findAndAddWork = (categories) => {
-        for (let cat of categories) {
-          if (cat.code === selectedCategory.code) {
-            const nextNumber = (cat.works ? cat.works.length : 0) + 1;
-            const newWorkCode = `${cat.code}:${nextNumber}`;
+      setCategories((prevCategories) => {
+        const newCategories = JSON.parse(JSON.stringify(prevCategories));
 
-            if (!cat.works) cat.works = [];
-            cat.works.push({
-              code: newWorkCode,
-              description: `Çalışma-${nextNumber}`,
-              count: count,
-              fileName: fileName,
-            });
+        const findAndAddWork = (categories) => {
+          for (let cat of categories) {
+            if (cat.code === selectedCategory.code) {
+              const nextNumber = (cat.works ? cat.works.length : 0) + 1;
+              const newWorkCode = `${cat.code}:${nextNumber}`;
 
-            return;
+              if (!cat.works) cat.works = [];
+              cat.works.push({
+                code: newWorkCode,
+                description: `Çalışma-${nextNumber}`,
+                count: count,
+                fileName: fileName,
+              });
+
+              return;
+            }
+            if (cat.subcategories) {
+              findAndAddWork(cat.subcategories);
+            }
           }
-          if (cat.subcategories) {
-            findAndAddWork(cat.subcategories);
-          }
-        }
-      };
+        };
 
-      findAndAddWork(newCategories);
-      return newCategories;
-    });
+        findAndAddWork(newCategories);
+        return newCategories;
+      });
+    } catch (error) {
+      // Eğer validation hatası varsa, burada bir şey yapabilirsiniz
+      console.log("Validation failed:", error);
+    }
   };
 
   const handleCancel = () => {
@@ -189,9 +203,18 @@ export default function E_part() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      setFile(selectedFile);
+      //setFile(selectedFile);
       setFileName(selectedFile.name);
     }
+  };
+
+  const onFinish = (values) => {
+    console.log("Success:", values);
+    // Burada form submit işlemleri yapılabilir.
+  };
+
+  const onFinishFailed = (errorInfo) => {
+    console.log("Failed:", errorInfo);
   };
 
   return (
@@ -209,6 +232,7 @@ export default function E_part() {
           />
         ))}
       </div>
+
       <Modal
         title={selectedCategory ? selectedCategory.description : ""}
         open={isModalOpen}
@@ -216,49 +240,49 @@ export default function E_part() {
         onCancel={handleCancel}
       >
         {selectedCategory && (
-          <>
-            <label className="block text-sm font-medium mb-2">
-              Künyeyi giriniz:
-            </label>
-            <textarea
-              className="w-full border p-2 rounded mb-3"
-              placeholder="Künyenizi buraya giriniz"
-            />
+          <Form
+            ref={formRef}
+            name="workForm"
+            labelCol={{ span: 8 }}
+            wrapperCol={{ span: 16 }}
+            style={{ maxWidth: 600 }}
+            initialValues={{ remember: true }}
+            onFinish={onFinish}
+            onFinishFailed={onFinishFailed}
+            autoComplete="off"
+          >
+            <Form.Item
+              label="Künyeyi giriniz"
+              name="workDescription"
+              rules={[{ required: true, message: "Lütfen künyenizi giriniz!" }]}
+            >
+              <Input.TextArea placeholder="Künyenizi buraya giriniz" />
+            </Form.Item>
 
-            <label className="block text-sm font-medium mb-2">
-              Yazar sayısını giriniz
-            </label>
-            <input
-              type="number"
-              className="w-full border p-2 rounded mb-3"
-              value={count}
-              onChange={(e) => setCount(parseInt(e.target.value, 10))}
-              min="1"
-            />
+            <Form.Item
+              label="Yazar sayısını giriniz"
+              name="authorCount"
+              rules={[{ required: true, message: "Lütfen yazar sayısını giriniz!" }]}
+            >
+              <Input
+                type="number"
+                value={count}
+                min="1"
+              />
+            </Form.Item>
 
-            <label className="block text-sm font-medium mb-2">
-              Belge Yükleyin:
-            </label>
-            <input
-              type="file"
-              className="w-full border p-2 rounded mb-3"
-              onChange={handleFileChange}
-            />
-
-            {file && (
-              <div className="mt-3 text-sm text-blue-600">
-                {selectedCategory.code}:{count} -{" "}
-                <a
-                  href={file ? URL.createObjectURL(file) : "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  {fileName}
-                </a>
-              </div>
-            )}
-          </>
+            <Form.Item
+              label="Belge Yükleyin"
+              name="file"
+              rules={[{ required: true, message: "Lütfen bir belge yükleyin!" }]}
+            >
+              <Input
+                type="file"
+                onChange={handleFileChange}
+                className="w-full border p-2 rounded mb-3"
+              />
+            </Form.Item>
+          </Form>
         )}
       </Modal>
     </div>

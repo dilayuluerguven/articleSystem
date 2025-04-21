@@ -112,7 +112,7 @@ const FormPart = () => {
       </div>
         {/* Bilgi kutucuğu*/}
 
-      <div className="bg-gray-100 p-4 rounded-lg shadow-md mt-6 w-full max-w-8xl text-center select-none">
+      <div className="bg-gray-100 p-6 rounded-lg shadow-md mt-6 w-full max-w-8xl text-center select-none">
         <p className="text-xl font-semibold text-gray-800 mb-2">
           Çalışmanızın kod numarasını seçmek için kutucuğu işaretleyebilirsiniz
         </p>
