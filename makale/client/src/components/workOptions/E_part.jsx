@@ -1,6 +1,8 @@
 import { Modal, Form, Input, Button } from "antd";
-import { useState, useRef ,useEffect} from "react";
-import { DeleteOutlined } from "@ant-design/icons";
+import { useState, useRef} from "react";
+//import { useEffect} from "react";
+
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 
 const initialCategories = [
   {
@@ -37,7 +39,7 @@ const initialCategories = [
 
 const handleDeleteWork = (workToDelete, category, setCategories) => {
   setCategories((prevCategories) => {
-    const newCategories = JSON.parse(JSON.stringify(prevCategories)); // Deep clone
+    const newCategories = JSON.parse(JSON.stringify(prevCategories)); 
 
     const findAndDeleteWork = (categories) => {
       for (let cat of categories) {
@@ -47,21 +49,21 @@ const handleDeleteWork = (workToDelete, category, setCategories) => {
           
           // Kalan çalışmaları güncelle
           cat.works.forEach((work, index) => {
-            // Yeni çalışma kodu, önceki çalışmalara göre sıralı olmalı
+            //önceki çalışmalara göre sıralı olmalı
             work.code = `${cat.code}:${index + 1}`;
           });
 
-          return true; // Çalışma silindi
+          return true; 
         }
 
         // Alt kategorilerde çalışmayı sil
         if (cat.subcategories) {
           if (findAndDeleteWork(cat.subcategories)) {
-            return true; // Alt kategoride çalışma silindi
+            return true; 
           }
         }
       }
-      return false; // Çalışma bulunamadı
+      return false; 
     };
 
     findAndDeleteWork(newCategories); // Çalışmayı sil ve güncelle
@@ -69,8 +71,7 @@ const handleDeleteWork = (workToDelete, category, setCategories) => {
   });
 };
 
-
-function CategoryItem({ category, onAddWork, setCategories }) {
+function CategoryItem({ category, onAddWork, onEditWork, setCategories }) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Özel olarak çalışmaya izin verilen kodlar
@@ -98,28 +99,33 @@ function CategoryItem({ category, onAddWork, setCategories }) {
           </div>
 
           {category.works &&
-  category.works.map((work, idx) => (
-    <div
-      key={idx}
-      className="mt-3 text-sm text-blue-700 flex items-center space-x-4 "
-    >
-      <span className="w-1/4">{work.code}:</span>
-      <a
-        href={work.fileName ? URL.createObjectURL(new Blob([work.fileName])) : "#"}
-        download={work.fileName}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 underline flex-grow"
-      >
-        {work.fileName}
-      </a>
-      {/* Çöp kutusu ikonu */}
-      <DeleteOutlined
-        className="ml-4 text-red-600 cursor-pointer"
-        onClick={() => handleDeleteWork(work, category, setCategories)} // Silme işlevi
-      />
-    </div>
-  ))}
+            category.works.map((work, idx) => (
+              <div
+                key={idx}
+                className="mt-3 text-sm text-blue-700 flex items-center space-x-4"
+              >
+                <span className="w-1/4">{work.code}:</span>
+                <a
+                  href={work.fileName ? URL.createObjectURL(new Blob([work.fileName])) : "#"}
+                  download={work.fileName}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline flex-grow"
+                >
+                  {work.fileName}
+                </a>
+                {/* Edit Icon */}
+                <EditOutlined
+                  className="ml-4 text-green-600 cursor-pointer"
+                  onClick={() => onEditWork(work, category)} // Düzenleme işlevi
+                />
+                {/* Delete Icon */}
+                <DeleteOutlined
+                  className="ml-4 text-red-600 cursor-pointer"
+                  onClick={() => handleDeleteWork(work, category, setCategories)} // Silme işlevi
+                />
+              </div>
+            ))}
 
           {/* Çalışma ekleme butonu sadece istenilen durumlarda */}
           {shouldAllowWorkAddition && (
@@ -139,6 +145,7 @@ function CategoryItem({ category, onAddWork, setCategories }) {
                 key={sub.code}
                 category={sub}
                 onAddWork={onAddWork}
+                onEditWork={onEditWork}
                 setCategories={setCategories}
               />
             ))}
@@ -148,60 +155,75 @@ function CategoryItem({ category, onAddWork, setCategories }) {
   );
 }
 
-
 export default function E_part() {
   const [categories, setCategories] = useState(initialCategories);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedWork, setSelectedWork] = useState(null);
   const [count, setCount] = useState(1);
   const [fileName, setFileName] = useState("");
-  const formRef = useRef(null); // Form referansı
+  const formRef = useRef(null); 
 
   const addWork = (parentCategory) => {
     setSelectedCategory(parentCategory);
+    setSelectedWork(null); 
     setIsModalOpen(true);
     setCount(1);
     setFileName("");
   };
 
+  const editWork = (work, category) => {
+    setSelectedCategory(category);
+    setSelectedWork(work); 
+    setIsModalOpen(true);
+    setCount(work.count);
+    setFileName(work.fileName);
+  };
+
   const handleOk = async () => {
     try {
-      // Formu validate et
+      // validasyon kısmı
       await formRef.current.validateFields();
 
-      // Validasyon başarılı ise, çalışma ekle
+      // Validasyon tamamsa ekle
       setIsModalOpen(false);
 
       setCategories((prevCategories) => {
         const newCategories = JSON.parse(JSON.stringify(prevCategories));
 
-        const findAndAddWork = (categories) => {
+        const findAndAddOrUpdateWork = (categories) => {
           for (let cat of categories) {
             if (cat.code === selectedCategory.code) {
               const nextNumber = (cat.works ? cat.works.length : 0) + 1;
               const newWorkCode = `${cat.code}:${nextNumber}`;
 
               if (!cat.works) cat.works = [];
-              cat.works.push({
-                code: newWorkCode,
-                description: `Çalışma-${nextNumber}`,
-                count: count,
-                fileName: fileName,
-              });
-
+              
+              if (selectedWork) {
+                
+                selectedWork.description = fileName;
+                selectedWork.count = count;
+                selectedWork.fileName = fileName;
+              } else {
+                cat.works.push({
+                  code: newWorkCode,
+                  description: `Çalışma-${nextNumber}`,
+                  count: count,
+                  fileName: fileName,
+                });
+              }
               return;
             }
             if (cat.subcategories) {
-              findAndAddWork(cat.subcategories);
+              findAndAddOrUpdateWork(cat.subcategories);
             }
           }
         };
 
-        findAndAddWork(newCategories);
+        findAndAddOrUpdateWork(newCategories);
         return newCategories;
       });
     } catch (error) {
-      // Eğer validation hatası varsa, burada bir şey yapabilirsiniz
       console.log("Validation failed:", error);
     }
   };
@@ -225,14 +247,11 @@ export default function E_part() {
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
-
-  // Modal açıldığında formu sıfırlamak için useEffect
-  useEffect(() => {
-    if (isModalOpen) {
-      formRef.current.resetFields();  // Modal açıldığında formu sıfırla
-    }
-  }, [isModalOpen]);  // `isModalOpen` state'i değiştiğinde tetiklenir
-
+  // useEffect(() => {
+  //   if (isModalOpen) {
+  //     formRef.current.resetFields();  
+  //   }
+  // }, [isModalOpen]);  
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center select-none">
@@ -244,6 +263,7 @@ export default function E_part() {
             key={category.code}
             category={category}
             onAddWork={addWork}
+            onEditWork={editWork}
             setCategories={setCategories}
           />
         ))}
@@ -254,6 +274,7 @@ export default function E_part() {
         open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}
+        closable={false}
       >
         {selectedCategory && (
           <Form
