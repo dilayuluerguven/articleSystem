@@ -37,6 +37,13 @@ const initialCategories = [
 function CategoryItem({ category, onAddWork }) {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Özel olarak çalışmaya izin verilen kodlar
+  const allowedCategoryCodes = ["E-1", "E-2"];
+
+  const shouldAllowWorkAddition =
+    (!category.subcategories || category.subcategories.length === 0) ||
+    allowedCategoryCodes.includes(category.code);
+
   return (
     <div className="border-b border-gray-300 mb-2">
       <div
@@ -58,20 +65,12 @@ function CategoryItem({ category, onAddWork }) {
           {category.works &&
             category.works.map((work, idx) => (
               <div key={idx} className="mt-2 text-sm text-blue-700">
-                {work.code}:{work.fileName}
+                {work.code}: {work.fileName}
               </div>
             ))}
 
-          {/* Alt kategoriler varsa devam et */}
-          {category.subcategories && category.subcategories.length > 0 ? (
-            category.subcategories.map((sub) => (
-              <CategoryItem
-                key={sub.code}
-                category={sub}
-                onAddWork={onAddWork}
-              />
-            ))
-          ) : (
+          {/* Çalışma ekleme butonu sadece istenilen durumlarda */}
+          {shouldAllowWorkAddition && (
             <button
               className="w-full bg-gray-200 p-2 rounded hover:bg-gray-300 mt-2"
               onClick={() => onAddWork(category)}
@@ -79,6 +78,17 @@ function CategoryItem({ category, onAddWork }) {
               + Çalışma Ekle
             </button>
           )}
+
+          {/* Alt kategorileri varsa alt alta göster */}
+          {category.subcategories &&
+            category.subcategories.length > 0 &&
+            category.subcategories.map((sub) => (
+              <CategoryItem
+                key={sub.code}
+                category={sub}
+                onAddWork={onAddWork}
+              />
+            ))}
         </div>
       )}
     </div>
