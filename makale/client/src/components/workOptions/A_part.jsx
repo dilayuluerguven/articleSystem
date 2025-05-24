@@ -1,9 +1,4 @@
-import { Modal, Form, Input, Button } from "antd";
 import { useState, useRef } from "react";
-//import { useEffect} from "react";
-
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import Icons from "../utils/Icon";
 import WorkModal from "../utils/WorkModal";
 import CategoryItem from "../utils/CategoryItem";
 
@@ -157,10 +152,6 @@ const initialCategories = [
   },
 ];
 
-
-
-
-
 export default function A_part() {
   const [categories, setCategories] = useState(initialCategories);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -169,7 +160,7 @@ export default function A_part() {
   const [count, setCount] = useState(1);
   const [fileName, setFileName] = useState("");
   const formRef = useRef(null);
-   const allowedCategoryCodes = ["A-1", "A-2", "A-3", "A-4", "A-5", "A-6"];
+  const allowedCategoryCodes = ["A-1", "A-2", "A-3", "A-4", "A-5", "A-6"];
 
   const addWork = (parentCategory) => {
     setSelectedCategory(parentCategory);
@@ -253,11 +244,7 @@ export default function A_part() {
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
-  // useEffect(() => {
-  //   if (isModalOpen) {
-  //     formRef.current.resetFields();
-  //   }
-  // }, [isModalOpen]);
+
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center select-none">
@@ -275,7 +262,6 @@ export default function A_part() {
           />
         ))}
       </div>
-
       <WorkModal
         isModalOpen={isModalOpen}
         handleOk={handleOk}
