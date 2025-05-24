@@ -104,7 +104,7 @@ function CategoryItem({ category, onAddWork, onEditWork, setCategories }) {
             category.works.map((work, idx) => (
               <div
                 key={idx}
-                className="mt-3 text-sm text-blue-700 flex items-center space-x-4"
+                className="mt-3 text-sm text-blue-700 flex flex-wrap items-center space-x-4"
               >
                 <span className="w-1/4">{work.code}:</span>
                 <a

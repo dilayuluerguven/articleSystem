@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 //import { useEffect} from "react";
 
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import Icons from "../icons/Icon";
 
 const initialCategories = [
   {
@@ -219,10 +220,10 @@ function CategoryItem({ category, onAddWork, onEditWork, setCategories }) {
           </div>
 
           {category.works &&
-            category.works.map((work, idx) => (
+            category.works?.map((work) => (
               <div
-                key={idx}
-                className="mt-3 text-sm text-blue-700 flex items-center space-x-4"
+                key={work.id}
+                className="mt-3 text-sm text-blue-700 flex flex-wrap items-center space-x-4"
               >
                 <span className="w-1/4">{work.code}:</span>
                 <a
@@ -238,17 +239,11 @@ function CategoryItem({ category, onAddWork, onEditWork, setCategories }) {
                 >
                   {work.fileName}
                 </a>
-                {/* Edit Icon */}
-                <EditOutlined
-                  className="ml-4 text-green-600 cursor-pointer"
-                  onClick={() => onEditWork(work, category)} // Düzenleme işlevi
-                />
-                {/* Delete Icon */}
-                <DeleteOutlined
-                  className="ml-4 text-red-600 cursor-pointer"
-                  onClick={() =>
+                <Icons
+                  onEdit={() => onEditWork(work, category)}
+                  onDelete={() =>
                     handleDeleteWork(work, category, setCategories)
-                  } // Silme işlevi
+                  }
                 />
               </div>
             ))}
@@ -256,7 +251,7 @@ function CategoryItem({ category, onAddWork, onEditWork, setCategories }) {
           {/* Çalışma ekleme butonu sadece istenilen durumlarda */}
           {shouldAllowWorkAddition && (
             <button
-              className="w-full bg-gray-200 p-2 rounded hover:bg-gray-300 mt-2"
+              className="w-full bg-gray-200 p-2 rounded hover:bg-gray-300 mt-2 mb-2"
               onClick={() => onAddWork(category)}
             >
               + Çalışma Ekle
