@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 //import { useEffect} from "react";
 
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import Icons from "../icons/Icon";
+import Icons from "../utils/Icon";
 
 const initialCategories = [
   {
