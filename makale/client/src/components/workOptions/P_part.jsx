@@ -1,7 +1,4 @@
-import { Modal, Form, Input, Button } from "antd";
 import { useState, useRef } from "react";
-
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import WorkModal from "../utils/WorkModal";
 import CategoryItem from "../utils/CategoryItem";
 

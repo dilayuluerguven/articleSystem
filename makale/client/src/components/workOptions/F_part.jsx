@@ -127,12 +127,13 @@ export default function F_part() {
     setIsModalOpen(false); // Modal'ı kapatın
   };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFileName(selectedFile.name);
-    }
-  };
+const handleFileChange = (e) => {
+  const selectedFile = e.target.files?.[0] || e.file;
+  if (selectedFile) {
+    setFileName(selectedFile.name);
+  }
+};
+
 
   const onFinish = (values) => {
     console.log("Success:", values);

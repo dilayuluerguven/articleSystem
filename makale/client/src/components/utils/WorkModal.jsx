@@ -1,5 +1,6 @@
-import { Modal, Form, Input, Radio } from "antd";
+import { Modal, Form, Input, Radio, Upload } from "antd";
 import { useState } from "react";
+import { InboxOutlined } from "@ant-design/icons";
 
 export default function WorkModal({
   isModalOpen,
@@ -70,13 +71,29 @@ export default function WorkModal({
           <Form.Item
             label="Belge Yükleyin"
             name="file"
+            valuePropName="fileList"
+            getValueFromEvent={(e) => (Array.isArray(e) ? e : e && e.fileList)}
             rules={[{ required: true, message: "Lütfen bir belge yükleyin!" }]}
           >
-            <Input
-              type="file"
-              onChange={handleFileChange}
-              className="w-full border p-2 rounded mb-3"
-            />
+            <Upload.Dragger
+              name="file"
+              multiple={false}
+              beforeUpload={(file) => {
+                handleFileChange({ target: { files: [file] } });
+                return false;
+              }}
+              accept=".pdf,.doc,.docx,.jpg,.png"
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">
+                Belgenizi buraya sürükleyin ya da tıklayarak seçin
+              </p>
+              <p className="ant-upload-hint">
+                PDF, Word veya görsel dosya yükleyebilirsiniz.
+              </p>
+            </Upload.Dragger>
           </Form.Item>
 
           <Form.Item label="Ana Başlıklar">
@@ -93,21 +110,28 @@ export default function WorkModal({
           {mainSelection === "baslicaEser" && (
             <Form.Item label="Başlıca Eserler">
               <Radio.Group onChange={handleSubChange} value={subSelection}>
-                <div style={{ display: "flex", flexDirection: "column", paddingLeft: 20 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    paddingLeft: 20,
+                  }}
+                >
                   <Radio value="tekYazarli">Tek Yazarlı Makale</Radio>
-                  
+
                   <Radio value="ogrenciyle">
-                    Danışmanlığını yürüttüğü lisansüstü öğrenciler ile üretilen makaleler
+                    Danışmanlığını yürüttüğü lisansüstü öğrenciler ile üretilen
+                    makaleler
                   </Radio>
-                  
+
                   <Radio value="adayTez">
                     Adayın Kendi Lisansüstü Tezlerinden Ürettiği Makaleler
                   </Radio>
-                  
+
                   <Radio value="projedenMakale">
                     Yürütücülüğünü yaptığı projelerden üretilmiş makale
                   </Radio>
-                  
+
                   <Radio value="kitap">Kitap Yazarlığı</Radio>
                 </div>
               </Radio.Group>
@@ -118,7 +142,9 @@ export default function WorkModal({
             <Form.Item label="Makale Türü" style={{ paddingLeft: 40 }}>
               <Radio.Group onChange={handleChildChange} value={childSelection}>
                 <Radio value="tezden">Tezden</Radio>
-                <Radio value="tezHarici">Tez Harici (Öğrencilik devam ederken)</Radio>
+                <Radio value="tezHarici">
+                  Tez Harici (Öğrencilik devam ederken)
+                </Radio>
               </Radio.Group>
             </Form.Item>
           )}
@@ -127,7 +153,9 @@ export default function WorkModal({
             <Form.Item label="Tez Türü" style={{ paddingLeft: 40 }}>
               <Radio.Group onChange={handleChildChange} value={childSelection}>
                 <Radio value="yuksekLisans">Yüksek Lisans Tezinden</Radio>
-                <Radio value="doktora">Doktora/Sanatta Yeterlilik Tezinden</Radio>
+                <Radio value="doktora">
+                  Doktora/Sanatta Yeterlilik Tezinden
+                </Radio>
               </Radio.Group>
             </Form.Item>
           )}
