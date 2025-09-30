@@ -1,6 +1,8 @@
+
 import { useState, useRef } from "react";
 import WorkModal from "../utils/WorkModal";
 import CategoryItem from "../utils/CategoryItem";
+
 
 const initialCategories = [
   {
@@ -50,14 +52,14 @@ const initialCategories = [
 ];
 
 export default function F_part() {
-  const [categories, setCategories] = useState(initialCategories);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedWork, setSelectedWork] = useState(null);
-  const [count, setCount] = useState(1);
-  const [fileName, setFileName] = useState("");
-  const formRef = useRef(null);
-  const allowedCategoryCodes = ["F-1", "F-2", "F-3", "F-4"];
+const [categories, setCategories] = useState(initialCategories); // Kategoriler listesi
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal görünürlük durumu
+  const [selectedCategory, setSelectedCategory] = useState(null); // Seçilen kategori
+  const [selectedWork, setSelectedWork] = useState(null); // Düzenlenen çalışma 
+  const [count, setCount] = useState(1); // Puan/değer bilgisi
+  const [fileName, setFileName] = useState(""); // Dosya adı
+  const formRef = useRef(null); // Form referansı
+  const allowedCategoryCodes = ["F-1", "F-2", "F-3", "F-4"]; // Eklenmesine izin verilen kategoriler
 
   const addWork = (parentCategory) => {
     setSelectedCategory(parentCategory);
@@ -75,12 +77,13 @@ export default function F_part() {
     setFileName(work.fileName);
   };
 
+    // Modal onaylandığında çağrılıyıo
   const handleOk = async () => {
     try {
       // validasyon kısmı
       await formRef.current.validateFields();
 
-      // Validasyon tamamsa ekle
+      // Validasyon tamamsa ekleme yapıyorum
       setIsModalOpen(false);
 
       setCategories((prevCategories) => {
@@ -121,9 +124,64 @@ export default function F_part() {
       console.log("Validation failed:", error);
     }
   };
+  /*
+  const handleOk = async () => {
+  try {
+    await formRef.current.validateFields();
+    setIsModalOpen(false);
+
+    const formData = new FormData();
+    formData.append("categoryCode", selectedCategory.code);
+    formData.append("count", count);
+    formData.append("file", fileRef.current); // dosya referansı
+
+    // Server'a gönder
+    await axios.post("http://localhost:5000/api/add-work", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    // Kategorilere ekleme işlemi (frontend tarafında)
+    setCategories((prevCategories) => {
+      const newCategories = JSON.parse(JSON.stringify(prevCategories));
+      const findAndAddOrUpdateWork = (categories) => {
+        for (let cat of categories) {
+          if (cat.code === selectedCategory.code) {
+            const nextNumber = (cat.works ? cat.works.length : 0) + 1;
+            const newWorkCode = ${cat.code}:${nextNumber};
+            if (!cat.works) cat.works = [];
+
+            if (selectedWork) {
+              selectedWork.description = fileName;
+              selectedWork.count = count;
+              selectedWork.fileName = fileName;
+            } else {
+              cat.works.push({
+                code: newWorkCode,
+                description: Çalışma-${nextNumber},
+                count: count,
+                fileName: fileName,
+              });
+            }
+            return;
+          }
+          if (cat.subcategories) {
+            findAndAddOrUpdateWork(cat.subcategories);
+          }
+        }
+      };
+      findAndAddOrUpdateWork(newCategories);
+      return newCategories;
+    });
+  } catch (error) {
+    console.log("Validation failed or upload error:",error);
+}
+};
+  */
 
   const handleCancel = () => {
-    formRef.current.resetFields(); // Formu sıfırlayın
+    //formRef.current.resetFields(); // Formu sıfırlayın
     setIsModalOpen(false); // Modal'ı kapatın
   };
 

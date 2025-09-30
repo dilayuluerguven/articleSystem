@@ -31,7 +31,7 @@ export default function CategoryItem({ category, onAddWork, onEditWork, setCateg
             category.works.map((work, idx) => (
               <div
                 key={idx}
-                className="mt-3 text-sm text-blue-700 flex items-center flex-wrap space-x-4"
+                className="mt-3 text-sm text-blue-700 flex flex-wrap items-center  space-x-4"
               >
                 <span className="w-1/4">{work.code}:</span>
                 <a
@@ -43,7 +43,7 @@ export default function CategoryItem({ category, onAddWork, onEditWork, setCateg
                   download={work.fileName}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 underline flex-grow"
+                  className="text-blue-600 underline  break-words max-w-20"
                 >
                   {work.fileName}
                 </a>

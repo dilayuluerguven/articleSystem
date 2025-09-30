@@ -1,5 +1,5 @@
 import { Modal, Form, Input, Radio, Upload } from "antd";
-import { useState } from "react";
+import {  useState } from "react";
 import { InboxOutlined } from "@ant-design/icons";
 
 export default function WorkModal({
@@ -17,6 +17,15 @@ export default function WorkModal({
   const [subSelection, setSubSelection] = useState(null);
   const [childSelection, setChildSelection] = useState(null);
 
+  // useEffect(() => {
+  //   if (!isModalOpen) {
+  //     setMainSelection(null);
+  //     setSubSelection(null);
+  //     setChildSelection(null);
+  //     formRef?.current?.resetFields();
+  //   }
+  // }, [isModalOpen]);
+
   const handleMainChange = (e) => {
     setMainSelection(e.target.value);
     setSubSelection(null);
@@ -31,6 +40,7 @@ export default function WorkModal({
   const handleChildChange = (e) => {
     setChildSelection(e.target.value);
   };
+  
 
   return (
     <Modal
