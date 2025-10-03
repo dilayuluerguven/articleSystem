@@ -1,159 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import axios from "axios";
 import WorkModal from "../utils/WorkModal";
 import CategoryItem from "../utils/CategoryItem";
 
-const initialCategories = [
-  {
-    code: "A",
-    description: "A. Uluslararası Çalışmalar",
-    subcategories: [
-      {
-        code: "A-1",
-        description:
-          "Q1 veya Q2 çeyreklik dilimi kategorisine giren dergilerde yer alan makaleler ve diğer çalışmalar.",
-        subcategories: [
-          {
-            code: "A-1a",
-            description:
-              "Q1 kategorisindeki dergilerde yayımlanmış özgün araştırma makalesi",
-            subcategories: [],
-          },
-          {
-            code: "A-1b",
-            description:
-              "Q2 kategorisindeki dergilerde yayımlanmış özgün araştırma makalesi",
-            subcategories: [],
-          },
-          {
-            code: "A-1c",
-            description: "Q1/Q2 kategorisindeki dergilerde yayımlanmış Derleme",
-            subcategories: [],
-          },
-          {
-            code: "A-1d",
-            description:
-              "Q1/Q2 kategorisindeki dergilerde yayımlanmış ‘Short Communication= Brief Communication’",
-            subcategories: [],
-          },
-          {
-            code: "A-1e",
-            description:
-              "Q1/Q2 kategorisindeki dergilerde yayımlanmış kongreye ait (tam metin / bildiri özeti) makale",
-            subcategories: [],
-          },
-          {
-            code: "A-1f",
-            description:
-              "Q1/Q2 kategorisindeki dergilerde yayımlanmış Vaka-Vaka Serisi Raporu, Teknik Not, Editöre Mektup, Kitap veya Makale Tahlili, Tartışma ",
-            subcategories: [],
-          },
-          {
-            code: "A-1g",
-            description:
-              "Mimarlık, Planlama ve Tasarım Temel Alanı / Sosyal, Beşeri ve İdari Bilimler Temel Alanı için; Alan indeksleri kapsamındaki dergilerde yayımlanmış makale",
-            subcategories: [],
-          },
-        ],
-      },
-      {
-        code: "A-2",
-        description:
-          "Q3 veya Q4 çeyreklik dilimi kategorisine giren dergilerde yer alan makaleler ve diğer çalışmalar",
-        subcategories: [
-          {
-            code: "A-2a",
-            description:
-              "Q3 kategorisindeki dergilerde yayımlanmış özgün araştırma makalesi",
-            subcategories: [],
-          },
-          {
-            code: "A-2b",
-            description:
-              "Q4 kategorisindeki dergilerde yayımlanmış özgün araştırma makalesi",
-            subcategories: [],
-          },
-          {
-            code: "A-2c",
-            description:
-              "Q3 / Q4 kategorisindeki dergilerde yayımlanmış Derleme",
-            subcategories: [],
-          },
-          {
-            code: "A-2d",
-            description:
-              "Q3 / Q4 kategorisindeki dergilerde yayımlanmış ‘Short Communication= Brief Communication’",
-            subcategories: [],
-          },
-          {
-            code: "A-2e",
-            description:
-              "Q3/Q4 kategorisindeki dergilerde yayımlanmış kongrede basılmış (tam metin / bildiri özeti) makale",
-            subcategories: [],
-          },
-          {
-            code: "A-2f",
-            description:
-              "Q3 / Q4 kategorisindeki dergilerde yayımlanmış Vaka-Vaka Serisi Raporu, Teknik Not, Editöre Mektup, Kitap veya Makale Tahlili, Tartışma ",
-            subcategories: [],
-          },
-        ],
-      },
-      {
-        code: "A-3",
-        description:
-          "Emerging Sources Citation Index (ESCI) kapsamındaki makaleler ve diğer çalışmalar",
-        subcategories: [
-          {
-            code: "A-3a",
-            description:
-              "ESCI kategorisindeki dergilerde yayımlanmış özgün araştırma makalesi ",
-            subcategories: [],
-          },
-          {
-            code: "A-3b",
-            description:
-              "ESCI kategorisindeki dergilerde yayımlanmış Derleme, Short Communication=Brief Communication, Vaka/Vaka Serisi Raporu, Teknik Not, Editöre Mektup, Kitap veya Makale Tahlili, Tartışma, Kongreye ait tam metin bildiri  ",
-            subcategories: [],
-          },
-        ],
-      },
-      {
-        code: "A-4",
-        description:
-          "Diğer uluslararası alan indeksleri kapsamındaki makaleler ve diğer çalışmalar ",
-        subcategories: [
-          {
-            code: "A-4a",
-            description:
-              "ESCI kategorisindeki dergilerde yayımlanmış özgün araştırma makalesi ",
-            subcategories: [],
-          },
-          {
-            code: "A-4b",
-            description:
-              "ESCI kategorisindeki dergilerde yayımlanmış Derleme, Short Communication=Brief Communication, Vaka/Vaka Serisi Raporu, Teknik Not, Editöre Mektup, Kitap veya Makale Tahlili, Tartışma, Kongreye ait tam metin bildiri  ",
-            subcategories: [],
-          },
-        ],
-      },
-      {
-        code: "A-5",
-        description:
-          "Diğer uluslararası alan indeksleri kategorisine girmeyen uluslararası dergiler ile Mesleki ve Kurumsal dergilerde yayımlanan makaleler",
-        subcategories: [],
-      },
-      {
-        code: "A-6",
-        description:
-          "Başvurulan bilim alanında Uluslararası özgün tasarım çalışmaları ve sanat eserleri ile jürili olarak fuar, festival, çalıştay (workshop), gösteri, bienal, trienal gibi etkinliğe bir çalışma ile katılmak",
-        subcategories: [],
-      },
-    ],
-  },
-];
-
 export default function A_part() {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedWork, setSelectedWork] = useState(null);
@@ -161,6 +12,12 @@ export default function A_part() {
   const [fileName, setFileName] = useState("");
   const formRef = useRef(null);
   const allowedCategoryCodes = ["A-1", "A-2", "A-3", "A-4", "A-5", "A-6"];
+
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/categories")
+      .then(res => setCategories(res.data))
+      .catch(err => console.error("Kategori çekilemedi", err));
+  }, []);
 
   const addWork = (parentCategory) => {
     setSelectedCategory(parentCategory);
@@ -248,7 +105,7 @@ export default function A_part() {
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center select-none">
-        A.Uluslararası Çalışmalar
+        A. Uluslararası Çalışmalar
       </h1>
       <div>
         {categories.map((category) => (

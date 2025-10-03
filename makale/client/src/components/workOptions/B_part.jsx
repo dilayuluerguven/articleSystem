@@ -1,44 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import CategoryItem from "../utils/CategoryItem";
 import WorkModal from "../utils/WorkModal";
 
-const initialCategories = [
-  {
-    code: "B",
-    description: "B. Uluslararası Bildiriler",
-    subcategories: [
-      {
-        code: "B-1",
-        description:
-          "Tam metinli bildiriler/Davetli konuşmacı bildirileri (Sözlü sunulan ve tam metni yayınlananlar)",
-        subcategories: [
-          {
-            code: "B-1.1",
-            description:
-              "Özet (Abstract) (Yabancı dilde sözlü sunulan ve özeti yayınlananlar)",
-            subcategories: [],
-          },
-        ],
-      },
-      {
-        code: "B-2",
-        description:
-          "Yabancı dilde poster olarak sunulan ve tam metin / poster olarak yayınlananlar",
-        subcategories: [
-          {
-            code: "B-2.1",
-            description:
-              "Yabancı dilde poster olarak sunulan ve özeti yayınlananlar",
-            subcategories: [],
-          },
-        ],
-      },
-    ],
-  },
-];
-
 export default function B_part() {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedWork, setSelectedWork] = useState(null);
@@ -46,6 +11,16 @@ export default function B_part() {
   const [fileName, setFileName] = useState("");
   const formRef = useRef(null);
   const allowedCategoryCodes = ["B-1", "B-2"];
+
+  // ✅ veritabanından kategorileri çek
+  useEffect(() => {
+  fetch("http://localhost:5000/api/categories")
+    .then(res => res.json())
+    .then(data => {
+      const aCategory = data.find(c => c.kod === "B");
+      setCategories(aCategory ? [aCategory] : []);
+    });
+}, []);
 
   const addWork = (parentCategory) => {
     setSelectedCategory(parentCategory);
@@ -65,10 +40,7 @@ export default function B_part() {
 
   const handleOk = async () => {
     try {
-      // validasyon kısmı
       await formRef.current.validateFields();
-
-      // Validasyon tamamsa ekle
       setIsModalOpen(false);
 
       setCategories((prevCategories) => {
@@ -76,7 +48,7 @@ export default function B_part() {
 
         const findAndAddOrUpdateWork = (categories) => {
           for (let cat of categories) {
-            if (cat.code === selectedCategory.code) {
+            if (cat.id === selectedCategory.id) { 
               const nextNumber = (cat.works ? cat.works.length : 0) + 1;
               const newWorkCode = `${cat.code}:${nextNumber}`;
 
@@ -111,29 +83,15 @@ export default function B_part() {
   };
 
   const handleCancel = () => {
-    formRef.current.resetFields(); // Formu sıfırlayın
-    setIsModalOpen(false); // Modal'ı kapatın
+    formRef.current.resetFields();
+    setIsModalOpen(false);
   };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFileName(selectedFile.name);
-    }
+    if (selectedFile) setFileName(selectedFile.name);
   };
 
-  const onFinish = (values) => {
-    console.log("Success:", values);
-  };
-
-  const onFinishFailed = (errorInfo) => {
-    console.log("Failed:", errorInfo);
-  };
-  // useEffect(() => {
-  //   if (isModalOpen) {
-  //     formRef.current.resetFields();
-  //   }
-  // }, [isModalOpen]);
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center select-none">
@@ -142,7 +100,7 @@ export default function B_part() {
       <div>
         {categories.map((category) => (
           <CategoryItem
-            key={category.code}
+            key={category.id} // artık id kullanıyoruz
             category={category}
             onAddWork={addWork}
             onEditWork={editWork}
@@ -159,8 +117,6 @@ export default function B_part() {
         selectedCategory={selectedCategory}
         count={count}
         handleFileChange={handleFileChange}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
       />
     </div>
   );

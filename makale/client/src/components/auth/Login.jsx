@@ -16,8 +16,7 @@ const Login = () => {
 
       const data = await res.json();
 
-      if (res.status !== 200) {
-        // Backend’den dönen error mesajını göster
+      if (!res.ok) {
         message.error(data.error || "Giriş başarısız!");
         return;
       }
@@ -25,12 +24,17 @@ const Login = () => {
       message.success("Giriş başarılı!");
       console.log("User:", data.user);
 
-      // Token varsa localStorage'a kaydet
       if (data.token) {
         localStorage.setItem("token", data.token);
+
+        if (data.user?.username) {
+          localStorage.setItem("username", data.user.username);
+        } else if (data.user?.email) {
+          localStorage.setItem("username", data.user.email);
+        }
       }
 
-      navigate("/"); // başarılı giriş sonrası anasayfaya yönlendirme
+      navigate("/");
     } catch (err) {
       console.error("Login error:", err);
       message.error("Sunucu hatası!");
@@ -41,13 +45,23 @@ const Login = () => {
     <div className="h-screen">
       <div className="flex justify-between h-full">
         <div className="xl:px-20 px-10 w-full flex flex-col h-full justify-center relative">
-          <h1 className="text-center text-5xl font-bold mb-2">LOGO</h1>
+          <h1 className="text-center text-5xl font-bold mb-2 ">
+            <img
+              src="/images/Konya_Teknik_Üniversitesi_logo.png"
+              alt="Konya Teknik Üniversitesi Logosu"
+              className="mt-20 h-10 w-auto transition-transform duration-300 group-hover:scale-110"
+            />
+            Makale Sistemi
+          </h1>
 
           <Form layout="vertical" onFinish={onFinish}>
             <Form.Item
               label="E-Mail:"
               name="email"
-              rules={[{ required: true, message: "E-Mail Boş Bırakılamaz!" }]}
+              rules={[
+                { required: true, message: "E-Mail Boş Bırakılamaz!" },
+                { type: "email", message: "Geçerli bir e-mail girin!" },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -93,23 +107,23 @@ const Login = () => {
               <Carousel className="!h-full px-6" autoplay>
                 <AuthCarousel
                   img="/images/responsive.svg"
-                  title="Responsive"
-                  desc="Tüm Cihaz Boyutlarıyla Uyumluluk"
+                  title="Akademik Uyum"
+                  desc="Tüm Akademik Platformlarda Kullanılabilir"
                 />
                 <AuthCarousel
                   img="/images/statistic.svg"
-                  title="İstatistikler"
-                  desc="Geniş Tutulan İstatistikler"
+                  title="Puanlama Sistemi"
+                  desc="Makale ve Aktivite Puanlarını Takip Edin"
                 />
                 <AuthCarousel
                   img="/images/customer.svg"
-                  title="Müşteri Memnuniyeti"
-                  desc="Deneyim Sonunda Üründen Memnun Müşteriler"
+                  title="Akademisyen Memnuniyeti"
+                  desc="Şeffaf ve Hızlı Değerlendirme Süreci"
                 />
                 <AuthCarousel
                   img="/images/admin.svg"
-                  title="Yönetici Paneli"
-                  desc="Tek Yerden Yönetim"
+                  title="Yönetim Paneli"
+                  desc="Makaleleri ve Puanlamaları Tek Noktadan Yönetin"
                 />
               </Carousel>
             </div>
