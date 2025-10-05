@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import CategoryItem from "../utils/CategoryItem";
 import WorkModal from "../utils/WorkModal";
 
 export default function B_part() {
@@ -9,16 +8,19 @@ export default function B_part() {
   const [selectedWork, setSelectedWork] = useState(null);
   const [count, setCount] = useState(1);
   const [fileName, setFileName] = useState("");
+  const [expanded, setExpanded] = useState({});
   const formRef = useRef(null);
-  const allowedCategoryCodes = ["B-1", "B-2"];
 
-  // ✅ veritabanından kategorileri çek
+  // ✅ B kategorisini backend'den çek
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/categories");
         const data = await res.json();
-        setCategories(data);
+
+        // Sadece B kategorisini al
+        const bCategory = data.find((cat) => cat.kod === "B");
+        setCategories(bCategory ? [bCategory] : []);
       } catch (err) {
         console.error("Kategori çekme hatası:", err);
       }
@@ -26,14 +28,16 @@ export default function B_part() {
     fetchCategories();
   }, []);
 
-  const addWork = (parentCategory) => {
-    setSelectedCategory(parentCategory);
+  // Çalışma ekleme modalını aç
+  const addWork = (category) => {
+    setSelectedCategory(category);
     setSelectedWork(null);
     setIsModalOpen(true);
     setCount(1);
     setFileName("");
   };
 
+  // Çalışma düzenleme modalını aç
   const editWork = (work, category) => {
     setSelectedCategory(category);
     setSelectedWork(work);
@@ -42,20 +46,18 @@ export default function B_part() {
     setFileName(work.fileName);
   };
 
+  // Modal onay
   const handleOk = async () => {
     try {
       await formRef.current.validateFields();
       setIsModalOpen(false);
 
-      setCategories((prevCategories) => {
-        const newCategories = JSON.parse(JSON.stringify(prevCategories));
+      setCategories((prev) => {
+        const newCategories = JSON.parse(JSON.stringify(prev));
 
-        const findAndAddOrUpdateWork = (categories) => {
-          for (let cat of categories) {
-            if (cat.id === selectedCategory.id) { 
-              const nextNumber = (cat.works ? cat.works.length : 0) + 1;
-              const newWorkCode = `${cat.code}:${nextNumber}`;
-
+        const addOrUpdate = (cats) => {
+          for (let cat of cats) {
+            if (cat.id === selectedCategory.id) {
               if (!cat.works) cat.works = [];
 
               if (selectedWork) {
@@ -63,6 +65,8 @@ export default function B_part() {
                 selectedWork.count = count;
                 selectedWork.fileName = fileName;
               } else {
+                const nextNumber = cat.works.length + 1;
+                const newWorkCode = `${cat.kod}:${nextNumber}`;
                 cat.works.push({
                   code: newWorkCode,
                   description: `Çalışma-${nextNumber}`,
@@ -70,19 +74,18 @@ export default function B_part() {
                   fileName: fileName,
                 });
               }
-              return;
+              return true;
             }
-            if (cat.subcategories) {
-              findAndAddOrUpdateWork(cat.subcategories);
-            }
+            if (cat.subcategories && addOrUpdate(cat.subcategories)) return true;
           }
+          return false;
         };
 
-        findAndAddOrUpdateWork(newCategories);
+        addOrUpdate(newCategories);
         return newCategories;
       });
-    } catch (error) {
-      console.log("Validation failed:", error);
+    } catch (err) {
+      console.log("Validation failed:", err);
     }
   };
 
@@ -96,23 +99,70 @@ export default function B_part() {
     if (selectedFile) setFileName(selectedFile.name);
   };
 
+  // Alt kategorileri aç/kapa
+  const toggleExpand = (id) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  // ✅ Recursive hiyerarşik kategori render
+  const renderCategories = (cats) => {
+    return cats.map((cat) => (
+      <div key={cat.id} className="mb-2 ml-2">
+        <div className="flex items-center justify-between font-semibold">
+          <div className="flex items-center gap-2">
+            {cat.subcategories && cat.subcategories.length > 0 && (
+              <button
+                className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center"
+                onClick={() => toggleExpand(cat.id)}
+              >
+                {expanded[cat.id] ? "-" : "+"}
+              </button>
+            )}
+            <span>{cat.kod} {cat.tanim}</span>
+          </div>
+
+          <button
+            className="bg-gray-200 px-2 py-1 rounded text-sm hover:bg-gray-300"
+            onClick={() => addWork(cat)}
+          >
+            + Çalışma Ekle
+          </button>
+        </div>
+
+        {expanded[cat.id] && (
+          <div className="ml-6 mt-2">
+            {/* Bu kategoriye ait çalışmalar */}
+            {cat.works && cat.works.map((work) => (
+              <div
+                key={work.code}
+                className="ml-4 mt-1 flex justify-between items-center text-sm"
+              >
+                <span>{work.description}</span>
+                <button
+                  className="text-green-600 hover:underline"
+                  onClick={() => editWork(work, cat)}
+                >
+                  Düzenle
+                </button>
+              </div>
+            ))}
+
+            {/* Alt kategorileri recursive render et */}
+            {cat.subcategories && renderCategories(cat.subcategories)}
+          </div>
+        )}
+      </div>
+    ));
+  };
+
   return (
     <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
       <h1 className="text-xl font-semibold mb-6 text-center select-none">
         B. Uluslararası Bildiriler
       </h1>
-      <div>
-        {categories.map((category) => (
-          <CategoryItem
-            key={category.id} // artık id kullanıyoruz
-            category={category}
-            onAddWork={addWork}
-            onEditWork={editWork}
-            setCategories={setCategories}
-            allowedCategoryCodes={allowedCategoryCodes}
-          />
-        ))}
-      </div>
+
+      {renderCategories(categories)}
+
       <WorkModal
         isModalOpen={isModalOpen}
         handleOk={handleOk}
