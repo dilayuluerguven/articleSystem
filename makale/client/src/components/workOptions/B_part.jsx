@@ -14,13 +14,17 @@ export default function B_part() {
 
   // ✅ veritabanından kategorileri çek
   useEffect(() => {
-  fetch("http://localhost:5000/api/categories")
-    .then(res => res.json())
-    .then(data => {
-      const aCategory = data.find(c => c.kod === "B");
-      setCategories(aCategory ? [aCategory] : []);
-    });
-}, []);
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/categories");
+        const data = await res.json();
+        setCategories(data);
+      } catch (err) {
+        console.error("Kategori çekme hatası:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const addWork = (parentCategory) => {
     setSelectedCategory(parentCategory);

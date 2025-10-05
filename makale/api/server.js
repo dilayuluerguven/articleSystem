@@ -99,8 +99,7 @@ app.post("/login", (req, res) => {
   );
 });
 
-// Modüler kategoriler route
-const categoriesRouter = require("./routes/categories")(db); // db’yi route’a geçiyoruz
+const categoriesRouter = require("./routes/categories")(db); 
 app.use("/api", categoriesRouter);
 
 app.listen(port, () => {
