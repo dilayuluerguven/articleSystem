@@ -1,5 +1,5 @@
 import { Modal, Form, Input, Radio, Upload } from "antd";
-import {  useState } from "react";
+import { useState } from "react";
 import { InboxOutlined } from "@ant-design/icons";
 
 export default function WorkModal({
@@ -17,15 +17,6 @@ export default function WorkModal({
   const [subSelection, setSubSelection] = useState(null);
   const [childSelection, setChildSelection] = useState(null);
 
-  // useEffect(() => {
-  //   if (!isModalOpen) {
-  //     setMainSelection(null);
-  //     setSubSelection(null);
-  //     setChildSelection(null);
-  //     formRef?.current?.resetFields();
-  //   }
-  // }, [isModalOpen]);
-
   const handleMainChange = (e) => {
     setMainSelection(e.target.value);
     setSubSelection(null);
@@ -40,13 +31,14 @@ export default function WorkModal({
   const handleChildChange = (e) => {
     setChildSelection(e.target.value);
   };
-  
 
   return (
     <Modal
       title={selectedCategory ? selectedCategory.description : ""}
       open={isModalOpen}
-      onOk={handleOk}
+      onOk={() =>
+        handleOk({ mainSelection, subSelection, childSelection })
+      }
       onCancel={handleCancel}
       closable={false}
     >
@@ -57,7 +49,6 @@ export default function WorkModal({
           labelCol={{ span: 8 }}
           wrapperCol={{ span: 16 }}
           style={{ maxWidth: 600 }}
-          initialValues={{ remember: true }}
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
           autoComplete="off"
@@ -106,7 +97,11 @@ export default function WorkModal({
             </Upload.Dragger>
           </Form.Item>
 
-          <Form.Item label="Ana Başlıklar">
+          <Form.Item
+            label="Ana Başlıklar"
+            name="mainSelection"
+            rules={[{ required: true, message: "Lütfen bir ana başlık seçiniz!" }]}
+          >
             <Radio.Group onChange={handleMainChange} value={mainSelection}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <Radio value="baslicaEser">BAŞLICA ESER</Radio>
@@ -118,30 +113,23 @@ export default function WorkModal({
           </Form.Item>
 
           {mainSelection === "baslicaEser" && (
-            <Form.Item label="Başlıca Eserler">
+            <Form.Item
+              label="Başlıca Eserler"
+              name="subSelection"
+              rules={[{ required: true, message: "Lütfen bir alt başlık seçiniz!" }]}
+            >
               <Radio.Group onChange={handleSubChange} value={subSelection}>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    paddingLeft: 20,
-                  }}
-                >
+                <div style={{ display: "flex", flexDirection: "column", paddingLeft: 20 }}>
                   <Radio value="tekYazarli">Tek Yazarlı Makale</Radio>
-
                   <Radio value="ogrenciyle">
-                    Danışmanlığını yürüttüğü lisansüstü öğrenciler ile üretilen
-                    makaleler
+                    Danışmanlığını yürüttüğü lisansüstü öğrenciler ile üretilen makaleler
                   </Radio>
-
                   <Radio value="adayTez">
                     Adayın Kendi Lisansüstü Tezlerinden Ürettiği Makaleler
                   </Radio>
-
                   <Radio value="projedenMakale">
                     Yürütücülüğünü yaptığı projelerden üretilmiş makale
                   </Radio>
-
                   <Radio value="kitap">Kitap Yazarlığı</Radio>
                 </div>
               </Radio.Group>
@@ -149,23 +137,29 @@ export default function WorkModal({
           )}
 
           {subSelection === "ogrenciyle" && (
-            <Form.Item label="Makale Türü" style={{ paddingLeft: 40 }}>
+            <Form.Item
+              label="Makale Türü"
+              name="childSelection"
+              rules={[{ required: true, message: "Lütfen makale türünü seçiniz!" }]}
+              style={{ paddingLeft: 40 }}
+            >
               <Radio.Group onChange={handleChildChange} value={childSelection}>
                 <Radio value="tezden">Tezden</Radio>
-                <Radio value="tezHarici">
-                  Tez Harici (Öğrencilik devam ederken)
-                </Radio>
+                <Radio value="tezHarici">Tez Harici (Öğrencilik devam ederken)</Radio>
               </Radio.Group>
             </Form.Item>
           )}
 
           {subSelection === "adayTez" && (
-            <Form.Item label="Tez Türü" style={{ paddingLeft: 40 }}>
+            <Form.Item
+              label="Tez Türü"
+              name="childSelection"
+              rules={[{ required: true, message: "Lütfen tez türünü seçiniz!" }]}
+              style={{ paddingLeft: 40 }}
+            >
               <Radio.Group onChange={handleChildChange} value={childSelection}>
                 <Radio value="yuksekLisans">Yüksek Lisans Tezinden</Radio>
-                <Radio value="doktora">
-                  Doktora/Sanatta Yeterlilik Tezinden
-                </Radio>
+                <Radio value="doktora">Doktora/Sanatta Yeterlilik Tezinden</Radio>
               </Radio.Group>
             </Form.Item>
           )}

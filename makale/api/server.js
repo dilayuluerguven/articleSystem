@@ -102,6 +102,9 @@ app.post("/login", (req, res) => {
 const categoriesRouter = require("./routes/categories")(db); 
 app.use("/api", categoriesRouter);
 
+const basvuruRoutes = require("./routes/basvuru")(db);
+app.use("/api/basvuru", basvuruRoutes);
+
 app.listen(port, () => {
   console.log(`Backend running on http://localhost:${port}`);
 });
