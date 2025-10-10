@@ -105,6 +105,10 @@ app.use("/api", categoriesRouter);
 const basvuruRoutes = require("./routes/basvuru")(db);
 app.use("/api/basvuru", basvuruRoutes);
 
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
 app.listen(port, () => {
   console.log(`Backend running on http://localhost:${port}`);
 });

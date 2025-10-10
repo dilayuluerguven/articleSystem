@@ -6,19 +6,15 @@ export default function B_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedWork, setSelectedWork] = useState(null);
-  const [count, setCount] = useState(1);
   const [fileName, setFileName] = useState("");
   const [expanded, setExpanded] = useState({});
   const formRef = useRef(null);
 
-  // ✅ B kategorisini backend'den çek
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch("http://localhost:5000/api/categories");
         const data = await res.json();
-
-        // Sadece B kategorisini al
         const bCategory = data.find((cat) => cat.kod === "B");
         setCategories(bCategory ? [bCategory] : []);
       } catch (err) {
@@ -28,64 +24,72 @@ export default function B_part() {
     fetchCategories();
   }, []);
 
-  // Çalışma ekleme modalını aç
   const addWork = (category) => {
     setSelectedCategory(category);
     setSelectedWork(null);
     setIsModalOpen(true);
-    setCount(1);
-    setFileName("");
   };
 
-  // Çalışma düzenleme modalını aç
   const editWork = (work, category) => {
     setSelectedCategory(category);
     setSelectedWork(work);
     setIsModalOpen(true);
-    setCount(work.count);
-    setFileName(work.fileName);
   };
 
-  // Modal onay
-  const handleOk = async () => {
+  // Aktivite yolunu oluştur
+  const getActivityPath = (category, subSelection, childSelection) => {
+    const ust_aktivite = category.kod;
+    let alt_aktivite = "";
+    let aktivite = "";
+
+    if (subSelection && category.subcategories) {
+      const subCat = category.subcategories.find((sc) => sc.kod === subSelection);
+      if (subCat) alt_aktivite = `${category.kod}-${subCat.kod}`;
+    }
+
+    if (childSelection) {
+      aktivite = alt_aktivite ? `${alt_aktivite}.${childSelection}` : childSelection;
+    }
+
+    return { ust_aktivite, alt_aktivite, aktivite };
+  };
+
+  const handleOk = async ({ mainSelection, subSelection, childSelection, file, yazarSayisi }) => {
+    if (!file) return alert("Lütfen dosya seçin!");
+
+    const { ust_aktivite, alt_aktivite, aktivite } = getActivityPath(
+      selectedCategory,
+      subSelection,
+      childSelection
+    );
+
+    const formData = new FormData();
+    formData.append("ust_aktivite", ust_aktivite);
+    formData.append("alt_aktivite", alt_aktivite);
+    formData.append("aktivite", aktivite);
+    formData.append("yazar_sayisi", yazarSayisi); 
+    formData.append("main_selection", mainSelection);
+    formData.append("sub_selection", subSelection || "");
+    formData.append("child_selection", childSelection || "");
+    formData.append("file", file);
+
+    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+
     try {
-      await formRef.current.validateFields();
-      setIsModalOpen(false);
-
-      setCategories((prev) => {
-        const newCategories = JSON.parse(JSON.stringify(prev));
-
-        const addOrUpdate = (cats) => {
-          for (let cat of cats) {
-            if (cat.id === selectedCategory.id) {
-              if (!cat.works) cat.works = [];
-
-              if (selectedWork) {
-                selectedWork.description = fileName;
-                selectedWork.count = count;
-                selectedWork.fileName = fileName;
-              } else {
-                const nextNumber = cat.works.length + 1;
-                const newWorkCode = `${cat.kod}:${nextNumber}`;
-                cat.works.push({
-                  code: newWorkCode,
-                  description: `Çalışma-${nextNumber}`,
-                  count: count,
-                  fileName: fileName,
-                });
-              }
-              return true;
-            }
-            if (cat.subcategories && addOrUpdate(cat.subcategories)) return true;
-          }
-          return false;
-        };
-
-        addOrUpdate(newCategories);
-        return newCategories;
+      const res = await fetch("http://localhost:5000/api/basvuru", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "DB Hatası");
+
+      alert(data.message);
+      setIsModalOpen(false);
     } catch (err) {
-      console.log("Validation failed:", err);
+      console.error("Başvuru kaydedilemedi:", err);
+      alert("Başvuru kaydedilemedi: " + err.message);
     }
   };
 
@@ -94,17 +98,10 @@ export default function B_part() {
     setIsModalOpen(false);
   };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) setFileName(selectedFile.name);
-  };
-
-  // Alt kategorileri aç/kapa
   const toggleExpand = (id) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // ✅ Recursive hiyerarşik kategori render
   const renderCategories = (cats) => {
     return cats.map((cat) => (
       <div key={cat.id} className="mb-2 ml-2">
@@ -131,7 +128,6 @@ export default function B_part() {
 
         {expanded[cat.id] && (
           <div className="ml-6 mt-2">
-            {/* Bu kategoriye ait çalışmalar */}
             {cat.works && cat.works.map((work) => (
               <div
                 key={work.code}
@@ -147,7 +143,6 @@ export default function B_part() {
               </div>
             ))}
 
-            {/* Alt kategorileri recursive render et */}
             {cat.subcategories && renderCategories(cat.subcategories)}
           </div>
         )}
@@ -169,8 +164,6 @@ export default function B_part() {
         handleCancel={handleCancel}
         formRef={formRef}
         selectedCategory={selectedCategory}
-        count={count}
-        handleFileChange={handleFileChange}
       />
     </div>
   );

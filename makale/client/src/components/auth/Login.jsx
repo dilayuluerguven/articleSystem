@@ -22,16 +22,11 @@ const Login = () => {
       }
 
       message.success("Giriş başarılı!");
-      console.log("User:", data.user);
 
       if (data.token) {
-        localStorage.setItem("token", data.token);
-
-        if (data.user?.username) {
-          localStorage.setItem("username", data.user.username);
-        } else if (data.user?.email) {
-          localStorage.setItem("username", data.user.email);
-        }
+        const storage = values.remember ? localStorage : sessionStorage;
+        storage.setItem("token", data.token);
+        storage.setItem("username", data.user?.username || data.user?.email);
       }
 
       navigate("/");
@@ -74,6 +69,13 @@ const Login = () => {
               <Input.Password />
             </Form.Item>
 
+            <Form.Item name="remember" valuePropName="checked" initialValue={false}>
+              <div className="flex justify-between items-center">
+                <Checkbox>Beni Hatırla</Checkbox>
+                <Link>Şifrenizi mi unuttunuz?</Link>
+              </div>
+            </Form.Item>
+
             <Form.Item>
               <Button
                 type="primary"
@@ -83,13 +85,6 @@ const Login = () => {
               >
                 Giriş Yap
               </Button>
-            </Form.Item>
-
-            <Form.Item name="remember" valuePropName="checked">
-              <div className="flex justify-between items-center">
-                <Checkbox>Beni Hatırla</Checkbox>
-                <Link>Şifrenizi mi unuttunuz?</Link>
-              </div>
             </Form.Item>
           </Form>
 

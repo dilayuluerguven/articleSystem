@@ -10,23 +10,23 @@ export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUsername = localStorage.getItem("username");
+    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+    const storedUsername =
+      sessionStorage.getItem("username") || localStorage.getItem("username");
+
     setIsLoggedIn(!!token);
     setUsername(storedUsername || "");
 
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleLoginLogout = () => {
     if (isLoggedIn) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("username");
+      sessionStorage.clear();
+      localStorage.clear();
       setIsLoggedIn(false);
       setUsername("");
       navigate("/login");
@@ -38,14 +38,12 @@ export const Header = () => {
   return (
     <div
       className={`border-b bg-black sticky top-0 z-50 transition-all duration-300
-      ${
-        isScrolled
-          ? "border-gray-700 shadow-2xl bg-black/95 backdrop-blur-sm"
-          : "border-gray-800 shadow-lg"
+      ${isScrolled
+        ? "border-gray-700 shadow-2xl bg-black/95 backdrop-blur-sm"
+        : "border-gray-800 shadow-lg"
       }`}
     >
       <header className="py-3 px-6 flex justify-between items-center">
-        {/* Sol Logo ve Başlık */}
         <div
           className="flex items-center group cursor-pointer transition-transform duration-300 hover:scale-105"
           onClick={() => navigate("/")}
@@ -62,7 +60,6 @@ export const Header = () => {
           </span>
         </div>
 
-        {/* Sağ Taraf (Kullanıcı Adı + Login/Logout) */}
         <div className="flex items-center space-x-3">
           {isLoggedIn && username && (
             <span className="text-white font-medium hidden sm:block">
@@ -74,20 +71,13 @@ export const Header = () => {
             type="primary"
             onClick={handleLoginLogout}
             className={`flex items-center space-x-2 font-semibold transition-all duration-300
-              ${
-                isLoggedIn
-                  ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-red-500 shadow-lg hover:shadow-xl"
-                  : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-blue-500 shadow-lg hover:shadow-xl"
+              ${isLoggedIn
+                ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-red-500 shadow-lg hover:shadow-xl"
+                : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-blue-500 shadow-lg hover:shadow-xl"
               }
               h-10 px-6 rounded-full border-0
             `}
-            icon={
-              isLoggedIn ? (
-                <LogoutOutlined className="text-sm" />
-              ) : (
-                <LoginOutlined className="text-sm" />
-              )
-            }
+            icon={isLoggedIn ? <LogoutOutlined className="text-sm" /> : <LoginOutlined className="text-sm" />}
           >
             <span>{isLoggedIn ? "Çıkış Yap" : "Giriş Yap"}</span>
           </Button>

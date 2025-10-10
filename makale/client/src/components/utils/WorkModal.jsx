@@ -1,5 +1,5 @@
 import { Modal, Form, Input, Radio, Upload } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { InboxOutlined } from "@ant-design/icons";
 
 export default function WorkModal({
@@ -8,14 +8,20 @@ export default function WorkModal({
   handleCancel,
   formRef,
   selectedCategory,
-  count,
-  handleFileChange,
-  onFinish,
-  onFinishFailed,
 }) {
   const [mainSelection, setMainSelection] = useState(null);
   const [subSelection, setSubSelection] = useState(null);
   const [childSelection, setChildSelection] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [count, setCount] = useState(1);
+
+  useEffect(() => {
+    setMainSelection(null);
+    setSubSelection(null);
+    setChildSelection(null);
+    setSelectedFile(null);
+    setCount(1);
+  }, [isModalOpen]);
 
   const handleMainChange = (e) => {
     setMainSelection(e.target.value);
@@ -32,13 +38,25 @@ export default function WorkModal({
     setChildSelection(e.target.value);
   };
 
+  const handleModalOk = () => {
+    if (!selectedFile) {
+      alert("Lütfen bir dosya seçin!");
+      return;
+    }
+    handleOk({
+      mainSelection,
+      subSelection,
+      childSelection,
+      file: selectedFile,
+      yazarSayisi: count, 
+    });
+  };
+
   return (
     <Modal
-      title={selectedCategory ? selectedCategory.description : ""}
+      title={selectedCategory ? selectedCategory.tanim : ""}
       open={isModalOpen}
-      onOk={() =>
-        handleOk({ mainSelection, subSelection, childSelection })
-      }
+      onOk={handleModalOk}
       onCancel={handleCancel}
       closable={false}
     >
@@ -49,8 +67,6 @@ export default function WorkModal({
           labelCol={{ span: 8 }}
           wrapperCol={{ span: 16 }}
           style={{ maxWidth: 600 }}
-          onFinish={onFinish}
-          onFinishFailed={onFinishFailed}
           autoComplete="off"
         >
           <Form.Item
@@ -66,23 +82,24 @@ export default function WorkModal({
             name="authorCount"
             rules={[{ required: true, message: "Yazar sayısını giriniz!" }]}
           >
-            <Input type="number" value={count} min="1" />
+            <Input
+              type="number"
+              min="1"
+              value={count}
+              onChange={(e) => setCount(Number(e.target.value))}
+            />
           </Form.Item>
 
-          <Form.Item
-            label="Belge Yükleyin"
-            name="file"
-            valuePropName="fileList"
-            getValueFromEvent={(e) => (Array.isArray(e) ? e : e && e.fileList)}
-            rules={[{ required: true, message: "Lütfen bir belge yükleyin!" }]}
-          >
+          <Form.Item label="Belge Yükleyin">
             <Upload.Dragger
               name="file"
               multiple={false}
               beforeUpload={(file) => {
-                handleFileChange({ target: { files: [file] } });
+                setSelectedFile(file);
                 return false;
               }}
+              fileList={selectedFile ? [selectedFile] : []}
+              onRemove={() => setSelectedFile(null)}
               accept=".pdf,.doc,.docx,.jpg,.png"
             >
               <p className="ant-upload-drag-icon">
@@ -127,9 +144,7 @@ export default function WorkModal({
                   <Radio value="adayTez">
                     Adayın Kendi Lisansüstü Tezlerinden Ürettiği Makaleler
                   </Radio>
-                  <Radio value="projedenMakale">
-                    Yürütücülüğünü yaptığı projelerden üretilmiş makale
-                  </Radio>
+                  <Radio value="projedenMakale">Projeden Üretilmiş Makale</Radio>
                   <Radio value="kitap">Kitap Yazarlığı</Radio>
                 </div>
               </Radio.Group>
