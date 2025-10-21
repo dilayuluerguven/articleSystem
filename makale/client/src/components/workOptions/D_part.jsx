@@ -1,171 +1,239 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import WorkModal from "../utils/WorkModal";
-import CategoryItem from "../utils/CategoryItem";
-
-const initialCategories = [
-  {
-    code: "D",
-    description: "D. Ulusal Çalışmalar",
-    subcategories: [
-      {
-        code: "D-1",
-        description: "Araştırma makalesi (TR Dizinlerde yer alan)",
-        subcategories: [
-          {
-            code: "D-1.1",
-            description:
-              "Derleme, Vaka takdimi, Teknik Not, Kısa Makale, Kitap veya Makale Tahlili, Editöre Mektup, Özet, Tartışma, TR dizinlerinde yeralan dergilerde yayımlanmış kongreye ait tam metin bildiriler",
-            subcategories: [],
-          },
-        ],
-      },
-      {
-        code: "D-2",
-        description: "Araştırma makalesi (hakemli)",
-        subcategories: [
-          {
-            code: "D-2.1",
-            description:
-              "Derleme, Vaka takdimi, Teknik Not, Kısa Makale, Kitap veya Makale Tahlili, Editöre Mektup, Özet, Tartışma",
-            subcategories: [],
-          },
-        ],
-      },
-      {
-        code: "D-3",
-        description: "Mesleki veya Kurumsal dergilerde makale",
-        subcategories: [],
-      },
-      {
-        code: "D-4",
-        description:
-          "Başvurulan bilim alanında Ulusal özgün tasarım çalışmaları ve sanat eserleri ile jürili olarak fuar, festival, çalıştay (workshop), gösteri, bienal, trienal gibi etkinliğe bir çalışma ile katılmak",
-        subcategories: [],
-      },
-    ],
-  },
-];
+import {
+  PlusOutlined,
+  EditOutlined,
+  InfoCircleOutlined,
+  LoadingOutlined,
+  CaretDownOutlined,
+  CaretRightOutlined,
+} from "@ant-design/icons";
 
 export default function D_part() {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedWork, setSelectedWork] = useState(null);
-  const [count, setCount] = useState(1);
-  const [fileName, setFileName] = useState("");
+  const [expanded, setExpanded] = useState({});
   const formRef = useRef(null);
-  const allowedCategoryCodes = ["D-1", "D-2", "D-3", "D-4"];
 
-  const addWork = (parentCategory) => {
-    setSelectedCategory(parentCategory);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/categories");
+        const data = await res.json();
+        const dCategory = data.find((cat) => cat.kod === "D");
+        setCategories(dCategory ? [dCategory] : []);
+      } catch (err) {
+        console.error("Kategori çekme hatası:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const addWork = (category) => {
+    setSelectedCategory(category);
     setSelectedWork(null);
     setIsModalOpen(true);
-    setCount(1);
-    setFileName("");
   };
 
   const editWork = (work, category) => {
     setSelectedCategory(category);
     setSelectedWork(work);
     setIsModalOpen(true);
-    setCount(work.count);
-    setFileName(work.fileName);
   };
 
-  const handleOk = async () => {
+  const getActivityPath = (category, selectedCode) => {
+    let path = [category.kod];
+
+    const findPathRecursive = (subs, code) => {
+      for (let sub of subs || []) {
+        if (sub.kod === code) {
+          path.push(sub.kod);
+          return sub.subcategories || [];
+        }
+        const deeper = findPathRecursive(sub.subcategories, code);
+        if (deeper) return deeper;
+      }
+      return null;
+    };
+
+    findPathRecursive(category.subcategories, selectedCode);
+
+    return {
+      ust_aktivite: path[0] || "",
+      alt_aktivite: path[1] || "",
+      aktivite: path.length > 2 ? path[2] : "",
+    };
+  };
+
+  const handleOk = async ({
+    mainSelection,
+    subSelection,
+    childSelection,
+    file,
+    yazarSayisi,
+  }) => {
+    if (!file) return alert("Lütfen dosya seçin!");
+
+    const { ust_aktivite, alt_aktivite, aktivite } = getActivityPath(
+      selectedCategory,
+      subSelection,
+      childSelection
+    );
+
+    const formData = new FormData();
+    formData.append("ust_aktivite", ust_aktivite);
+    formData.append("alt_aktivite", alt_aktivite);
+    formData.append("aktivite", aktivite);
+    formData.append("yazar_sayisi", yazarSayisi);
+    formData.append("main_selection", mainSelection);
+    formData.append("sub_selection", subSelection || "");
+    formData.append("child_selection", childSelection || "");
+    formData.append("file", file);
+
+    const token =
+      sessionStorage.getItem("token") || localStorage.getItem("token");
+
     try {
-      // validasyon kısmı
-      await formRef.current.validateFields();
-
-      // Validasyon tamamsa ekle
-      setIsModalOpen(false);
-
-      setCategories((prevCategories) => {
-        const newCategories = JSON.parse(JSON.stringify(prevCategories));
-
-        const findAndAddOrUpdateWork = (categories) => {
-          for (let cat of categories) {
-            if (cat.code === selectedCategory.code) {
-              const nextNumber = (cat.works ? cat.works.length : 0) + 1;
-              const newWorkCode = `${cat.code}:${nextNumber}`;
-
-              if (!cat.works) cat.works = [];
-
-              if (selectedWork) {
-                selectedWork.description = fileName;
-                selectedWork.count = count;
-                selectedWork.fileName = fileName;
-              } else {
-                cat.works.push({
-                  code: newWorkCode,
-                  description: `Çalışma-${nextNumber}`,
-                  count: count,
-                  fileName: fileName,
-                });
-              }
-              return;
-            }
-            if (cat.subcategories) {
-              findAndAddOrUpdateWork(cat.subcategories);
-            }
-          }
-        };
-
-        findAndAddOrUpdateWork(newCategories);
-        return newCategories;
+      const res = await fetch("http://localhost:5000/api/basvuru", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
-    } catch (error) {
-      console.log("Validation failed:", error);
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "DB Hatası");
+
+      alert(data.message);
+      setIsModalOpen(false);
+    } catch (err) {
+      alert("Başvuru kaydedilemedi: " + err.message);
     }
   };
 
   const handleCancel = () => {
-    formRef.current.resetFields(); // Formu sıfırlayın
-    setIsModalOpen(false); // Modal'ı kapatın
+    formRef.current.resetFields();
+    setIsModalOpen(false);
   };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFileName(selectedFile.name);
-    }
+  const toggleExpand = (id) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const onFinish = (values) => {
-    console.log("Success:", values);
-  };
+  const renderCategories = (cats) => {
+    const disallowedCodes = ["D"];
+    return cats.map((cat) => (
+      <div key={cat.id} className="mb-4 ml-2">
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="flex items-center gap-3">
+            {cat.subcategories && cat.subcategories.length > 0 && (
+              <button
+                className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                onClick={() => toggleExpand(cat.id)}
+              >
+                {expanded[cat.id] ? (
+                  <CaretDownOutlined />
+                ) : (
+                  <CaretRightOutlined />
+                )}
+              </button>
+            )}
+            <div className="flex flex-col">
+              <span className="font-bold text-gray-800 text-medium">
+                {cat.kod} - {cat.tanim}
+              </span>
+              {cat.subcategories && (
+                <span className="text-xs text-gray-500 mt-1">
+                  {cat.subcategories.length} alt kategori
+                </span>
+              )}
+            </div>
+          </div>
 
-  const onFinishFailed = (errorInfo) => {
-    console.log("Failed:", errorInfo);
+          {!disallowedCodes.includes(cat.kod) && (
+            <button
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+              onClick={() => addWork(cat)}
+            >
+              <PlusOutlined />
+              Çalışma Ekle
+            </button>
+          )}
+        </div>
+
+        {expanded[cat.id] && (
+          <div className="ml-8 mt-3 space-y-2 border-l-2 border-blue-200 pl-4">
+            {cat.works &&
+              cat.works.map((work) => (
+                <div
+                  key={work.code}
+                  className="ml-2 mt-2 flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-700 font-normal">
+                      {work.description}
+                    </span>
+                  </div>
+                  <button
+                    className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-3 py-1 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1"
+                    onClick={() => editWork(work, cat)}
+                  >
+                    <EditOutlined />
+                    Düzenle
+                  </button>
+                </div>
+              ))}
+
+            {cat.subcategories && (
+              <div className="mt-4 space-y-3">
+                {renderCategories(cat.subcategories)}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    ));
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto bg-white rounded-lg shadow-lg m-5">
-      <h1 className="text-xl font-semibold mb-6 text-center select-none">
-        D.Ulusal Çalışmalar
-      </h1>
-      <div>
-        {categories.map((category) => (
-          <CategoryItem
-            key={category.code}
-            category={category}
-            onAddWork={addWork}
-            onEditWork={editWork}
-            setCategories={setCategories}
-            allowedCategoryCodes={allowedCategoryCodes}
-          />
-        ))}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8 text-center">
+            <p className="text-blue-100 text-lg">
+              Kategorileri genişletin, "Çalışma Ekle" butonu ile yeni çalışmalar
+              ekleyin, ve profilinizden görüntüleyin.
+            </p>
+          </div>
+
+          <div className="p-6 sm:p-8">
+            {categories.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <LoadingOutlined
+                    style={{ fontSize: "2rem", color: "#9ca3af" }}
+                  />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Kategoriler yükleniyor...
+                </h3>
+                <p className="text-gray-500">Lütfen bekleyin</p>
+              </div>
+            ) : (
+              <div className="space-y-4">{renderCategories(categories)}</div>
+            )}
+          </div>
+        </div>
       </div>
+
       <WorkModal
         isModalOpen={isModalOpen}
         handleOk={handleOk}
         handleCancel={handleCancel}
         formRef={formRef}
         selectedCategory={selectedCategory}
-        count={count}
-        handleFileChange={handleFileChange}
-        onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
       />
     </div>
   );
