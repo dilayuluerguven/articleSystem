@@ -41,14 +41,19 @@ const Login = ({ setIsAuthenticated }) => {
     <div className="h-screen">
       <div className="flex justify-between h-full">
         <div className="xl:px-20 px-10 w-full flex flex-col h-full justify-center relative">
-          <h1 className="text-center text-5xl font-bold mb-2">
-            <img
-              src="/images/Konya_Teknik_Üniversitesi_logo.png"
-              alt="Konya Teknik Üniversitesi Logosu"
-              className="mt-20 h-10 w-auto transition-transform duration-300 group-hover:scale-110"
-            />
-            Makale Sistemi
-          </h1>
+           <div className="text-center mb-8">
+              <div className="flex justify-center mb-4">
+                <img
+                  src="/images/Konya_Teknik_Üniversitesi_logo.png"
+                  alt="Konya Teknik Üniversitesi Logosu"
+                  className="h-16 w-auto transition-all duration-300 hover:scale-105"
+                />
+              </div>
+              <h1 className="text-4xl font-bold text-gray-800 mb-2">
+                Makale Sistemi
+              </h1>
+              <p className="text-gray-600 text-lg">Akademik Yönetim Platformu</p>
+            </div>
 
           {errorMessage && (
             <div className="mb-4">
@@ -104,7 +109,7 @@ const Login = ({ setIsAuthenticated }) => {
           </div>
         </div>
 
-        <div className="xl:w-4/6 lg:w-3/5 md:w-1/2 md:flex hidden bg-[#6c63ff] h-full">
+        <div className="xl:w-4/6 lg:w-3/5 md:w-1/2 md:flex hidden bg-[#7053e0] h-full">
           <div className="w-full h-full flex items-center">
             <div className="w-full">
               <Carousel className="!h-full px-6" autoplay>
