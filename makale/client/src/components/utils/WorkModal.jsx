@@ -8,20 +8,23 @@ export default function WorkModal({
   handleCancel,
   formRef,
   selectedCategory,
+  initialCount = 1,
 }) {
   const [mainSelection, setMainSelection] = useState(null);
   const [subSelection, setSubSelection] = useState(null);
   const [childSelection, setChildSelection] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [count, setCount] = useState(1);
+  const [count, setCount] = useState(initialCount);
+  const [workDescription, setWorkDescription] = useState("");
 
   useEffect(() => {
+    setCount(initialCount);
     setMainSelection(null);
     setSubSelection(null);
     setChildSelection(null);
     setSelectedFile(null);
-    setCount(1);
-  }, [isModalOpen]);
+    setWorkDescription("");
+  }, [isModalOpen, initialCount]);
 
   const handleMainChange = (e) => {
     setMainSelection(e.target.value);
@@ -43,18 +46,23 @@ export default function WorkModal({
       alert("Lütfen bir dosya seçin!");
       return;
     }
+    if (!workDescription.trim()) {
+      alert("Lütfen künyenizi giriniz!");
+      return;
+    }
     handleOk({
       mainSelection,
       subSelection,
       childSelection,
       file: selectedFile,
-      yazarSayisi: count, 
+      yazarSayisi: count,
+      workDescription, 
     });
   };
 
   return (
     <Modal
-      title={selectedCategory ? selectedCategory.tanim : ""}
+      title={selectedCategory ? selectedCategory.description : ""}
       open={isModalOpen}
       onOk={handleModalOk}
       onCancel={handleCancel}
@@ -74,7 +82,11 @@ export default function WorkModal({
             name="workDescription"
             rules={[{ required: true, message: "Lütfen künyenizi giriniz!" }]}
           >
-            <Input.TextArea placeholder="Künyenizi buraya giriniz" />
+            <Input.TextArea
+              placeholder="Künyenizi buraya giriniz"
+              value={workDescription}
+              onChange={(e) => setWorkDescription(e.target.value)}
+            />
           </Form.Item>
 
           <Form.Item

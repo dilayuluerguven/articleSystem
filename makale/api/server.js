@@ -74,30 +74,47 @@ app.post("/register", async (req, res) => {
 });
 
 // Kullanıcı login
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email ve şifre zorunludur" });
-  }
 
-  db.query(
-    "SELECT * FROM users WHERE email = ?",
-    [email],
-    async (err, results) => {
-      if (err) return res.status(500).json({ error: "Login sırasında hata oluştu" });
-      if (results.length === 0) return res.status(400).json({ error: "Kullanıcı bulunamadı" });
+  if (!email || !password)
+    return res.status(400).json({ error: "Email ve şifre zorunludur" });
+
+  try {
+    db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
+      if (err) {
+        console.error("DB error:", err);
+        return res.status(500).json({ error: "Veritabanı hatası" });
+      }
+
+      if (!results || results.length === 0)
+        return res.status(400).json({ error: "Kullanıcı bulunamadı" });
 
       const user = results[0];
       const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) return res.status(400).json({ error: "Şifre yanlış" });
 
-      const { password: pwd, ...userWithoutPassword } = user;
-      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+      if (!isMatch)
+        return res.status(400).json({ error: "Şifre yanlış" });
 
-      res.json({ message: "Giriş başarılı!", user: userWithoutPassword, token });
-    }
-  );
+      const { password: _, ...userWithoutPassword } = user;
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.status(200).json({
+        message: "Giriş başarılı!",
+        user: userWithoutPassword,
+        token,
+      });
+    });
+  } catch (e) {
+    console.error("Login error:", e);
+    return res.status(500).json({ error: "Sunucu hatası" });
+  }
 });
+
 
 const categoriesRouter = require("./routes/categories")(db); 
 app.use("/api", categoriesRouter);

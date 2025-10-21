@@ -1,10 +1,11 @@
-import { Button, Carousel, Checkbox, Form, Input, message } from "antd";
-import React from "react";
+import { Button, Carousel, Checkbox, Form, Input, message, Alert } from "antd"; 
+import React, { useState } from "react"; 
 import { Link, useNavigate } from "react-router-dom";
 import AuthCarousel from "../../components/auth/AuthCarousel";
 
-const Login = () => {
+const Login = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState(""); 
 
   const onFinish = async (values) => {
     try {
@@ -14,25 +15,25 @@ const Login = () => {
         body: JSON.stringify(values),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         message.error(data.error || "Giriş başarısız!");
         return;
       }
 
-      message.success("Giriş başarılı!");
-
       if (data.token) {
         const storage = values.remember ? localStorage : sessionStorage;
         storage.setItem("token", data.token);
         storage.setItem("username", data.user?.username || data.user?.email);
-      }
 
-      navigate("/");
+        setIsAuthenticated(true);  
+        message.success("Giriş başarılı!");
+        navigate("/home");         
+      }
     } catch (err) {
-      console.error("Login error:", err);
-      message.error("Sunucu hatası!");
+      console.error(err);
+      message.error("Sunucuya bağlanılamadı!");
     }
   };
 
@@ -40,7 +41,7 @@ const Login = () => {
     <div className="h-screen">
       <div className="flex justify-between h-full">
         <div className="xl:px-20 px-10 w-full flex flex-col h-full justify-center relative">
-          <h1 className="text-center text-5xl font-bold mb-2 ">
+          <h1 className="text-center text-5xl font-bold mb-2">
             <img
               src="/images/Konya_Teknik_Üniversitesi_logo.png"
               alt="Konya Teknik Üniversitesi Logosu"
@@ -48,6 +49,18 @@ const Login = () => {
             />
             Makale Sistemi
           </h1>
+
+          {errorMessage && (
+            <div className="mb-4">
+              <Alert
+                message={errorMessage}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setErrorMessage("")}
+              />
+            </div>
+          )}
 
           <Form layout="vertical" onFinish={onFinish}>
             <Form.Item
@@ -77,12 +90,7 @@ const Login = () => {
             </Form.Item>
 
             <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                className="w-full"
-                size="large"
-              >
+              <Button type="primary" htmlType="submit" className="w-full" size="large">
                 Giriş Yap
               </Button>
             </Form.Item>

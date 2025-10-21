@@ -6,7 +6,6 @@ export default function B_part() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedWork, setSelectedWork] = useState(null);
-  const [fileName, setFileName] = useState("");
   const [expanded, setExpanded] = useState({});
   const formRef = useRef(null);
 
@@ -36,23 +35,30 @@ export default function B_part() {
     setIsModalOpen(true);
   };
 
-  // Aktivite yolunu oluştur
-  const getActivityPath = (category, subSelection, childSelection) => {
-    const ust_aktivite = category.kod;
-    let alt_aktivite = "";
-    let aktivite = "";
+const getActivityPath = (category, selectedCode) => {
+  let path = [category.kod];
 
-    if (subSelection && category.subcategories) {
-      const subCat = category.subcategories.find((sc) => sc.kod === subSelection);
-      if (subCat) alt_aktivite = `${category.kod}-${subCat.kod}`;
+  const findPathRecursive = (subs, code) => {
+    for (let sub of subs || []) {
+      if (sub.kod === code) {
+        path.push(sub.kod);
+        return sub.subcategories || [];
+      }
+      const deeper = findPathRecursive(sub.subcategories, code);
+      if (deeper) return deeper;
     }
-
-    if (childSelection) {
-      aktivite = alt_aktivite ? `${alt_aktivite}.${childSelection}` : childSelection;
-    }
-
-    return { ust_aktivite, alt_aktivite, aktivite };
+    return null;
   };
+
+  findPathRecursive(category.subcategories, selectedCode);
+
+  return {
+    ust_aktivite: path[0] || "",
+    alt_aktivite: path[1] || "",
+    aktivite: path.length > 2 ? path[2] : "", 
+  };
+};
+
 
   const handleOk = async ({ mainSelection, subSelection, childSelection, file, yazarSayisi }) => {
     if (!file) return alert("Lütfen dosya seçin!");
@@ -88,7 +94,6 @@ export default function B_part() {
       alert(data.message);
       setIsModalOpen(false);
     } catch (err) {
-      console.error("Başvuru kaydedilemedi:", err);
       alert("Başvuru kaydedilemedi: " + err.message);
     }
   };
