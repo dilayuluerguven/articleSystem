@@ -122,6 +122,10 @@ app.use("/api", categoriesRouter);
 const basvuruRoutes = require("./routes/basvuru")(db);
 app.use("/api/basvuru", basvuruRoutes);
 
+const ustAktiviteRouter = require("./routes/ustAktivite")(db);
+app.use("/api", ustAktiviteRouter);
+
+
 const path = require("path");
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 

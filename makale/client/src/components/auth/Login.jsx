@@ -1,11 +1,11 @@
-import { Button, Carousel, Checkbox, Form, Input, message, Alert } from "antd"; 
-import React, { useState } from "react"; 
+import { Button, Carousel, Checkbox, Form, Input, message, Alert } from "antd"; // 🔹 Alert eklendi
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthCarousel from "../../components/auth/AuthCarousel";
 
-const Login = ({ setIsAuthenticated }) => {
+const Login = () => {
   const navigate = useNavigate();
-  const [errorMessage, setErrorMessage] = useState(""); 
+  const [errorMessage, setErrorMessage] = useState("");
 
   const onFinish = async (values) => {
     try {
@@ -18,21 +18,29 @@ const Login = ({ setIsAuthenticated }) => {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        console.error("Login response error:", data);
+
+        setErrorMessage(data.error || "Giriş başarısız! Lütfen bilgilerinizi kontrol edin.");
+
         message.error(data.error || "Giriş başarısız!");
+
         return;
       }
+
+      setErrorMessage("");
+
+      message.success("Giriş başarılı!");
 
       if (data.token) {
         const storage = values.remember ? localStorage : sessionStorage;
         storage.setItem("token", data.token);
         storage.setItem("username", data.user?.username || data.user?.email);
-
-        setIsAuthenticated(true);  
-        message.success("Giriş başarılı!");
-        navigate("/home");         
       }
+
+      setTimeout(() => navigate("/home"), 300);
     } catch (err) {
-      console.error(err);
+      console.error("Login fetch error:", err);
+      setErrorMessage("Sunucuya bağlanılamadı veya beklenmedik hata oluştu!");
       message.error("Sunucuya bağlanılamadı!");
     }
   };
@@ -54,7 +62,6 @@ const Login = ({ setIsAuthenticated }) => {
               </h1>
               <p className="text-gray-600 text-lg">Akademik Yönetim Platformu</p>
             </div>
-
           {errorMessage && (
             <div className="mb-4">
               <Alert
@@ -109,7 +116,7 @@ const Login = ({ setIsAuthenticated }) => {
           </div>
         </div>
 
-        <div className="xl:w-4/6 lg:w-3/5 md:w-1/2 md:flex hidden bg-[#7053e0] h-full">
+        <div className="xl:w-4/6 lg:w-3/5 md:w-1/2 md:flex hidden bg-[#6c63ff] h-full">
           <div className="w-full h-full flex items-center">
             <div className="w-full">
               <Carousel className="!h-full px-6" autoplay>

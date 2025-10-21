@@ -1,5 +1,11 @@
-import { Button, Avatar } from "antd";
-import { LogoutOutlined, LoginOutlined, UserOutlined, HomeOutlined } from "@ant-design/icons";
+import { Button, Avatar, Tooltip } from "antd";
+import {
+  LogoutOutlined,
+  LoginOutlined,
+  UserOutlined,
+  HomeOutlined,
+  FileTextOutlined,
+} from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 
@@ -10,7 +16,8 @@ export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+    const token =
+      sessionStorage.getItem("token") || localStorage.getItem("token");
     const storedUsername =
       sessionStorage.getItem("username") || localStorage.getItem("username");
 
@@ -35,29 +42,20 @@ export const Header = () => {
     }
   };
 
-  const goToProfile = () => {
-    navigate("/profile");
-  };
-
-  const goToHome = () => {
-    navigate("/");
-  };
+  const goToProfile = () => navigate("/profile");
+  const goToHome = () => navigate("/home");
 
   return (
     <div
-      className={`border-b bg-black sticky top-0 z-50 transition-all duration-300
-      ${isScrolled
-        ? "border-gray-700 shadow-2xl bg-black/95 backdrop-blur-sm"
-        : "border-gray-800 shadow-lg"
+      className={`sticky top-0 z-50 transition-all duration-300 border-b 
+      ${
+        isScrolled
+          ? "bg-black/80 backdrop-blur-md border-gray-700 shadow-2xl"
+          : "bg-black border-gray-800 shadow-lg"
       }`}
     >
       <header className="py-3 px-6 flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <HomeOutlined
-            className="text-white text-2xl cursor-pointer hover:text-blue-400 transition-colors"
-            onClick={goToHome}
-          />
-
+        <div className="flex items-center space-x-4">
           <div
             className="flex items-center group cursor-pointer transition-transform duration-300 hover:scale-105"
             onClick={goToHome}
@@ -75,25 +73,62 @@ export const Header = () => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
-          {isLoggedIn && username && (
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={goToProfile}>
-              <Avatar icon={<UserOutlined />} size="small" />
-              <span className="text-white font-medium hidden sm:block">{username}</span>
-            </div>
+        <div className="flex items-center space-x-4">
+          {isLoggedIn && (
+            <>
+              <Tooltip title="Ana Sayfa">
+                <HomeOutlined
+                  style={{ color: "white" }}
+                  className="text-lg cursor-pointer hover:text-blue-400 transition-colors"
+                  onClick={goToHome}
+                />
+              </Tooltip>
+              <Tooltip title="Başvuruları Görüntüle">
+                <FileTextOutlined
+                  style={{ color: "white" }}
+                  className="text-lg cursor-pointer hover:text-blue-400 transition-colors"
+                  onClick={goToHome}
+                />
+              </Tooltip>
+
+
+              <Tooltip title="Profili Görüntüle">
+                <div
+                  className="flex items-center space-x-2 cursor-pointer group"
+                  onClick={goToProfile}
+                >
+                  <Avatar
+                    icon={<UserOutlined />}
+                  
+                    className="bg-blue-500 group-hover:bg-blue-600 transition-colors text-lg"
+                  />
+                  <span className="text-white font-medium hidden sm:block group-hover:text-blue-400 transition-colors">
+                    {username}
+                  </span>
+                </div>
+              </Tooltip>
+            </>
           )}
 
           <Button
             type="primary"
             onClick={handleLoginLogout}
-            className={`flex items-center space-x-2 font-semibold transition-all duration-300
-              ${isLoggedIn
-                ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 border-red-500 shadow-lg hover:shadow-xl"
-                : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 border-blue-500 shadow-lg hover:shadow-xl"
+            className={`flex items-center space-x-2 font-semibold transition-all duration-300 
+              backdrop-blur-md border-0 shadow-lg hover:shadow-xl 
+              ${
+                isLoggedIn
+                  ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                  : "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
               }
-              h-10 px-6 rounded-full border-0
+              h-10 px-6 rounded-full
             `}
-            icon={isLoggedIn ? <LogoutOutlined className="text-sm" /> : <LoginOutlined className="text-sm" />}
+            icon={
+              isLoggedIn ? (
+                <LogoutOutlined className="text-sm" />
+              ) : (
+                <LoginOutlined className="text-sm" />
+              )
+            }
           >
             <span>{isLoggedIn ? "Çıkış Yap" : "Giriş Yap"}</span>
           </Button>

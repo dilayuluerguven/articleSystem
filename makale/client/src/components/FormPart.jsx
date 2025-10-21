@@ -88,14 +88,13 @@ const FormPart = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Form Seçimi Bölümü */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+      <div className="max-w-7xl mx-auto space-y-8 ">
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center">
           <p className="text-2xl font-bold text-gray-800 text-center select-none mb-6">
             Otomatik doldurmak istediğiniz Form Türünü seçiniz.
           </p>
           <Select
-            className="w-full max-w-md mx-auto"
+            className="w-full max-w-md mx-auto  "
             showSearch
             placeholder="Form Seçiniz"
             optionFilterProp="children"
@@ -116,11 +115,11 @@ const FormPart = () => {
         </div>
 
         {/* Bilgi Kutucuğu */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-2xl shadow-lg text-center select-none">
+        <div className="bg-gradient-to-r from-green-300 to-green-400 text-white p-6 rounded-2xl shadow-lg text-center select-none">
           <p className="text-xl font-semibold mb-3">
             Çalışmanızın kod numarasını seçmek için kutucuğu işaretleyebilirsiniz
           </p>
-          <p className="text-blue-100 text-sm opacity-90">
+          <p className="text-amber-50 text-sm opacity-90">
             İlgili kutucuğun alt seçimlerine eklemek istediğiniz belge türünü
             seçerek ilerleyiniz.
           </p>
@@ -158,7 +157,7 @@ const FormPart = () => {
                   className="w-full"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-bold text-sm">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-green-600 rounded-lg flex items-center justify-center font-bold text-sm">
                       {item.key}
                     </div>
                     <span className="text-gray-700 text-sm leading-tight flex-1">
