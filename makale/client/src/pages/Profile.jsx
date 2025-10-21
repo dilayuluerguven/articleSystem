@@ -30,9 +30,6 @@ const Profile = () => {
       const res = await axios.get("http://localhost:5000/api/basvuru", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      console.log(res.data);
-
       setApplications(numberApplications(res.data));
     } catch (err) {
       console.error(err);
@@ -67,6 +64,51 @@ const Profile = () => {
     } catch (err) {
       console.error("Başvuru silinemedi:", err);
       message.error("Başvuru silinemedi. Tekrar deneyin.");
+    }
+  };
+
+  //  uygun önizleme gösteren fonksiyonum
+  const renderFilePreview = (fileName) => {
+    if (!fileName) return null;
+    const fileUrl = `http://localhost:5000/uploads/${fileName}`;
+    const isImage = /\.(jpg|jpeg|png|gif)$/i.test(fileName);
+    const isPDF = /\.pdf$/i.test(fileName);
+
+    if (isImage) {
+      return (
+        <a
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block"
+        >
+          <img
+            src={fileUrl}
+            alt={fileName}
+            className="w-full h-48 object-cover rounded-lg border border-gray-200 hover:scale-[1.02] transition-transform"
+          />
+        </a>
+      );
+    } else if (isPDF) {
+      return (
+        <iframe
+          src={fileUrl}
+          title={fileName}
+          className="w-full h-56 border rounded-lg"
+        />
+      );
+    } else {
+      return (
+        <a
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200"
+        >
+          <span>📎</span>
+          {fileName}
+        </a>
+      );
     }
   };
 
@@ -151,8 +193,10 @@ const Profile = () => {
                       },
                     }}
                   >
-                    
+                    {/* önizleme  */}
                     <div className="space-y-3">
+                      {item.eser && renderFilePreview(item.eser)}
+
                       {item.category_description && (
                         <div className="flex flex-col">
                           <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
@@ -161,23 +205,6 @@ const Profile = () => {
                           <Text className="text-gray-700 text-sm leading-relaxed">
                             {item.category_description}
                           </Text>
-                        </div>
-                      )}
-
-                      {item.eser && (
-                        <div className="flex flex-col">
-                          <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                            Eser
-                          </Text>
-                          <a
-                            href={`http://localhost:5000/uploads/${item.eser}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200"
-                          >
-                            <span>📎</span>
-                            {item.eser}
-                          </a>
                         </div>
                       )}
 
