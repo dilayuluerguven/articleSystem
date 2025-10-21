@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Card, List, Spin, Typography, message, Button, Popconfirm } from "antd";
+import {
+  Card,
+  List,
+  Spin,
+  Typography,
+  message,
+  Button,
+  Popconfirm,
+} from "antd";
 import axios from "axios";
 import { Header } from "../header/header";
 
@@ -10,7 +18,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) return;
     fetchApplications(token);
   }, []);
@@ -22,7 +31,7 @@ const Profile = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log(res.data); 
+      console.log(res.data);
 
       setApplications(numberApplications(res.data));
     } catch (err) {
@@ -33,10 +42,11 @@ const Profile = () => {
     }
   };
 
- 
   const numberApplications = (apps) => {
     const counts = {};
-    const sorted = [...apps].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const sorted = [...apps].sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
     return sorted.map((item) => {
       const key = item.ust_aktivite || "Bilinmeyen Aktivite";
       counts[key] = (counts[key] || 0) + 1;
@@ -45,7 +55,8 @@ const Profile = () => {
   };
 
   const handleDelete = async (id) => {
-    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+    const token =
+      sessionStorage.getItem("token") || localStorage.getItem("token");
     try {
       await axios.delete(`http://localhost:5000/api/basvuru/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -65,7 +76,10 @@ const Profile = () => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <Title level={1} className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4">
+            <Title
+              level={1}
+              className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4"
+            >
               Başvurularım
             </Title>
             <Text className="text-lg text-gray-600">
@@ -114,7 +128,9 @@ const Profile = () => {
                         onConfirm={() => handleDelete(item.id)}
                         okText="Evet"
                         cancelText="Hayır"
-                        okButtonProps={{ className: "bg-red-500 hover:bg-red-600 border-0" }}
+                        okButtonProps={{
+                          className: "bg-red-500 hover:bg-red-600 border-0",
+                        }}
                       >
                         <Button
                           danger
@@ -126,13 +142,16 @@ const Profile = () => {
                         </Button>
                       </Popconfirm>
                     }
-                    bodyStyle={{ padding: "20px" }}
-                    headStyle={{
-                      borderBottom: "1px solid #e5e7eb",
-                      padding: "16px 20px",
-                      backgroundColor: "#f8fafc",
+                    styles={{
+                      body: { padding: "20px" },
+                      header: {
+                        borderBottom: "1px solid #e5e7eb",
+                        padding: "16px 20px",
+                        backgroundColor: "#f8fafc",
+                      },
                     }}
                   >
+                    
                     <div className="space-y-3">
                       {item.category_description && (
                         <div className="flex flex-col">
@@ -184,7 +203,9 @@ const Profile = () => {
                           <span className="text-gray-400">📅</span>
                           <Text className="text-sm text-gray-600">
                             {item.created_at
-                              ? new Date(item.created_at).toLocaleDateString("tr-TR")
+                              ? new Date(item.created_at).toLocaleDateString(
+                                  "tr-TR"
+                                )
                               : "-"}
                           </Text>
                         </div>

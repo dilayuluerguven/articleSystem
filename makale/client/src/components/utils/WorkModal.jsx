@@ -50,13 +50,14 @@ export default function WorkModal({
       alert("Lütfen künyenizi giriniz!");
       return;
     }
+
     handleOk({
       mainSelection,
       subSelection,
       childSelection,
       file: selectedFile,
       yazarSayisi: count,
-      workDescription, 
+      workDescription,
     });
   };
 

@@ -81,88 +81,138 @@ const FormPart = () => {
   const onChange = (value) => {
     console.log(`selected ${value}`);
   };
+  
   const onSearch = (value) => {
     console.log("search:", value);
   };
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
-      {/* Form Seçimi Bölümü */}
-      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <p className="text-xl font-semibold text-gray-800 mt-5 mb-5 text-center select-none">
-          Otomatik doldurmak istediğiniz Form Türünü seçiniz.
-        </p>
-        <Select
-          className="w-full"
-          showSearch
-          placeholder="Form Seçiniz"
-          optionFilterProp="children"
-          onChange={onChange}
-          onSearch={onSearch}
-          options={[
-            { value: "seciniz", label: "Seçiniz" },
-            { value: "form1", label: "Form-1" },
-            { value: "form2", label: "Form-2" },
-            { value: "form3", label: "Form-3" },
-            { value: "form4", label: "Form-4" },
-            { value: "form5", label: "Form-5" },
-            { value: "form6", label: "Form-6" },
-            { value: "form8", label: "Form-8" },
-          ]}
-        />
-      </div>
-        {/* Bilgi kutucuğu*/}
 
-      <div className="bg-gray-100 p-6 rounded-lg shadow-md mt-6 w-full max-w-8xl text-center select-none">
-        <p className="text-xl font-semibold text-gray-800 mb-2">
-          Çalışmanızın kod numarasını seçmek için kutucuğu işaretleyebilirsiniz
-        </p>
-        <p className="text-gray-600 text-sm">
-          İlgili kutucuğun alt seçimlerine eklemek istediğiniz belge türünü
-          seçerek ilerleyiniz.
-        </p>
-      </div>
-  
-      <div className="bg-white p-6 rounded-lg shadow-md mt-6 w-full max-w-8xl">
-        <div className="flex items-center mb-4">
-          <Checkbox
-            onChange={handleToggleAll}
-            checked={selectedItems.length === data.length}
-            className="mr-3"
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Form Seçimi Bölümü */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+          <p className="text-2xl font-bold text-gray-800 text-center select-none mb-6">
+            Otomatik doldurmak istediğiniz Form Türünü seçiniz.
+          </p>
+          <Select
+            className="w-full max-w-md mx-auto"
+            showSearch
+            placeholder="Form Seçiniz"
+            optionFilterProp="children"
+            onChange={onChange}
+            onSearch={onSearch}
+            size="large"
+            options={[
+              { value: "seciniz", label: "Seçiniz" },
+              { value: "form1", label: "Form-1" },
+              { value: "form2", label: "Form-2" },
+              { value: "form3", label: "Form-3" },
+              { value: "form4", label: "Form-4" },
+              { value: "form5", label: "Form-5" },
+              { value: "form6", label: "Form-6" },
+              { value: "form8", label: "Form-8" },
+            ]}
           />
-          <span className="text-gray-800 font-medium px-2">Tümünü seç</span>
         </div>
-  
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {data.map((item) => (
-            <div
-              key={item.key}
-              className="p-3 rounded-md border border-gray-300 hover:bg-gray-100 transition duration-200"
-            >
-              <Checkbox
-                checked={selectedItems.includes(item.key)}
-                onChange={() => handleCheckboxChange(item.key)}
-                className="text-gray-700"
+
+        {/* Bilgi Kutucuğu */}
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-2xl shadow-lg text-center select-none">
+          <p className="text-xl font-semibold mb-3">
+            Çalışmanızın kod numarasını seçmek için kutucuğu işaretleyebilirsiniz
+          </p>
+          <p className="text-blue-100 text-sm opacity-90">
+            İlgili kutucuğun alt seçimlerine eklemek istediğiniz belge türünü
+            seçerek ilerleyiniz.
+          </p>
+        </div>
+
+        {/* Checkbox Grid */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+          <div className="flex items-center mb-6 p-3 bg-gray-50 rounded-lg">
+            <Checkbox
+              onChange={handleToggleAll}
+              checked={selectedItems.length === data.length}
+              className="mr-3 transform scale-125"
+            />
+            <span className="text-lg font-bold text-gray-800 px-2">
+              Tümünü seç
+            </span>
+            <span className="ml-auto text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
+              {selectedItems.length} / {data.length} seçili
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {data.map((item) => (
+              <div
+                key={item.key}
+                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                  selectedItems.includes(item.key)
+                    ? "border-blue-500 bg-blue-50 shadow-md"
+                    : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                }`}
               >
-                <span className="font-medium">{item.key}.</span> {item.activity}
-              </Checkbox>
+                <Checkbox
+                  checked={selectedItems.includes(item.key)}
+                  onChange={() => handleCheckboxChange(item.key)}
+                  className="w-full"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-bold text-sm">
+                      {item.key}
+                    </div>
+                    <span className="text-gray-700 text-sm leading-tight flex-1">
+                      {item.activity}
+                    </span>
+                  </div>
+                </Checkbox>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Seçili Form Bileşenleri */}
+        {selectedItems.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Seçili Kategoriler
+              </h2>
+              <span className="ml-auto bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">
+                {selectedItems.length} kategori seçildi
+              </span>
             </div>
-          ))}
-        </div>
-      </div>
-  
-      {/* Seçili Form */}
-      <div className="mt-6 w-full max-w-7xl">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {data.map(
-            (item) =>
-              selectedItems.includes(item.key) &&
-              item.component && <item.component key={item.key} />
-          )}
-        </div>
+
+            <div className="space-y-6">
+              {data.map(
+                (item) =>
+                  selectedItems.includes(item.key) &&
+                  item.component && (
+                    <div 
+                      key={item.key} 
+                      className="border-2 border-gray-200 rounded-2xl overflow-hidden bg-gradient-to-br from-white to-gray-50 hover:shadow-lg transition-all duration-300"
+                    >
+                      <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+                        <h3 className="text-lg font-bold text-gray-800 flex items-center gap-3">
+                          <span className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center text-sm">
+                            {item.key}
+                          </span>
+                          {item.activity}
+                        </h3>
+                      </div>
+                      <div className="p-6">
+                        <item.component />
+                      </div>
+                    </div>
+                  )
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
-  
 };
 
 export default FormPart;
