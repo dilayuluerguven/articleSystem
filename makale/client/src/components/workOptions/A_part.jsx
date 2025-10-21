@@ -1,16 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
 import WorkModal from "../utils/WorkModal";
+import { PlusOutlined, EditOutlined, InfoCircleOutlined, LoadingOutlined, CaretDownOutlined, CaretRightOutlined } from "@ant-design/icons";
 
 export default function A_part() {
   const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedWork, setSelectedWork] = useState(null);
-  const [count, setCount] = useState(1);
-  const [fileName, setFileName] = useState("");
   const [expanded, setExpanded] = useState({});
-  const [selectedFile, setSelectedFile] = useState(null);
   const formRef = useRef(null);
 
   useEffect(() => {
@@ -18,8 +15,6 @@ export default function A_part() {
       try {
         const res = await fetch("http://localhost:5000/api/categories");
         const data = await res.json();
-
-        // sadece A kategorisi
         const aCategory = data.find((cat) => cat.kod === "A");
         setCategories(aCategory ? [aCategory] : []);
       } catch (err) {
@@ -33,103 +28,73 @@ export default function A_part() {
     setSelectedCategory(category);
     setSelectedWork(null);
     setIsModalOpen(true);
-    setCount(1);
-    setFileName("");
-    setSelectedFile(null);
   };
 
   const editWork = (work, category) => {
     setSelectedCategory(category);
     setSelectedWork(work);
     setIsModalOpen(true);
-    setCount(work.count);
-    setFileName(work.fileName);
-    setSelectedFile(null);
   };
 
-  const deleteWork = (work, category) => {
-    if (!window.confirm("Bu çalışmayı silmek istediğine emin misin?")) return;
+  const getActivityPath = (category, selectedCode) => {
+    let path = [category.kod];
 
-    setCategories((prev) => {
-      const newCategories = JSON.parse(JSON.stringify(prev));
-
-      const removeWork = (cats) => {
-        for (let cat of cats) {
-          if (cat.id === category.id) {
-            cat.works = cat.works.filter((w) => w.code !== work.code);
-            return true;
-          }
-          if (cat.subcategories && removeWork(cat.subcategories)) return true;
+    const findPathRecursive = (subs, code) => {
+      for (let sub of subs || []) {
+        if (sub.kod === code) {
+          path.push(sub.kod);
+          return sub.subcategories || [];
         }
-        return false;
-      };
+        const deeper = findPathRecursive(sub.subcategories, code);
+        if (deeper) return deeper;
+      }
+      return null;
+    };
 
-      removeWork(newCategories);
-      return newCategories;
-    });
+    findPathRecursive(category.subcategories, selectedCode);
+
+    return {
+      ust_aktivite: path[0] || "",
+      alt_aktivite: path[1] || "",
+      aktivite: path.length > 2 ? path[2] : "",
+    };
   };
 
-  const handleOk = async (selections) => {
+  const handleOk = async ({ mainSelection, subSelection, childSelection, file, yazarSayisi }) => {
+    if (!file) return alert("Lütfen dosya seçin!");
+
+    const { ust_aktivite, alt_aktivite, aktivite } = getActivityPath(
+      selectedCategory,
+      subSelection,
+      childSelection
+    );
+
+    const formData = new FormData();
+    formData.append("ust_aktivite", ust_aktivite);
+    formData.append("alt_aktivite", alt_aktivite);
+    formData.append("aktivite", aktivite);
+    formData.append("yazar_sayisi", yazarSayisi); 
+    formData.append("main_selection", mainSelection);
+    formData.append("sub_selection", subSelection || "");
+    formData.append("child_selection", childSelection || "");
+    formData.append("file", file);
+
+    const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+
     try {
-      const values = await formRef.current.validateFields();
-      setIsModalOpen(false);
-
-      // Ana kategori kodunu bul
-      const ustKod = selectedCategory.parentKod
-        ? categories[0].kod // A kategorisi
-        : selectedCategory.kod;
-      const altKod = selectedCategory.kod;
-
-      const newWork = {
-        code: `${altKod}:${Date.now()}`,
-        description: values.workDescription,
-        count: values.authorCount,
-        fileName: fileName,
-        ...selections,
-      };
-
-      // kategori state güncelle
-      setCategories((prev) => {
-        const newCategories = JSON.parse(JSON.stringify(prev));
-        const addWorkToCat = (cats) => {
-          for (let cat of cats) {
-            if (cat.id === selectedCategory.id) {
-              if (!cat.works) cat.works = [];
-              cat.works.push(newWork);
-              return true;
-            }
-            if (cat.subcategories && addWorkToCat(cat.subcategories)) return true;
-          }
-          return false;
-        };
-        addWorkToCat(newCategories);
-        return newCategories;
-      });
-
-      // FormData oluştur
-      const formData = new FormData();
-
-      const loggedUserId = localStorage.getItem("userId") || 1;
-      formData.append("user_id", loggedUserId);
-
-      formData.append("ust_aktivite", ustKod);
-      formData.append("alt_aktivite", altKod);
-      formData.append("aktivite", selectedCategory.description);
-      formData.append("yazar_sayisi", values.authorCount);
-      formData.append("main_selection", selections.mainSelection || "");
-      formData.append("sub_selection", selections.subSelection || "");
-      formData.append("child_selection", selections.childSelection || "");
-
-      if (selectedFile) {
-        formData.append("file", selectedFile);
-      }
-
-      await fetch("http://localhost:5000/api/basvuru", {
+      const res = await fetch("http://localhost:5000/api/basvuru", {
         method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "DB Hatası");
+
+      alert(data.message);
+      setIsModalOpen(false);
     } catch (err) {
-      console.log("Validation failed:", err);
+      alert("Başvuru kaydedilemedi: " + err.message);
     }
   };
 
@@ -138,94 +103,116 @@ export default function A_part() {
     setIsModalOpen(false);
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setFileName(file.name);
-    }
-  };
-
   const toggleExpand = (id) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const renderCategories = (cats, level = 0) => {
-    const disallowedCodes = ["A", "A-1","A-2","A-3","A-4"]; 
-
-    return cats.map((cat) => (
-      <div key={cat.id} className={`mb-4 ml-${level * 4}`}>
-        <div className="flex items-center justify-between font-semibold">
-          <div className="flex items-center gap-2">
-            {cat.subcategories && cat.subcategories.length > 0 && (
-              <button
-                className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition"
-                onClick={() => toggleExpand(cat.id)}
-              >
-                {expanded[cat.id] ? "-" : "+"}
-              </button>
-            )}
-            {/* <span className="select-none">{cat.kod} {cat.tanim}</span> */}
-            <span className="select-none">{cat.kod} </span>
-          </div>
-
-          {!disallowedCodes.includes(cat.kod) && (
+  const renderCategories = (cats) => {
+   const disallowedCodes = ["A", "A-1", "A-2", "A-3", "A-4"];
+  return cats.map((cat) => (
+    <div key={cat.id} className="mb-4 ml-2">
+      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="flex items-center gap-3">
+          {cat.subcategories && cat.subcategories.length > 0 && (
             <button
-              className="bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200 transition text-xs"
-              onClick={() => addWork(cat)}
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+              onClick={() => toggleExpand(cat.id)}
             >
-              + Çalışma Ekle
+              {expanded[cat.id] ? <CaretDownOutlined /> : <CaretRightOutlined />}
             </button>
           )}
+          <div className="flex flex-col">
+            <span className="font-bold text-gray-800 text-medium">
+              {cat.kod} - {cat.tanim}
+            </span>
+            {cat.subcategories && (
+              <span className="text-xs text-gray-500 mt-1">
+                {cat.subcategories.length} alt kategori
+              </span>
+            )}
+          </div>
         </div>
 
-        {expanded[cat.id] && (
-          <div className="mt-2 ml-6">
-            {cat.tanim && (
-              <p className="text-gray-500 italic mb-2">{cat.tanim}</p>
-            )}
-
-            {cat.works &&
-              cat.works.map((work) => (
-                <div
-                  key={work.code}
-                  className="flex items-center justify-between bg-gray-50 p-2 rounded mb-2 shadow-sm"
-                >
-                  <span className="text-sm text-blue-600 underline cursor-pointer">
-                    {work.code}: {work.fileName || "Dosya Yok"}
-                  </span>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => editWork(work, cat)}
-                      className="text-green-600 hover:text-green-800"
-                    >
-                      <AiOutlineEdit />
-                    </button>
-                    <button
-                      onClick={() => deleteWork(work, cat)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <AiOutlineDelete />
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-            {cat.subcategories && renderCategories(cat.subcategories, level + 1)}
-          </div>
+        {!disallowedCodes.includes(cat.kod) && (
+          <button
+            className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+            onClick={() => addWork(cat)}
+          >
+            <PlusOutlined />
+            Çalışma Ekle
+          </button>
         )}
       </div>
-    ));
-  };
+
+      {expanded[cat.id] && (
+        <div className="ml-8 mt-3 space-y-2 border-l-2 border-blue-200 pl-4">
+          {cat.works && cat.works.map((work) => (
+            <div
+              key={work.code}
+              className="ml-2 mt-2 flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-gray-700 font-normal">{work.description}</span>
+              </div>
+              <button
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-3 py-1 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1"
+                onClick={() => editWork(work, cat)}
+              >
+                <EditOutlined />
+                Düzenle
+              </button>
+            </div>
+          ))}
+
+          {cat.subcategories && (
+            <div className="mt-4 space-y-3">{renderCategories(cat.subcategories)}</div>
+          )}
+        </div>
+      )}
+    </div>
+  ));
+};
+
 
   return (
-    <div className="p-6 max-w-2xl mx-auto bg-white rounded-lg shadow-lg mt-6">
-      <h1 className="text-2xl font-bold mb-6 text-center select-none">
-        A. Uluslararası Çalışmalar
-      </h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8 text-center">
+            <p className="text-blue-100 text-lg">
+              Kategori yapısını inceleyin ve çalışmalarınızı ekleyin. Profilinizden görüntüleyin.
+            </p>
+          </div>
 
-      {renderCategories(categories)}
+          <div className="p-6 sm:p-8">
+            {categories.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <LoadingOutlined style={{ fontSize: '2rem', color: '#9ca3af' }} />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Kategoriler yükleniyor...</h3>
+                <p className="text-gray-500">Lütfen bekleyin</p>
+              </div>
+            ) : (
+              <div className="space-y-4">{renderCategories(categories)}</div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <InfoCircleOutlined className="text-white text-sm" />
+          </div>
+          <div>
+            <h4 className="font-medium text-blue-900 mb-1">Nasıl kullanılır?</h4>
+            <p className="text-blue-700 text-sm">
+               Kategorileri genişletin, "Çalışma Ekle" butonu ile yeni çalışmalar ekleyin, 
+              
+            </p>
+          </div>
+        </div>
+      </div>
 
       <WorkModal
         isModalOpen={isModalOpen}
@@ -233,8 +220,6 @@ export default function A_part() {
         handleCancel={handleCancel}
         formRef={formRef}
         selectedCategory={selectedCategory}
-        count={count}
-        handleFileChange={handleFileChange}
       />
     </div>
   );
