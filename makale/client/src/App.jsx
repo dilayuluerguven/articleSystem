@@ -1,38 +1,52 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { Header } from "./components/header/header";
-import UpperPart from "./components/UpperPart";
-import FormPart from "./components/FormPart";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
-import { useEffect, useState } from "react";
+import Home from "./pages/Home";
+import Profile from "./pages/Profile";
+import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   useEffect(() => {
-    const token = sessionStorage.getItem("token");
-    setIsAuthenticated(!!token);
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (token) setIsAuthenticated(true);
   }, []);
 
   return (
     <Router>
       <Routes>
         <Route
+          path="/login"
+          element={<Login setIsAuthenticated={setIsAuthenticated} />}
+        />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/home"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <Home />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <Profile />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="/"
           element={
             isAuthenticated ? (
-              <div>
-                <Header />
-                <UpperPart />
-                <FormPart />
-              </div>
+              <Home />
             ) : (
-              <Navigate to="/login" replace />
+              <Login setIsAuthenticated={setIsAuthenticated} />
             )
           }
         />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
       </Routes>
     </Router>
   );
