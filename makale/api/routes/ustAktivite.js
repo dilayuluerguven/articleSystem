@@ -6,7 +6,7 @@ module.exports = (db) => {
  router.get("/ust-aktivite", async (req, res) => {
   try {
     const [rows] = await db.promise().query(
-      "SELECT `kod`, `tanim` FROM `üst_aktiviteler` ORDER BY `kod`"
+      "SELECT `kod`, `tanim` FROM `ust_aktiviteler` ORDER BY `kod`"
     );
     res.json(rows);
   } catch (err) {

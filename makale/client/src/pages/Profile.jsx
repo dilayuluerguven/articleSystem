@@ -211,7 +211,7 @@ const Profile = () => {
                       {item.workDescription || item.kunye ? (
                         <div className="flex flex-col">
                           <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                            Künyesi
+                            Künye :
                           </Text>
                           <Text className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
                             {item.workDescription || item.kunye}

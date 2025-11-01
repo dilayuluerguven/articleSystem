@@ -1,4 +1,4 @@
-import { Modal, Form, Input, Radio, Upload } from "antd";
+import { Modal, Form, Input, Radio, Upload, Select } from "antd";
 import { useState, useEffect } from "react";
 import { InboxOutlined } from "@ant-design/icons";
 
@@ -16,6 +16,7 @@ export default function WorkModal({
   const [selectedFile, setSelectedFile] = useState(null);
   const [count, setCount] = useState(initialCount);
   const [workDescription, setWorkDescription] = useState("");
+  const [authorPosition, setAuthorPosition] = useState("ilk"); // varsayılan: ilk yazar
 
   useEffect(() => {
     setCount(initialCount);
@@ -24,6 +25,7 @@ export default function WorkModal({
     setChildSelection(null);
     setSelectedFile(null);
     setWorkDescription("");
+    setAuthorPosition("ilk");
   }, [isModalOpen, initialCount]);
 
   const handleMainChange = (e) => {
@@ -58,6 +60,7 @@ export default function WorkModal({
       file: selectedFile,
       yazarSayisi: count,
       workDescription,
+      authorPosition, // <-- yeni alan
     });
   };
 
@@ -101,6 +104,20 @@ export default function WorkModal({
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
             />
+          </Form.Item>
+
+          <Form.Item
+            label="Yazar Pozisyonu"
+            name="authorPosition"
+            rules={[{ required: true, message: "Yazar pozisyonunu seçiniz!" }]}
+          >
+            <Select
+              value={authorPosition}
+              onChange={(value) => setAuthorPosition(value)}
+            >
+              <Select.Option value="ilk">İlk Yazar</Select.Option>
+              <Select.Option value="diger">Diğer Yazar</Select.Option>
+            </Select>
           </Form.Item>
 
           <Form.Item label="Belge Yükleyin">

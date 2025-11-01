@@ -8,7 +8,7 @@ module.exports = (db) => {
       // Üst aktiviteleri al
       const [ustResults] = await db
         .promise()
-        .query("SELECT * FROM üst_aktiviteler ORDER BY id ASC");
+        .query("SELECT * FROM ust_aktiviteler ORDER BY id ASC");
 
       // Alt aktiviteleri al
       const [altResults] = await db

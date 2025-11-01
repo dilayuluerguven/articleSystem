@@ -20,54 +20,54 @@ module.exports = (db) => {
 
   // POST - Başvuru ekle
   router.post("/", authMiddleware, upload.single("file"), async (req, res) => {
-    console.log("req.body:", req.body);
-    console.log("req.file:", req.file);
-    try {
-      const user_id = req.user?.id;
-      if (!user_id) return res.status(401).json({ error: "User yok" });
+  try {
+    const user_id = req.user?.id;
+    if (!user_id) return res.status(401).json({ error: "User yok" });
 
-      const {
+    const {
+      ust_aktivite,
+      alt_aktivite,
+      aktivite,
+      yazar_sayisi,
+      main_selection,
+      sub_selection,
+      child_selection,
+      workDescription,
+      authorPosition
+    } = req.body;
+
+    const eser = req.file ? req.file.filename : null;
+    const is_first_author = authorPosition === "ilk" ? 1 : 0; // boolean
+
+    await db.promise().query(
+      `INSERT INTO basvuru 
+       (user_id, ust_aktivite, alt_aktivite, aktivite, eser, yazar_sayisi, main_selection, sub_selection, child_selection, workDescription, is_first_author)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        user_id,
         ust_aktivite,
         alt_aktivite,
         aktivite,
+        eser,
         yazar_sayisi,
         main_selection,
         sub_selection,
         child_selection,
         workDescription,
-      } = req.body;
+        is_first_author,
+      ]
+    );
 
-      const eser = req.file ? req.file.filename : null;
-
-      await db.promise().query(
-        `INSERT INTO basvuru 
-         (user_id, ust_aktivite, alt_aktivite, aktivite, eser, yazar_sayisi, main_selection, sub_selection, child_selection, workDescription)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          user_id,
-          ust_aktivite,
-          alt_aktivite,
-          aktivite,
-          eser,
-          yazar_sayisi,
-          main_selection,
-          sub_selection,
-          child_selection,
-          workDescription,
-        ]
-      );
-
-      res.json({
-        success: true,
-        message: "Başvuru başarıyla kaydedildi",
-        file: eser,
-      });
-    } catch (err) {
-      console.error("Başvuru ekleme hatası:", err);
-      res.status(500).json({ success: false, error: "DB Hatası" });
-    }
-  });
-
+    res.json({
+      success: true,
+      message: "Başvuru başarıyla kaydedildi",
+      file: eser,
+    });
+  } catch (err) {
+    console.error("Başvuru ekleme hatası:", err);
+    res.status(500).json({ success: false, error: "DB Hatası" });
+  }
+});
   router.get("/", authMiddleware, async (req, res) => {
     try {
       const user_id = req.user?.id;
@@ -81,7 +81,7 @@ module.exports = (db) => {
               aa.tanim AS alt_aktivite_tanim,
               a.tanim AS aktivite_tanim
        FROM basvuru b
-       LEFT JOIN üst_aktiviteler ua ON b.ust_aktivite = ua.kod
+       LEFT JOIN ust_aktiviteler ua ON b.ust_aktivite = ua.kod
        LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite = aa.kod
        LEFT JOIN aktivite a ON b.aktivite = a.kod
        WHERE b.user_id = ?
@@ -97,69 +97,65 @@ module.exports = (db) => {
     }
   });
 
-  router.put(
-    "/:id",
-    authMiddleware,
-    upload.single("file"),
-    async (req, res) => {
-      try {
-        const { id } = req.params;
-        const user_id = req.user?.id;
-        const {
-          ust_aktivite,
-          alt_aktivite,
-          aktivite,
-          yazar_sayisi,
-          main_selection,
-          sub_selection,
-          child_selection,
-          workDescription,
-        } = req.body;
+  router.put("/:id", authMiddleware, upload.single("file"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user?.id;
+    const {
+      ust_aktivite,
+      alt_aktivite,
+      aktivite,
+      yazar_sayisi,
+      main_selection,
+      sub_selection,
+      child_selection,
+      workDescription,
+      authorPosition
+    } = req.body;
 
-        const [oldRows] = await db
-          .promise()
-          .query("SELECT eser FROM basvuru WHERE id = ? AND user_id = ?", [
-            id,
-            user_id,
-          ]);
+    const [oldRows] = await db
+      .promise()
+      .query("SELECT eser FROM basvuru WHERE id = ? AND user_id = ?", [id, user_id]);
 
-        if (oldRows.length === 0)
-          return res.status(404).json({ error: "Başvuru bulunamadı" });
+    if (oldRows.length === 0)
+      return res.status(404).json({ error: "Başvuru bulunamadı" });
 
-        let eser = oldRows[0].eser;
+    let eser = oldRows[0].eser;
 
-        if (req.file) {
-          const oldFile = path.join(uploadDir, eser);
-          if (fs.existsSync(oldFile)) fs.unlinkSync(oldFile);
-          eser = req.file.filename;
-        }
-
-        await db.promise().query(
-          `UPDATE basvuru
-         SET ust_aktivite=?, alt_aktivite=?, aktivite=?, eser=?, yazar_sayisi=?, main_selection=?, sub_selection=?, child_selection=?, workDescription=?
-         WHERE id=? AND user_id=?`,
-          [
-            ust_aktivite,
-            alt_aktivite,
-            aktivite,
-            eser,
-            yazar_sayisi,
-            main_selection,
-            sub_selection,
-            child_selection,
-            workDescription,
-            id,
-            user_id,
-          ]
-        );
-
-        res.json({ success: true, message: "Başvuru güncellendi", file: eser });
-      } catch (err) {
-        console.error("Başvuru güncelleme hatası:", err);
-        res.status(500).json({ error: "Güncelleme işlemi başarısız" });
-      }
+    if (req.file) {
+      const oldFile = path.join(uploadDir, eser);
+      if (fs.existsSync(oldFile)) fs.unlinkSync(oldFile);
+      eser = req.file.filename;
     }
-  );
+
+    const is_first_author = authorPosition === "ilk" ? 1 : 0;
+
+    await db.promise().query(
+      `UPDATE basvuru
+       SET ust_aktivite=?, alt_aktivite=?, aktivite=?, eser=?, yazar_sayisi=?, main_selection=?, sub_selection=?, child_selection=?, workDescription=?, is_first_author=?
+       WHERE id=? AND user_id=?`,
+      [
+        ust_aktivite,
+        alt_aktivite,
+        aktivite,
+        eser,
+        yazar_sayisi,
+        main_selection,
+        sub_selection,
+        child_selection,
+        workDescription,
+        is_first_author,
+        id,
+        user_id,
+      ]
+    );
+
+    res.json({ success: true, message: "Başvuru güncellendi", file: eser });
+  } catch (err) {
+    console.error("Başvuru güncelleme hatası:", err);
+    res.status(500).json({ error: "Güncelleme işlemi başarısız" });
+  }
+});
 
   router.delete("/:id", authMiddleware, async (req, res) => {
     try {

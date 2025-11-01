@@ -73,6 +73,8 @@ export default function O_part() {
     childSelection,
     file,
     yazarSayisi,
+    workDescription,
+    authorPosition
   }) => {
     if (!file) return alert("Lütfen dosya seçin!");
 
@@ -91,7 +93,8 @@ export default function O_part() {
     formData.append("sub_selection", subSelection || "");
     formData.append("child_selection", childSelection || "");
     formData.append("file", file);
-
+    formData.append("workDescription", workDescription);
+    formData.append("authorPosition", authorPosition);
     const token =
       sessionStorage.getItem("token") || localStorage.getItem("token");
 
