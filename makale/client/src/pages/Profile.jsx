@@ -67,7 +67,7 @@ const Profile = () => {
     }
   };
 
-  //  uygun önizleme gösteren fonksiyonum
+  // Dosya önizleme fonksiyonu
   const renderFilePreview = (fileName) => {
     if (!fileName) return null;
     const fileUrl = `http://localhost:5000/uploads/${fileName}`;
@@ -76,12 +76,7 @@ const Profile = () => {
 
     if (isImage) {
       return (
-        <a
-          href={fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block"
-        >
+        <a href={fileUrl} target="_blank" rel="noopener noreferrer">
           <img
             src={fileUrl}
             alt={fileName}
@@ -131,7 +126,7 @@ const Profile = () => {
 
           {loading && (
             <div className="flex justify-center items-center py-16">
-              <Spin size="large" className="custom-spin" />
+              <Spin size="large" />
             </div>
           )}
 
@@ -165,69 +160,74 @@ const Profile = () => {
                       </div>
                     }
                     extra={
-                      <Popconfirm
-                        title="Bu başvuruyu silmek istediğinize emin misiniz?"
-                        onConfirm={() => handleDelete(item.id)}
-                        okText="Evet"
-                        cancelText="Hayır"
-                        okButtonProps={{
-                          className: "bg-red-500 hover:bg-red-600 border-0",
-                        }}
-                      >
+                      <div className="flex gap-2">
                         <Button
-                          danger
+                          type="primary"
                           size="small"
-                          className="flex items-center gap-1 bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300"
+                          onClick={() => {
+                            const token =
+                              localStorage.getItem("token") ||
+                              sessionStorage.getItem("token");
+                            if (!token) {
+                              message.error(
+                                "Oturum bulunamadı, lütfen tekrar giriş yapın."
+                              );
+                              return;
+                            }
+
+                            window.open(
+                              `http://localhost:5000/api/form8/${item.id}/pdf?token=${token}`,
+                              "_blank"
+                            );
+                          }}
                         >
-                          <span>🗑️</span>
-                          Sil
+                          📄 Form-8 PDF
                         </Button>
-                      </Popconfirm>
+
+                        <Popconfirm
+                          title="Bu başvuruyu silmek istediğinize emin misiniz?"
+                          onConfirm={() => handleDelete(item.id)}
+                          okText="Evet"
+                          cancelText="Hayır"
+                          okButtonProps={{
+                            className:
+                              "bg-red-500 hover:bg-red-600 border-0 text-white",
+                          }}
+                        >
+                          <Button
+                            danger
+                            size="small"
+                            className="flex items-center gap-1 bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300"
+                          >
+                            🗑️ Sil
+                          </Button>
+                        </Popconfirm>
+                      </div>
                     }
-                    styles={{
-                      body: { padding: "20px" },
-                      header: {
-                        borderBottom: "1px solid #e5e7eb",
-                        padding: "16px 20px",
-                        backgroundColor: "#f8fafc",
-                      },
-                    }}
                   >
-                    {/* önizleme  */}
                     <div className="space-y-3">
                       {item.eser && renderFilePreview(item.eser)}
 
-                      {item.category_description && (
-                        <div className="flex flex-col">
-                          <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                            Kategori Tanımı
-                          </Text>
-                          <Text className="text-gray-700 text-sm leading-relaxed">
-                            {item.category_description}
-                          </Text>
-                        </div>
-                      )}
-
-                      {item.workDescription || item.kunye ? (
+                      {item.workDescription && (
                         <div className="flex flex-col">
                           <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
                             Künye :
                           </Text>
                           <Text className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
-                            {item.workDescription || item.kunye}
+                            {item.workDescription}
                           </Text>
                         </div>
-                      ) : null}
+                      )}
 
                       <div className="flex flex-wrap gap-4 pt-2 border-t border-gray-100">
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-400">👤</span>
+                          <span>👤</span>
                           <Text className="text-sm text-gray-600">
                             {item.yazar_sayisi || "0"} yazar
                           </Text>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-gray-400">📅</span>
+                          <span>📅</span>
                           <Text className="text-sm text-gray-600">
                             {item.created_at
                               ? new Date(item.created_at).toLocaleDateString(

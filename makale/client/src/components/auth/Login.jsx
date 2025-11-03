@@ -1,4 +1,4 @@
-import { Button, Carousel, Checkbox, Form, Input, message, Alert } from "antd"; // 🔹 Alert eklendi
+import { Button, Carousel, Checkbox, Form, Input, message, Alert } from "antd"; 
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthCarousel from "../../components/auth/AuthCarousel";

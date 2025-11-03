@@ -74,8 +74,7 @@ export default function B_part() {
     file,
     yazarSayisi,
     workDescription,
-    authorPosition
-
+    authorPosition,
   }) => {
     if (!file) return alert("Lütfen dosya seçin!");
 
@@ -103,7 +102,9 @@ export default function B_part() {
     try {
       const res = await fetch("http://localhost:5000/api/basvuru", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         body: formData,
       });
 

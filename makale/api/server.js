@@ -128,6 +128,8 @@ app.use("/api", ustAktiviteRouter);
 
 const path = require("path");
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+const form8Router = require("./routes/form8")(db);
+app.use("/api/form8", form8Router);
 
 
 app.listen(port, () => {
