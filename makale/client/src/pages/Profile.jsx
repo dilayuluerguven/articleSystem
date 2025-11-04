@@ -46,7 +46,6 @@ const Profile = () => {
 
   const numberApplications = (apps) => {
     const counts = {};
-
     const sorted = [...apps].sort(
       (a, b) =>
         new Date(b.created_at || 0).getTime() -
@@ -56,13 +55,8 @@ const Profile = () => {
     return sorted.map((item) => {
       const key =
         item.aktivite_kod || item.alt_kod || item.ust_kod || "Bilinmeyen";
-
       counts[key] = (counts[key] || 0) + 1;
-
-      return {
-        ...item,
-        displayTitle: `${key}:${counts[key]}`,
-      };
+      return { ...item, displayTitle: `${key}:${counts[key]}` };
     });
   };
 
@@ -121,12 +115,36 @@ const Profile = () => {
     }
   };
 
+  const handleForm7PDF = () => {
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) {
+      message.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
+      return;
+    }
+
+    fetch(`http://localhost:5000/api/form7/pdf`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("PDF oluşturulamadı");
+        return res.blob();
+      })
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+      })
+      .catch(() => {
+        message.error("Form-7 PDF indirilemedi");
+      });
+  };
+
   return (
     <>
       <Header />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <Title
               level={1}
               className="text-3xl sm:text-4xl font-bold text-gray-800 mb-4"
@@ -136,6 +154,17 @@ const Profile = () => {
             <Text className="text-lg text-gray-600">
               Tüm başvurularınızı buradan görüntüleyebilir ve yönetebilirsiniz
             </Text>
+          </div>
+
+          <div className="flex justify-center mb-8">
+            <Button
+              type="primary"
+              size="large"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg shadow-md"
+              onClick={handleForm7PDF}
+            >
+              📄 Form-7 PDF Oluştur
+            </Button>
           </div>
 
           {loading && (
@@ -175,40 +204,6 @@ const Profile = () => {
                     }
                     extra={
                       <div className="flex gap-2">
-                        <Button
-                          type="primary"
-                          size="small"
-                          onClick={() => {
-                            const token =
-                              localStorage.getItem("token") ||
-                              sessionStorage.getItem("token");
-                            if (!token) {
-                              message.error(
-                                "Oturum bulunamadı, lütfen tekrar giriş yapın."
-                              );
-                              return;
-                            }
-
-                            fetch(`http://localhost:5000/api/form7/pdf`, {
-                              headers: { Authorization: `Bearer ${token}` },
-                            })
-                              .then((res) => {
-                                if (!res.ok)
-                                  throw new Error("PDF oluşturulamadı");
-                                return res.blob();
-                              })
-                              .then((blob) => {
-                                const url = window.URL.createObjectURL(blob);
-                                window.open(url, "_blank");
-                              })
-                              .catch(() => {
-                                message.error("PDF indirilemedi");
-                              });
-                          }}
-                        >
-                          📄 Form-7 PDF
-                        </Button>
-
                         <Button
                           type="primary"
                           size="small"
