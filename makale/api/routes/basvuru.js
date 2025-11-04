@@ -58,7 +58,6 @@ module.exports = (db) => {
      let hamPuan = 0.0;
 let puanId = null;
 
-// 1️⃣ Aktivite seviyesi: puan_id'yi bul ve puanı çek
 if (aktivite_id && !isNaN(aktivite_id)) {
   const [aRow] = await db
     .promise()
@@ -73,7 +72,6 @@ if (aktivite_id && !isNaN(aktivite_id)) {
   }
 }
 
-// 2️⃣ Eğer bulunmadıysa alt_aktivite'den dene
 if (!puanId && alt_aktivite_id && !isNaN(alt_aktivite_id)) {
   const [altRow] = await db
     .promise()
@@ -88,7 +86,6 @@ if (!puanId && alt_aktivite_id && !isNaN(alt_aktivite_id)) {
   }
 }
 
-// 3️⃣ Hâlâ bulunamadıysa ust_aktivite seviyesinden dene
 if (!puanId && ust_aktivite_id && !isNaN(ust_aktivite_id)) {
   const [p] = await db
     .promise()
@@ -144,15 +141,15 @@ const toplamPuan = parseFloat((hamPuan * yazarpuanı).toFixed(2));
   });
 
 
-  router.get("/", authMiddleware, async (req, res) => {
-    try {
-      const user_id = req.user?.id;
-      console.log("Token’dan gelen user_id:", user_id);
-      if (!user_id)
-        return res.status(401).json({ error: "Kullanıcı bulunamadı" });
+router.get("/", authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user?.id;
+    console.log("Token’dan gelen user_id:", user_id);
+    if (!user_id)
+      return res.status(401).json({ error: "Kullanıcı bulunamadı" });
 
-      const [rows] = await db.promise().query(
-        `
+    const [rows] = await db.promise().query(
+      `
       SELECT 
         b.id,
         b.user_id,
@@ -163,7 +160,12 @@ const toplamPuan = parseFloat((hamPuan * yazarpuanı).toFixed(2));
         b.child_selection,
         b.workDescription,
         b.is_first_author,
+
+        -- 🔹 puan sütunlarının gerçek isimleri
         b.yazarpuanı,
+        b.hamPuan,
+        b.toplamPuan,
+
         b.created_at,
 
         ua.id AS ust_aktivite_id,
@@ -185,16 +187,17 @@ const toplamPuan = parseFloat((hamPuan * yazarpuanı).toFixed(2));
       WHERE b.user_id = ?
       ORDER BY b.created_at DESC
       `,
-        [user_id]
-      );
+      [user_id]
+    );
 
-      console.log("DB’den gelen satır sayısı:", rows.length);
-      res.json(rows);
-    } catch (err) {
-      console.error("Başvuru listeleme hatası:", err);
-      res.status(500).json({ error: "Veri çekme hatası" });
-    }
-  });
+    console.log("DB’den gelen satır sayısı:", rows.length);
+    res.json(rows);
+  } catch (err) {
+    console.error("Başvuru listeleme hatası:", err);
+    res.status(500).json({ error: "Veri çekme hatası" });
+  }
+});
+
 
   router.put(
     "/:id",

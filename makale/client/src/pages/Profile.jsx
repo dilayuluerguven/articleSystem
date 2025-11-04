@@ -8,6 +8,17 @@ import {
   Button,
   Popconfirm,
 } from "antd";
+import {
+  CalendarOutlined,
+  CloudOutlined,
+  DeleteOutlined,
+  FilePdfOutlined,
+  FormOutlined,
+  TeamOutlined,
+  UserOutlined,
+  StarOutlined,
+  BookOutlined,
+} from "@ant-design/icons";
 import axios from "axios";
 import { Header } from "../header/header";
 
@@ -163,7 +174,7 @@ const Profile = () => {
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg shadow-md"
               onClick={handleForm7PDF}
             >
-              📄 Form-7 PDF Oluştur
+              <FormOutlined /> Form-7 PDF Oluştur
             </Button>
           </div>
 
@@ -176,7 +187,9 @@ const Profile = () => {
           {!loading && applications.length === 0 && (
             <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-200">
               <div className="max-w-md mx-auto">
-                <div className="text-6xl mb-4">📝</div>
+                <div className="text-6xl mb-4">
+                  <CloudOutlined />
+                </div>
                 <Title level={3} className="text-gray-700 mb-2">
                   Henüz başvuru bulunmuyor
                 </Title>
@@ -189,24 +202,153 @@ const Profile = () => {
 
           {!loading && applications.length > 0 && (
             <List
-              grid={{ gutter: 24, xs: 1, sm: 1, md: 2, lg: 2, xl: 3, xxl: 3 }}
+              grid={{ gutter: 20, xs: 1, sm: 1, md: 2, lg: 2, xl: 3, xxl: 3 }}
               dataSource={applications}
               renderItem={(item) => (
                 <List.Item>
                   <Card
                     className="h-full transition-all duration-300 hover:shadow-lg border-0 rounded-2xl overflow-hidden bg-white"
                     title={
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold text-gray-800 truncate">
+                      <div className="flex flex-col">
+                        <h3 className="text-lg font-bold text-gray-800 leading-tight mb-1 mt-4">
                           {item.displayTitle}
-                        </span>
+                        </h3>
+
+                        {(item.aktivite_tanim ||
+                          item.alt_tanim ||
+                          item.ust_tanim) && (
+                          <p
+                            className="
+                              text-sm text-gray-600 italic
+                              leading-snug 
+                              break-words
+                              overflow-hidden
+                              text-ellipsis
+                              line-clamp-2
+                              min-h-[2.8em]
+                            "
+                          >
+                            {item.aktivite_tanim ||
+                              item.alt_tanim ||
+                              item.ust_tanim}
+                          </p>
+                        )}
                       </div>
                     }
                     extra={
-                      <div className="flex gap-2">
+                      <Popconfirm
+                        title="Bu başvuruyu silmek istediğinize emin misiniz?"
+                        onConfirm={() => handleDelete(item.id)}
+                        okText="Evet"
+                        cancelText="Hayır"
+                        okButtonProps={{
+                          className:
+                            "bg-red-500 hover:bg-red-600 border-0 text-white",
+                        }}
+                      >
+                        <Button
+                          danger
+                          size="small"
+                          className="flex items-center gap-1 bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300"
+                        >
+                          <DeleteOutlined />
+                        </Button>
+                      </Popconfirm>
+                    }
+                  >
+                    <div className="p-5 bg-white rounded-xl border border-gray-200 h-[500px] flex flex-col shadow-sm">
+                      <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+                        {item.eser && (
+                          <div className="h-[150px] flex justify-center items-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+                            {renderFilePreview(item.eser)}
+                          </div>
+                        )}
+
+                        <div className="flex-1 flex flex-col gap-4">
+                          {item.workDescription && (
+                            <div className="flex-1 min-h-[80px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-2">
+                              <h4 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-100">
+                                Künye
+                              </h4>
+                              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                                {item.workDescription}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="pt-4 mt-2 border-t border-gray-200">
+                        <div className="grid grid-cols-5 gap-3 text-center">
+                          <div className="space-y-1">
+                            <div className="flex flex-col items-center text-gray-600">
+                              <UserOutlined className="text-lg mb-1" />
+                              <span className="text-xs font-semibold">
+                                Yazarlar
+                              </span>
+                            </div>
+                            <p className="text-lg font-bold text-gray-900">
+                              {item.yazar_sayisi || "0"}
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex flex-col items-center text-gray-600">
+                              <CalendarOutlined className="text-lg mb-1" />
+                              <span className="text-xs font-semibold">
+                                Tarih
+                              </span>
+                            </div>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {item.created_at
+                                ? new Date(item.created_at).toLocaleDateString(
+                                    "tr-TR"
+                                  )
+                                : "-"}
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex flex-col items-center text-gray-600">
+                              <BookOutlined className="text-lg mb-1" />
+                              <span className="text-xs font-semibold">Ham</span>
+                            </div>
+                            <p className="text-lg font-bold text-blue-700">
+                              {item.hamPuan ?? "-"}
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex flex-col items-center text-gray-600">
+                              <TeamOutlined className="text-lg mb-1" />
+                              <span className="text-xs font-semibold">
+                                Yazar
+                              </span>
+                            </div>
+                            <p className="text-lg font-bold text-indigo-700">
+                              {item.yazarpuanı ?? "-"}
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex flex-col items-center text-gray-600">
+                              <StarOutlined className="text-lg mb-1" />
+                              <span className="text-xs font-semibold">
+                                Toplam
+                              </span>
+                            </div>
+                            <p className="text-lg font-bold text-green-700">
+                              {item.toplamPuan ?? "-"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
                         <Button
                           type="primary"
-                          size="small"
+                          icon={<FilePdfOutlined />}
+                          className="w-full h-10 text-white font-medium bg-blue-600 hover:bg-blue-700 rounded-lg"
                           onClick={() => {
                             const token =
                               localStorage.getItem("token") ||
@@ -224,61 +366,8 @@ const Profile = () => {
                             );
                           }}
                         >
-                          📄 Form-8 PDF
+                          Form-8 PDF Oluştur
                         </Button>
-
-                        <Popconfirm
-                          title="Bu başvuruyu silmek istediğinize emin misiniz?"
-                          onConfirm={() => handleDelete(item.id)}
-                          okText="Evet"
-                          cancelText="Hayır"
-                          okButtonProps={{
-                            className:
-                              "bg-red-500 hover:bg-red-600 border-0 text-white",
-                          }}
-                        >
-                          <Button
-                            danger
-                            size="small"
-                            className="flex items-center gap-1 bg-red-50 border-red-200 text-red-600 hover:bg-red-100 hover:border-red-300"
-                          >
-                            🗑️ Sil
-                          </Button>
-                        </Popconfirm>
-                      </div>
-                    }
-                  >
-                    <div className="space-y-3">
-                      {item.eser && renderFilePreview(item.eser)}
-
-                      {item.workDescription && (
-                        <div className="flex flex-col">
-                          <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                            Künye:
-                          </Text>
-                          <Text className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
-                            {item.workDescription}
-                          </Text>
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-100">
-                        <div className="flex items-center gap-2">
-                          <span>👤</span>
-                          <Text className="text-sm text-gray-600">
-                            {item.yazar_sayisi || "0"} yazar
-                          </Text>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span>📅</span>
-                          <Text className="text-sm text-gray-600">
-                            {item.created_at
-                              ? new Date(item.created_at).toLocaleDateString(
-                                  "tr-TR"
-                                )
-                              : "-"}
-                          </Text>
-                        </div>
                       </div>
                     </div>
                   </Card>
