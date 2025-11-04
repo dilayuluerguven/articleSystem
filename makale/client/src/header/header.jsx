@@ -14,6 +14,7 @@ export const Header = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [updateNotice, setUpdateNotice] = useState(false); 
 
   useEffect(() => {
     const token =
@@ -27,7 +28,21 @@ export const Header = () => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    const syncUsername = () => {
+      const updatedUsername =
+        sessionStorage.getItem("username") || localStorage.getItem("username");
+      setUsername(updatedUsername || "");
+
+      setUpdateNotice(true);
+      setTimeout(() => setUpdateNotice(false), 2000);
+    };
+
+    window.addEventListener("storage", syncUsername);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("storage", syncUsername);
+    };
   }, []);
 
   const handleLoginLogout = () => {
@@ -42,8 +57,9 @@ export const Header = () => {
     }
   };
 
-  const goToProfile = () => navigate("/profile");
   const goToHome = () => navigate("/home");
+  const goToProfile = () => navigate("/profile");
+  const goToUserProfile = () => navigate("/userprofile");
 
   return (
     <div
@@ -54,6 +70,12 @@ export const Header = () => {
           : "bg-black border-gray-800 shadow-lg"
       }`}
     >
+      {updateNotice && (
+        <div className="fixed top-20 right-6 z-50 bg-green-500/90 text-white px-4 py-2 rounded-lg shadow-lg backdrop-blur-sm border border-white/20 animate-fade-in-out">
+          Profil bilgileri güncellendi
+        </div>
+      )}
+
       <header className="py-3 px-6 flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <div
@@ -83,23 +105,21 @@ export const Header = () => {
                   onClick={goToHome}
                 />
               </Tooltip>
-              <Tooltip title="Başvuruları Görüntüle">
+
+              <Tooltip title="Başvurularım">
                 <FileTextOutlined
                   style={{ color: "white" }}
                   className="text-lg cursor-pointer hover:text-blue-400 transition-colors"
-                  onClick={goToHome}
+                  onClick={goToProfile}
                 />
               </Tooltip>
-
-
-              <Tooltip title="Profili Görüntüle">
+              <Tooltip title="Kullanıcı Bilgilerim">
                 <div
                   className="flex items-center space-x-2 cursor-pointer group"
-                  onClick={goToProfile}
+                  onClick={goToUserProfile}
                 >
                   <Avatar
                     icon={<UserOutlined />}
-                  
                     className="bg-blue-500 group-hover:bg-blue-600 transition-colors text-lg"
                   />
                   <span className="text-white font-medium hidden sm:block group-hover:text-blue-400 transition-colors">

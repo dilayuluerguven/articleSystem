@@ -135,6 +135,9 @@ app.use("/api/form8", form8Router);
 const form7Router = require("./routes/form7")(db);
 app.use("/api/form7", form7Router);
 
+const userRoutes = require("./routes/user")(db);
+app.use("/api/user", userRoutes);
+
 
 
 app.listen(port, () => {

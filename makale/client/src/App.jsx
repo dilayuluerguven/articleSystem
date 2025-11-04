@@ -5,11 +5,13 @@ import Register from "./components/auth/Register";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import PrivateRoute from "./components/PrivateRoute";
+import UserProfile from "./pages/UserProfile";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   useEffect(() => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) setIsAuthenticated(true);
   }, []);
 
@@ -34,6 +36,14 @@ function App() {
           element={
             <PrivateRoute isAuthenticated={isAuthenticated}>
               <Profile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/userprofile"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <UserProfile />
             </PrivateRoute>
           }
         />
