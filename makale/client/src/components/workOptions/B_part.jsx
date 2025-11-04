@@ -3,7 +3,6 @@ import WorkModal from "../utils/WorkModal";
 import {
   PlusOutlined,
   EditOutlined,
-  InfoCircleOutlined,
   LoadingOutlined,
   CaretDownOutlined,
   CaretRightOutlined,
@@ -31,8 +30,29 @@ export default function B_part() {
     fetchCategories();
   }, []);
 
-  const addWork = (category) => {
-    setSelectedCategory(category);
+  const getActivityPath = (rootCategory, targetId) => {
+    const findPath = (node, targetId, path = []) => {
+      if (node.id === targetId) return [...path, node];
+
+      for (let sub of node.subcategories || []) {
+        const found = findPath(sub, targetId, [...path, node]);
+        if (found.length) return found;
+      }
+
+      return [];
+    };
+
+    const path = findPath(rootCategory, targetId);
+
+    const ust_aktivite = path[0]?.kod || "";
+    const alt_aktivite = path[1]?.kod || "";
+    const aktivite = path[2]?.kod || path[path.length - 1]?.kod || "";
+
+    return { ust_aktivite, alt_aktivite, aktivite };
+  };
+
+  const addWork = (category, categoryId) => {
+    setSelectedCategory({ ...category, selectedId: categoryId });
     setSelectedWork(null);
     setIsModalOpen(true);
   };
@@ -41,30 +61,6 @@ export default function B_part() {
     setSelectedCategory(category);
     setSelectedWork(work);
     setIsModalOpen(true);
-  };
-
-  const getActivityPath = (category, selectedCode) => {
-    let path = [category.kod];
-
-    const findPathRecursive = (subs, code) => {
-      for (let sub of subs || []) {
-        if (sub.kod === code) {
-          path.push(sub.kod);
-          return sub.subcategories || [];
-        }
-        const deeper = findPathRecursive(sub.subcategories, code);
-        if (deeper) return deeper;
-      }
-      return null;
-    };
-
-    findPathRecursive(category.subcategories, selectedCode);
-
-    return {
-      ust_aktivite: path[0] || "",
-      alt_aktivite: path[1] || "",
-      aktivite: path.length > 2 ? path[2] : "",
-    };
   };
 
   const handleOk = async ({
@@ -79,9 +75,8 @@ export default function B_part() {
     if (!file) return alert("Lütfen dosya seçin!");
 
     const { ust_aktivite, alt_aktivite, aktivite } = getActivityPath(
-      selectedCategory,
-      subSelection,
-      childSelection
+      categories[0],
+      selectedCategory.selectedId
     );
 
     const formData = new FormData();
@@ -102,16 +97,14 @@ export default function B_part() {
     try {
       const res = await fetch("http://localhost:5000/api/basvuru", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "DB Hatası");
 
-      alert(data.message);
+      alert(`${data.message}\n\n${ust_aktivite} > ${alt_aktivite} > ${aktivite}`);
       setIsModalOpen(false);
     } catch (err) {
       alert("Başvuru kaydedilemedi: " + err.message);
@@ -119,7 +112,7 @@ export default function B_part() {
   };
 
   const handleCancel = () => {
-    formRef.current.resetFields();
+    formRef.current?.resetFields();
     setIsModalOpen(false);
   };
 
@@ -128,7 +121,7 @@ export default function B_part() {
   };
 
   const renderCategories = (cats) => {
-    const disallowedCodes = ["B", "B-2"];
+    const disallowedCodes = ["B"];
     return cats.map((cat) => (
       <div key={cat.id} className="mb-4 ml-2">
         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300">
@@ -138,11 +131,7 @@ export default function B_part() {
                 className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                 onClick={() => toggleExpand(cat.id)}
               >
-                {expanded[cat.id] ? (
-                  <CaretDownOutlined />
-                ) : (
-                  <CaretRightOutlined />
-                )}
+                {expanded[cat.id] ? <CaretDownOutlined /> : <CaretRightOutlined />}
               </button>
             )}
             <div className="flex flex-col">
@@ -160,7 +149,7 @@ export default function B_part() {
           {!disallowedCodes.includes(cat.kod) && (
             <button
               className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
-              onClick={() => addWork(cat)}
+              onClick={() => addWork(categories[0], cat.id)} 
             >
               <PlusOutlined />
               Çalışma Ekle
@@ -178,9 +167,7 @@ export default function B_part() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-gray-700 font-normal">
-                      {work.description}
-                    </span>
+                    <span className="text-gray-700 font-normal">{work.description}</span>
                   </div>
                   <button
                     className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-3 py-1 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1"
@@ -193,9 +180,7 @@ export default function B_part() {
               ))}
 
             {cat.subcategories && (
-              <div className="mt-4 space-y-3">
-                {renderCategories(cat.subcategories)}
-              </div>
+              <div className="mt-4 space-y-3">{renderCategories(cat.subcategories)}</div>
             )}
           </div>
         )}
@@ -209,8 +194,8 @@ export default function B_part() {
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8 text-center">
             <p className="text-blue-100 text-lg">
-              Kategorileri genişletin, "Çalışma Ekle" butonu ile yeni çalışmalar
-              ekleyin, ve profilinizden görüntüleyin.
+              Kategorileri genişletin, "Çalışma Ekle" butonu ile yeni çalışmalar ekleyin,
+              ve profilinizden görüntüleyin.
             </p>
           </div>
 
@@ -218,9 +203,7 @@ export default function B_part() {
             {categories.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <LoadingOutlined
-                    style={{ fontSize: "2rem", color: "#9ca3af" }}
-                  />
+                  <LoadingOutlined style={{ fontSize: "2rem", color: "#9ca3af" }} />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   Kategoriler yükleniyor...

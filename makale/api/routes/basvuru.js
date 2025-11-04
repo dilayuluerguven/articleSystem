@@ -20,69 +20,88 @@ module.exports = (db) => {
 
 // POST - Başvuru ekle
 router.post("/", authMiddleware, upload.single("file"), async (req, res) => {
-    try {
-        const user_id = req.user?.id;
-        if (!user_id) return res.status(401).json({ error: "User yok" });
+  try {
+    const user_id = req.user?.id;
+    if (!user_id) return res.status(401).json({ error: "User yok" });
 
-        const {
-            ust_aktivite,
-            alt_aktivite,
-            aktivite,
-            yazar_sayisi,
-            main_selection,
-            sub_selection,
-            child_selection,
-            workDescription,
-            authorPosition,
-        } = req.body;
+    let {
+      ust_aktivite,
+      alt_aktivite,
+      aktivite,
+      yazar_sayisi,
+      main_selection,
+      sub_selection,
+      child_selection,
+      workDescription,
+      authorPosition,
+    } = req.body;
 
-        const eser = req.file ? req.file.filename : null;
-        const is_first_author = authorPosition === "ilk" ? 1 : 0; 
-        
-        const [puanRows] = await db.promise().query(
-            `SELECT 
-                CASE 
-                    WHEN ? = 1 THEN ilk_isim 
-                    ELSE digerleri 
-                END AS puan
-            FROM yazar_puanlar
-            WHERE yazar_sayisi = ?`,
-            [is_first_author, yazar_sayisi]
-        );
-        
-        const yazarpuanı = puanRows.length > 0 ? puanRows[0].puan : 0.0; 
+    const eser = req.file ? req.file.filename : null;
+    const is_first_author = authorPosition === "ilk" ? 1 : 0;
 
-        await db.promise().query(
-            `INSERT INTO basvuru 
-            (user_id, ust_aktivite, alt_aktivite, aktivite, eser, yazar_sayisi, main_selection, sub_selection, child_selection, workDescription, is_first_author, yazarpuanı)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, 
-            [
-                user_id,
-                ust_aktivite,
-                alt_aktivite,
-                aktivite,
-                eser,
-                yazar_sayisi,
-                main_selection,
-                sub_selection,
-                child_selection,
-                workDescription,
-                is_first_author,
-                yazarpuanı, 
-            ]
-        );
-
-        res.json({
-            success: true,
-            message: "Başvuru başarıyla kaydedildi",
-            file: eser,
-            yazarpuanı: yazarpuanı, 
-        });
-    } catch (err) {
-        console.error("Başvuru ekleme hatası:", err);
-        res.status(500).json({ success: false, error: "DB Hatası" });
+    // 🔹 Kod hiyerarşisini otomatik oluştur
+    // Eğer sadece üst seviye geldiyse
+    if (ust_aktivite && !alt_aktivite) {
+      alt_aktivite = `${ust_aktivite}-1`;
+      aktivite = `${alt_aktivite}.1`;
     }
+    // Eğer alt var ama aktivite yoksa
+    else if (ust_aktivite && alt_aktivite && !aktivite) {
+      aktivite = `${alt_aktivite}.1`;
+    }
+
+    // 🔹 Yazar puanı hesapla
+    const [puanRows] = await db.promise().query(
+      `SELECT 
+          CASE 
+              WHEN ? = 1 THEN ilk_isim 
+              ELSE digerleri 
+          END AS puan
+       FROM yazar_puanlar
+       WHERE yazar_sayisi = ?`,
+      [is_first_author, yazar_sayisi]
+    );
+
+    const yazarpuanı = puanRows.length > 0 ? puanRows[0].puan : 0.0;
+
+    // 🔹 Kaydı ekle
+    await db.promise().query(
+      `INSERT INTO basvuru 
+        (user_id, ust_aktivite, alt_aktivite, aktivite, eser, yazar_sayisi, 
+         main_selection, sub_selection, child_selection, workDescription, 
+         is_first_author, yazarpuanı)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        user_id,
+        ust_aktivite,
+        alt_aktivite,
+        aktivite,
+        eser,
+        yazar_sayisi,
+        main_selection,
+        sub_selection,
+        child_selection,
+        workDescription,
+        is_first_author,
+        yazarpuanı,
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: "Başvuru başarıyla kaydedildi",
+      file: eser,
+      yazarpuanı,
+      ust_aktivite,
+      alt_aktivite,
+      aktivite,
+    });
+  } catch (err) {
+    console.error("Başvuru ekleme hatası:", err);
+    res.status(500).json({ success: false, error: "DB Hatası" });
+  }
 });
+
   router.get("/", authMiddleware, async (req, res) => {
     try {
       const user_id = req.user?.id;

@@ -1,0 +1,102 @@
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const PizZip = require("pizzip");
+const Docxtemplater = require("docxtemplater");
+const { exec } = require("child_process");
+const authMiddleware = require("../middleware/auth");
+
+module.exports = (db) => {
+  const router = express.Router();
+
+  router.get("/:id/pdf", authMiddleware, async (req, res) => {
+    try {
+      const user_id = req.user?.id;
+      if (!user_id) return res.status(401).json({ error: "Kullanıcı bulunamadı" });
+
+      const [rows] = await db.promise().query(
+        `
+        SELECT 
+          b.*, 
+          u.username,
+          ua.kod AS ust_kod, ua.tanim AS ust_tanim,
+          a.kod AS aktivite_kod, a.tanim AS aktivite_tanim
+        FROM basvuru b
+        JOIN users u ON b.user_id = u.id
+        LEFT JOIN ust_aktiviteler ua ON b.ust_aktivite = ua.kod
+        LEFT JOIN aktivite a ON b.aktivite = a.kod
+        WHERE b.user_id = ?
+        ORDER BY b.ust_aktivite, b.aktivite
+        `,
+        [user_id]
+      );
+
+      if (rows.length === 0)
+        return res.status(404).json({ error: "Hiç başvuru bulunamadı" });
+
+      // Gruplama
+      const grouped = rows.reduce((acc, row) => {
+        const ustKod = row.ust_aktivite || "Diger";
+        if (!acc[ustKod]) acc[ustKod] = [];
+        acc[ustKod].push(row);
+        return acc;
+      }, {});
+
+      // Şablon
+      const templatePath = path.join(__dirname, "../FORM-7.docx");
+      const content = fs.readFileSync(templatePath, "binary");
+      const zip = new PizZip(content);
+      const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+      const formatEntries = (entries) =>
+        entries
+          .map((e, i) => {
+            const yayin = e.aktivite || e.aktivite_kod || e.alt_aktivite || "-";
+            const kod = `${yayin}:${i + 1}`;
+            const eser = e.workDescription || e.eser || "(Eser bilgisi bulunamadı)";
+            const puan = e.yazar_puani ? `(${e.yazar_puani})` : "";
+            return `${kod} - ${eser} ${puan}`;
+          })
+          .join("\n");
+
+      const sections = {};
+      const harfler = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S"];
+
+      for (const harf of harfler) {
+        sections[`${harf}_section`] =
+          grouped[harf]?.length > 0 ? formatEntries(grouped[harf]) : "";
+      }
+
+      doc.render({
+        username: rows[0].username || "-",
+        ...sections,
+      });
+
+      const outputDocx = path.join(__dirname, `../uploads/form7_${user_id}.docx`);
+      fs.writeFileSync(outputDocx, doc.getZip().generate({ type: "nodebuffer" }));
+
+      const outputPdf = outputDocx.replace(".docx", ".pdf");
+      const sofficePath = `"C:\\Program Files\\LibreOffice\\program\\soffice.exe"`;
+
+      exec(
+        `${sofficePath} --headless --convert-to pdf "${outputDocx}" --outdir "${path.join(
+          __dirname,
+          "../uploads"
+        )}"`,
+        (err) => {
+          if (err) {
+            console.error("PDF oluşturma hatası:", err);
+            return res.status(500).json({ error: "PDF oluşturulamadı" });
+          }
+
+          res.download(outputPdf, `Form7_${rows[0].username}.pdf`);
+        }
+      );
+    } catch (err) {
+      console.error("Form-7 oluşturma hatası:", err);
+      res.status(500).json({ error: "Sunucu hatası" });
+    }
+  });
+
+  return router;
+};

@@ -30,6 +30,11 @@ const Profile = () => {
       const res = await axios.get("http://localhost:5000/api/basvuru", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!Array.isArray(res.data)) {
+        console.error("Beklenmeyen veri formatı:", res.data);
+        message.error("Veri alınırken hata oluştu.");
+        return;
+      }
       setApplications(numberApplications(res.data));
     } catch (err) {
       console.error(err);
@@ -41,13 +46,23 @@ const Profile = () => {
 
   const numberApplications = (apps) => {
     const counts = {};
+
     const sorted = [...apps].sort(
-      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      (a, b) =>
+        new Date(b.created_at || 0).getTime() -
+        new Date(a.created_at || 0).getTime()
     );
+
     return sorted.map((item) => {
-      const key = item.ust_aktivite || "Bilinmeyen Aktivite";
+      const key =
+        item.aktivite || item.alt_aktivite || item.ust_aktivite || "Bilinmeyen";
+
       counts[key] = (counts[key] || 0) + 1;
-      return { ...item, displayTitle: `${key} :${counts[key]}` };
+
+      return {
+        ...item,
+        displayTitle: `${key}:${counts[key]}`,
+      };
     });
   };
 
@@ -67,7 +82,6 @@ const Profile = () => {
     }
   };
 
-  // Dosya önizleme fonksiyonu
   const renderFilePreview = (fileName) => {
     if (!fileName) return null;
     const fileUrl = `http://localhost:5000/uploads/${fileName}`;
@@ -175,6 +189,45 @@ const Profile = () => {
                               return;
                             }
 
+                            fetch(
+                              `http://localhost:5000/api/form7/${item.id}/pdf`,
+                              {
+                                headers: {
+                                  Authorization: `Bearer ${token}`,
+                                },
+                              }
+                            )
+                              .then((res) => {
+                                if (!res.ok)
+                                  throw new Error("PDF oluşturulamadı");
+                                return res.blob();
+                              })
+                              .then((blob) => {
+                                const url = window.URL.createObjectURL(blob);
+                                window.open(url, "_blank");
+                              })
+                              .catch(() => {
+                                message.error("PDF indirilemedi");
+                              });
+                          }}
+                        >
+                          📄 Form-7 PDF
+                        </Button>
+
+                        <Button
+                          type="primary"
+                          size="small"
+                          onClick={() => {
+                            const token =
+                              localStorage.getItem("token") ||
+                              sessionStorage.getItem("token");
+                            if (!token) {
+                              message.error(
+                                "Oturum bulunamadı, lütfen tekrar giriş yapın."
+                              );
+                              return;
+                            }
+
                             window.open(
                               `http://localhost:5000/api/form8/${item.id}/pdf?token=${token}`,
                               "_blank"
@@ -211,7 +264,7 @@ const Profile = () => {
                       {item.workDescription && (
                         <div className="flex flex-col">
                           <Text className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                            Künye :
+                            Künye:
                           </Text>
                           <Text className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
                             {item.workDescription}
@@ -219,7 +272,7 @@ const Profile = () => {
                         </div>
                       )}
 
-                      <div className="flex flex-wrap gap-4 pt-2 border-t border-gray-100">
+                      <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-100">
                         <div className="flex items-center gap-2">
                           <span>👤</span>
                           <Text className="text-sm text-gray-600">

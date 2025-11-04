@@ -43,29 +43,33 @@ export default function C_part() {
     setIsModalOpen(true);
   };
 
-  const getActivityPath = (category, selectedCode) => {
-    let path = [category.kod];
+ const getActivityPath = (category, subSelection, childSelection) => {
+  const ust = category.kod; // örn: B
+  let alt = "";
+  let aktivite = "";
 
-    const findPathRecursive = (subs, code) => {
-      for (let sub of subs || []) {
-        if (sub.kod === code) {
-          path.push(sub.kod);
-          return sub.subcategories || [];
-        }
-        const deeper = findPathRecursive(sub.subcategories, code);
-        if (deeper) return deeper;
-      }
-      return null;
-    };
+  // Eğer alt kategori varsa (örneğin "2" veya "B-2")
+  if (subSelection) {
+    alt = subSelection.includes("-") ? subSelection : `${ust}-${subSelection}`;
+  } else {
+    alt = `${ust}-1`;
+  }
 
-    findPathRecursive(category.subcategories, selectedCode);
+  // Eğer childSelection varsa (örneğin "1" veya "2")
+  if (childSelection) {
+    aktivite = childSelection.includes(".")
+      ? childSelection
+      : `${alt}.${childSelection}`;
+  } else {
+    aktivite = `${alt}.1`;
+  }
 
-    return {
-      ust_aktivite: path[0] || "",
-      alt_aktivite: path[1] || "",
-      aktivite: path.length > 2 ? path[2] : "",
-    };
+  return {
+    ust_aktivite: ust,
+    alt_aktivite: alt,
+    aktivite: aktivite,
   };
+};
 
   const handleOk = async ({
     mainSelection,
