@@ -55,7 +55,7 @@ const Profile = () => {
 
     return sorted.map((item) => {
       const key =
-        item.aktivite || item.alt_aktivite || item.ust_aktivite || "Bilinmeyen";
+        item.aktivite_kod || item.alt_kod || item.ust_kod || "Bilinmeyen";
 
       counts[key] = (counts[key] || 0) + 1;
 
@@ -189,14 +189,9 @@ const Profile = () => {
                               return;
                             }
 
-                            fetch(
-                              `http://localhost:5000/api/form7/${item.id}/pdf`,
-                              {
-                                headers: {
-                                  Authorization: `Bearer ${token}`,
-                                },
-                              }
-                            )
+                            fetch(`http://localhost:5000/api/form7/pdf`, {
+                              headers: { Authorization: `Bearer ${token}` },
+                            })
                               .then((res) => {
                                 if (!res.ok)
                                   throw new Error("PDF oluşturulamadı");

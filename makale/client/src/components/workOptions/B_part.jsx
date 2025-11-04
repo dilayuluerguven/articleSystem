@@ -29,26 +29,35 @@ export default function B_part() {
     };
     fetchCategories();
   }, []);
-
-  const getActivityPath = (rootCategory, targetId) => {
+  const getActivityPath = (allCategories, targetId) => {
     const findPath = (node, targetId, path = []) => {
       if (node.id === targetId) return [...path, node];
-
       for (let sub of node.subcategories || []) {
         const found = findPath(sub, targetId, [...path, node]);
         if (found.length) return found;
       }
-
       return [];
     };
 
-    const path = findPath(rootCategory, targetId);
+    for (let root of allCategories) {
+      const path = findPath(root, targetId);
 
-    const ust_aktivite = path[0]?.kod || "";
-    const alt_aktivite = path[1]?.kod || "";
-    const aktivite = path[2]?.kod || path[path.length - 1]?.kod || "";
+      if (path.length) {
+        const ust_aktivite_id = path[0]?.id ?? null;
+        const alt_aktivite_id =
+          path.length > 1 && path[1]?.aktivite_id === ust_aktivite_id
+            ? path[1].id
+            : null;
 
-    return { ust_aktivite, alt_aktivite, aktivite };
+        // Aktivite tablosundaki kayıtlar genelde 3. seviye node’lar
+        const aktivite_id =
+          path.length > 2 && path[2]?.alt_aktivite_id ? path[2].id : null;
+
+        return { ust_aktivite_id, alt_aktivite_id, aktivite_id };
+      }
+    }
+
+    return { ust_aktivite_id: null, alt_aktivite_id: null, aktivite_id: null };
   };
 
   const addWork = (category, categoryId) => {
@@ -73,16 +82,25 @@ export default function B_part() {
     authorPosition,
   }) => {
     if (!file) return alert("Lütfen dosya seçin!");
+    console.log("Seçilen kategori:", selectedCategory);
+    console.log(
+      "Bulunan path:",
+      getActivityPath(categories, selectedCategory.selectedId)
+    );
 
-    const { ust_aktivite, alt_aktivite, aktivite } = getActivityPath(
-      categories[0],
+    const { ust_aktivite_id, alt_aktivite_id, aktivite_id } = getActivityPath(
+      categories,
       selectedCategory.selectedId
     );
 
+    const safeAktiviteId =
+      aktivite_id && aktivite_id !== alt_aktivite_id ? aktivite_id : null;
+
     const formData = new FormData();
-    formData.append("ust_aktivite", ust_aktivite);
-    formData.append("alt_aktivite", alt_aktivite);
-    formData.append("aktivite", aktivite);
+    formData.append("ust_aktivite_id", ust_aktivite_id);
+    formData.append("alt_aktivite_id", alt_aktivite_id);
+    formData.append("aktivite_id", safeAktiviteId);
+
     formData.append("yazar_sayisi", yazarSayisi);
     formData.append("main_selection", mainSelection);
     formData.append("sub_selection", subSelection || "");
@@ -104,7 +122,7 @@ export default function B_part() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "DB Hatası");
 
-      alert(`${data.message}\n\n${ust_aktivite} > ${alt_aktivite} > ${aktivite}`);
+      alert(`${data.message}\n\nKategori ID'leri başarıyla kaydedildi!`);
       setIsModalOpen(false);
     } catch (err) {
       alert("Başvuru kaydedilemedi: " + err.message);
@@ -131,7 +149,11 @@ export default function B_part() {
                 className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                 onClick={() => toggleExpand(cat.id)}
               >
-                {expanded[cat.id] ? <CaretDownOutlined /> : <CaretRightOutlined />}
+                {expanded[cat.id] ? (
+                  <CaretDownOutlined />
+                ) : (
+                  <CaretRightOutlined />
+                )}
               </button>
             )}
             <div className="flex flex-col">
@@ -149,7 +171,7 @@ export default function B_part() {
           {!disallowedCodes.includes(cat.kod) && (
             <button
               className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
-              onClick={() => addWork(categories[0], cat.id)} 
+              onClick={() => addWork(cat, cat.id)}
             >
               <PlusOutlined />
               Çalışma Ekle
@@ -167,7 +189,9 @@ export default function B_part() {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-gray-700 font-normal">{work.description}</span>
+                    <span className="text-gray-700 font-normal">
+                      {work.description}
+                    </span>
                   </div>
                   <button
                     className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-3 py-1 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1"
@@ -180,7 +204,9 @@ export default function B_part() {
               ))}
 
             {cat.subcategories && (
-              <div className="mt-4 space-y-3">{renderCategories(cat.subcategories)}</div>
+              <div className="mt-4 space-y-3">
+                {renderCategories(cat.subcategories)}
+              </div>
             )}
           </div>
         )}
@@ -194,8 +220,8 @@ export default function B_part() {
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8 text-center">
             <p className="text-blue-100 text-lg">
-              Kategorileri genişletin, "Çalışma Ekle" butonu ile yeni çalışmalar ekleyin,
-              ve profilinizden görüntüleyin.
+              Kategorileri genişletin, "Çalışma Ekle" butonu ile yeni çalışmalar
+              ekleyin, ve profilinizden görüntüleyin.
             </p>
           </div>
 
@@ -203,7 +229,9 @@ export default function B_part() {
             {categories.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <LoadingOutlined style={{ fontSize: "2rem", color: "#9ca3af" }} />
+                  <LoadingOutlined
+                    style={{ fontSize: "2rem", color: "#9ca3af" }}
+                  />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   Kategoriler yükleniyor...

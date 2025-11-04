@@ -3,7 +3,6 @@ import WorkModal from "../utils/WorkModal";
 import {
   PlusOutlined,
   EditOutlined,
-  InfoCircleOutlined,
   LoadingOutlined,
   CaretDownOutlined,
   CaretRightOutlined,
@@ -31,8 +30,31 @@ export default function O_part() {
     fetchCategories();
   }, []);
 
-  const addWork = (category) => {
-    setSelectedCategory(category);
+  const getActivityPath = (allCategories, targetId) => {
+    const findPath = (node, targetId, path = []) => {
+      if (node.id === targetId) return [...path, node];
+      for (let sub of node.subcategories || []) {
+        const found = findPath(sub, targetId, [...path, node]);
+        if (found.length) return found;
+      }
+      return [];
+    };
+
+    for (let root of allCategories) {
+      const path = findPath(root, targetId);
+      if (path.length) {
+        const ust_aktivite_id = path[0]?.id ?? null;
+        const alt_aktivite_id = path.length >= 2 ? path[1].id : null;
+        const aktivite_id = path.length >= 3 ? path[2].id : null;
+        return { ust_aktivite_id, alt_aktivite_id, aktivite_id };
+      }
+    }
+
+    return { ust_aktivite_id: null, alt_aktivite_id: null, aktivite_id: null };
+  };
+
+  const addWork = (category, categoryId) => {
+    setSelectedCategory({ ...category, selectedId: categoryId });
     setSelectedWork(null);
     setIsModalOpen(true);
   };
@@ -43,30 +65,6 @@ export default function O_part() {
     setIsModalOpen(true);
   };
 
-  const getActivityPath = (category, selectedCode) => {
-    let path = [category.kod];
-
-    const findPathRecursive = (subs, code) => {
-      for (let sub of subs || []) {
-        if (sub.kod === code) {
-          path.push(sub.kod);
-          return sub.subcategories || [];
-        }
-        const deeper = findPathRecursive(sub.subcategories, code);
-        if (deeper) return deeper;
-      }
-      return null;
-    };
-
-    findPathRecursive(category.subcategories, selectedCode);
-
-    return {
-      ust_aktivite: path[0] || "",
-      alt_aktivite: path[1] || "",
-      aktivite: path.length > 2 ? path[2] : "",
-    };
-  };
-
   const handleOk = async ({
     mainSelection,
     subSelection,
@@ -74,20 +72,19 @@ export default function O_part() {
     file,
     yazarSayisi,
     workDescription,
-    authorPosition
+    authorPosition,
   }) => {
     if (!file) return alert("Lütfen dosya seçin!");
 
-    const { ust_aktivite, alt_aktivite, aktivite } = getActivityPath(
-      selectedCategory,
-      subSelection,
-      childSelection
+    const { ust_aktivite_id, alt_aktivite_id, aktivite_id } = getActivityPath(
+      categories,
+      selectedCategory.selectedId
     );
 
     const formData = new FormData();
-    formData.append("ust_aktivite", ust_aktivite);
-    formData.append("alt_aktivite", alt_aktivite);
-    formData.append("aktivite", aktivite);
+    formData.append("ust_aktivite_id", ust_aktivite_id);
+    formData.append("alt_aktivite_id", alt_aktivite_id);
+    formData.append("aktivite_id", aktivite_id);
     formData.append("yazar_sayisi", yazarSayisi);
     formData.append("main_selection", mainSelection);
     formData.append("sub_selection", subSelection || "");
@@ -95,6 +92,7 @@ export default function O_part() {
     formData.append("file", file);
     formData.append("workDescription", workDescription);
     formData.append("authorPosition", authorPosition);
+
     const token =
       sessionStorage.getItem("token") || localStorage.getItem("token");
 
@@ -116,7 +114,7 @@ export default function O_part() {
   };
 
   const handleCancel = () => {
-    formRef.current.resetFields();
+    formRef.current?.resetFields();
     setIsModalOpen(false);
   };
 
@@ -125,7 +123,7 @@ export default function O_part() {
   };
 
   const renderCategories = (cats) => {
-    const disallowedCodes = ["O","O-1", "O-2","O-6","O-7"];
+    const disallowedCodes = ["O", "O-1", "O-2", "O-6", "O-7"];
     return cats.map((cat) => (
       <div key={cat.id} className="mb-4 ml-2">
         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300">
@@ -144,7 +142,7 @@ export default function O_part() {
             )}
             <div className="flex flex-col">
               <span className="font-bold text-gray-800 text-medium">
-                {cat.kod} : {cat.tanim}
+                {cat.kod} - {cat.tanim}
               </span>
               {cat.subcategories && (
                 <span className="text-xs text-gray-500 mt-1">
@@ -157,7 +155,7 @@ export default function O_part() {
           {!disallowedCodes.includes(cat.kod) && (
             <button
               className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
-              onClick={() => addWork(cat)}
+              onClick={() => addWork(cat, cat.id)}
             >
               <PlusOutlined />
               Çalışma Ekle

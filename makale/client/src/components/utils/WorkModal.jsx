@@ -16,7 +16,7 @@ export default function WorkModal({
   const [selectedFile, setSelectedFile] = useState(null);
   const [count, setCount] = useState(initialCount);
   const [workDescription, setWorkDescription] = useState("");
-  const [authorPosition, setAuthorPosition] = useState("ilk"); // varsayılan: ilk yazar
+  const [authorPosition, setAuthorPosition] = useState("ilk"); 
 
   useEffect(() => {
     setCount(initialCount);
@@ -43,26 +43,30 @@ export default function WorkModal({
     setChildSelection(e.target.value);
   };
 
-  const handleModalOk = () => {
-    if (!selectedFile) {
-      alert("Lütfen bir dosya seçin!");
-      return;
-    }
-    if (!workDescription.trim()) {
-      alert("Lütfen künyenizi giriniz!");
-      return;
-    }
+ const handleModalOk = () => {
+  if (!selectedFile) {
+    alert("Lütfen bir dosya seçin!");
+    return;
+  }
+  if (!workDescription.trim()) {
+    alert("Lütfen künyenizi giriniz!");
+    return;
+  }
 
-    handleOk({
-      mainSelection,
-      subSelection,
-      childSelection,
-      file: selectedFile,
-      yazarSayisi: count,
-      workDescription,
-      authorPosition, // <-- yeni alan
-    });
-  };
+  handleOk({
+    ust_aktivite_id: selectedCategory?.id, 
+    alt_aktivite_id: selectedCategory?.parent_id || null,
+    aktivite_id: childSelection?.id || null,
+    mainSelection,
+    subSelection,
+    childSelection,
+    file: selectedFile,
+    yazarSayisi: count,
+    workDescription,
+    authorPosition,
+  });
+};
+
 
   return (
     <Modal
@@ -80,6 +84,7 @@ export default function WorkModal({
           wrapperCol={{ span: 16 }}
           style={{ maxWidth: 600 }}
           autoComplete="off"
+          onSubmit={(e) => e.preventDefault()} 
         >
           <Form.Item
             label="Künyeyi giriniz"
