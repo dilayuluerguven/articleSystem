@@ -86,22 +86,25 @@ module.exports = (db) => {
         yazar_sayisi: data.yazar_sayisi || 0,
         username: data.username || "-",
 
-        b_eser: check(data.main_selection, "baslicaeser"),
-        tek_yaz: check(data.main_selection, "tekyazar"),
+        b_eser: check(data.main_selection, "baslicaEser"),
+        tek_yaz: check(data.sub_selection, "tekYazarli"),
         ogrenci_makale: check(data.sub_selection, "ogrenciyle"),
         tezden: check(data.child_selection, "tezden"),
-        tez_harici: check(data.child_selection, "tezharici"),
-        aday_tez_makale: check(data.main_selection, "adaytezyayin"),
-        aday_yuksek: check(data.child_selection, "yuksek"),
+        tez_harici: check(data.child_selection, "tezHarici"),
+        aday_tez_makale: check(data.sub_selection, "adayTez"),
+        aday_yuksek: check(data.child_selection, "yuksekLisans"),
         aday_doktora: check(data.child_selection, "doktora"),
-        proje_makale: check(data.main_selection, "projemakale"),
-        kitap_yazarligi: check(data.main_selection, "kitapyazarligi"),
-        diger_faaliyet: check(data.main_selection, "digerfaaliyet"),
-        docentlik_sonrasi: check(data.main_selection, "docentliksonrasi"),
-        doktora_sonrasi: check(data.main_selection, "doktorasonrasi"),
+        proje_makale: check(data.sub_selection, "projedenMakale"),
+        kitap_yazarligi: check(data.sub_selection, "kitap"),
+        diger_faaliyet: check(data.main_selection, "digerFaaliyet"),
+        docentlik_sonrasi: check(data.main_selection, "docentlikSonrasi"),
+        doktora_sonrasi: check(data.main_selection, "doktoraSonrasi"),
       });
 
-      const outputDocx = path.join(__dirname, `../uploads/form8_${data.id}.docx`);
+      const outputDocx = path.join(
+        __dirname,
+        `../uploads/form8_${data.id}.docx`
+      );
       fs.writeFileSync(
         outputDocx,
         doc.getZip().generate({ type: "nodebuffer" })

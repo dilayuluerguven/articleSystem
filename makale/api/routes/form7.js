@@ -14,7 +14,6 @@ router.get("/pdf", authMiddleware, async (req, res) => {
     if (!user_id)
       return res.status(401).json({ error: "Kullanıcı bulunamadı" });
 
-    // 🔹 Kullanıcının TÜM başvurularını çek
     const [rows] = await db.promise().query(
       `
       SELECT 
@@ -37,7 +36,6 @@ router.get("/pdf", authMiddleware, async (req, res) => {
     if (rows.length === 0)
       return res.status(404).json({ error: "Hiç başvuru bulunamadı" });
 
-    // 🔹 Kategorilere göre grupla
     const grouped = rows.reduce((acc, row) => {
       const ustKod = row.ust_kod?.trim() || "Diger";
       if (!acc[ustKod]) acc[ustKod] = [];
@@ -45,13 +43,11 @@ router.get("/pdf", authMiddleware, async (req, res) => {
       return acc;
     }, {});
 
-    // 🔹 Word şablonunu yükle
     const templatePath = path.join(__dirname, "../FORM-7.docx");
     const content = fs.readFileSync(templatePath, "binary");
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-    // 🔹 Her kategori altındaki satırları biçimlendir
     const formatEntries = (entries) =>
       entries
         .map((e, i) => {
@@ -64,7 +60,6 @@ router.get("/pdf", authMiddleware, async (req, res) => {
         })
         .join("\n");
 
-    // 🔹 Şablondaki tüm bölümleri doldur
     const sections = {};
     const harfler = [
       "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
@@ -81,11 +76,9 @@ router.get("/pdf", authMiddleware, async (req, res) => {
       ...sections,
     });
 
-    // 🔹 Word oluştur
     const outputDocx = path.join(__dirname, `../uploads/form7_${user_id}.docx`);
     fs.writeFileSync(outputDocx, doc.getZip().generate({ type: "nodebuffer" }));
 
-    // 🔹 PDF'e dönüştür
     const outputPdf = outputDocx.replace(".docx", ".pdf");
     const sofficePath = `"C:\\Program Files\\LibreOffice\\program\\soffice.exe"`;
 

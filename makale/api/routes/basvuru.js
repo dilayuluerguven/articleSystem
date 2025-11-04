@@ -161,7 +161,6 @@ router.get("/", authMiddleware, async (req, res) => {
         b.workDescription,
         b.is_first_author,
 
-        -- 🔹 puan sütunlarının gerçek isimleri
         b.yazarpuanı,
         b.hamPuan,
         b.toplamPuan,
