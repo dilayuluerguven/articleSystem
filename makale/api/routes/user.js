@@ -1,16 +1,15 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
-const authMiddleware = require("../middleware/auth"); // JWT kontrolü
+const authMiddleware = require("../middleware/auth"); 
 
 module.exports = (db) => {
-  // 🟢 Kullanıcı bilgilerini getir
   router.get("/me", authMiddleware, async (req, res) => {
     try {
       const [rows] = await db
         .promise()
         .query(
-          "SELECT id, username, email, created_at FROM users WHERE id = ?",
+          "SELECT id,fullname,username, email, created_at FROM users WHERE id = ?",
           [req.user.id]
         );
 
@@ -25,25 +24,22 @@ module.exports = (db) => {
     }
   });
 
-  // 🟡 Kullanıcı bilgilerini güncelle
   router.put("/update", authMiddleware, async (req, res) => {
     try {
-      const { username, email, password } = req.body;
+      const {fullname, username, email, password } = req.body;
       const userId = req.user.id;
 
-      // Şifre girilmişse hashle
       let hashedPassword = null;
       if (password) {
         const salt = await bcrypt.genSalt(10);
         hashedPassword = await bcrypt.hash(password, salt);
       }
 
-      // Sorgu oluştur
       const [result] = await db
         .promise()
         .query(
-          "UPDATE users SET username = ?, email = ?, password = IFNULL(?, password) WHERE id = ?",
-          [username, email, hashedPassword, userId]
+          "UPDATE users SET fullname=?,username = ?, email = ?, password = IFNULL(?, password) WHERE id = ?",
+          [fullname,username, email, hashedPassword, userId]
         );
 
       if (result.affectedRows === 0) {

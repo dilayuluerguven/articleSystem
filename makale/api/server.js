@@ -36,8 +36,9 @@ app.get("/", (req, res) => {
 
 // Kullanıcı kayıt
 app.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password) {
+  const { fullname, username, email, password } = req.body;
+
+  if (!fullname || !username || !email || !password) {
     return res.status(400).json({ error: "Tüm alanlar zorunludur" });
   }
 
@@ -53,8 +54,8 @@ app.post("/register", async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         db.query(
-          "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-          [username, email, hashedPassword],
+          "INSERT INTO users (fullname, username, email, password) VALUES (?, ?, ?, ?)",
+          [fullname, username, email, hashedPassword],
           (err, result) => {
             if (err) {
               console.error("Kayıt hatası:", err);
@@ -72,6 +73,7 @@ app.post("/register", async (req, res) => {
     res.status(500).json({ error: "Server hatası" });
   }
 });
+
 
 // Kullanıcı login
 app.post("/login", async (req, res) => {
@@ -125,6 +127,8 @@ app.use("/api/basvuru", basvuruRoutes);
 const ustAktiviteRouter = require("./routes/ustAktivite")(db);
 app.use("/api", ustAktiviteRouter);
 
+const form1Router = require("./routes/form1")(db);
+app.use("/api/form1", form1Router);
 
 const path = require("path");
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
