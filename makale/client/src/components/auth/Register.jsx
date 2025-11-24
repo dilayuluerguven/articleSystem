@@ -12,6 +12,7 @@ const Register = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          fullname: values.fullname,
           username: values.username,
           email: values.email,
           password: values.password,
@@ -40,9 +41,20 @@ const Register = () => {
           <h1 className="text-center text-5xl font-bold mb-2">LOGO</h1>
           <Form layout="vertical" onFinish={onFinish}>
             <Form.Item
+              label="Adı Soyadı:"
+              name="fullname"
+              rules={[
+                { required: true, message: "Adı Soyadı boş bırakılamaz!" },
+              ]}
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
               label="Kullanıcı Adı:"
               name="username"
-              rules={[{ required: true, message: "Kullanıcı Adı Boş Bırakılamaz!" }]}
+              rules={[
+                { required: true, message: "Kullanıcı Adı Boş Bırakılamaz!" },
+              ]}
             >
               <Input />
             </Form.Item>
@@ -79,7 +91,12 @@ const Register = () => {
               <Input.Password />
             </Form.Item>
             <Form.Item>
-              <Button type="primary" htmlType="submit" className="w-full" size="large">
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="w-full"
+                size="large"
+              >
                 Kaydol
               </Button>
             </Form.Item>

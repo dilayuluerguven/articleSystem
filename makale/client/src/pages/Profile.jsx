@@ -56,19 +56,30 @@ const Profile = () => {
   };
 
   const numberApplications = (apps) => {
+    const sortedForNumbering = [...apps].sort(
+      (a, b) =>
+        new Date(a.created_at || 0).getTime() -
+        new Date(b.created_at || 0).getTime()
+    );
+
     const counts = {};
-    const sorted = [...apps].sort(
+
+    sortedForNumbering.forEach((item) => {
+      const key =
+        item.aktivite_kod || item.alt_kod || item.ust_kod || "Bilinmeyen";
+
+      counts[key] = (counts[key] || 0) + 1;
+
+      item.displayTitle = `${key}:${counts[key]}`;
+    });
+
+    const finalSorted = sortedForNumbering.sort(
       (a, b) =>
         new Date(b.created_at || 0).getTime() -
         new Date(a.created_at || 0).getTime()
     );
 
-    return sorted.map((item) => {
-      const key =
-        item.aktivite_kod || item.alt_kod || item.ust_kod || "Bilinmeyen";
-      counts[key] = (counts[key] || 0) + 1;
-      return { ...item, displayTitle: `${key}:${counts[key]}` };
-    });
+    return finalSorted;
   };
 
   const handleDelete = async (id) => {

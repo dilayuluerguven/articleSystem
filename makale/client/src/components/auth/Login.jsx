@@ -1,9 +1,9 @@
-import { Button, Carousel, Checkbox, Form, Input, message, Alert } from "antd"; 
+import { Button, Carousel, Checkbox, Form, Input, message, Alert } from "antd";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthCarousel from "../../components/auth/AuthCarousel";
 
-const Login = () => {
+const Login = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -20,27 +20,36 @@ const Login = () => {
       if (!res.ok) {
         console.error("Login response error:", data);
 
-        setErrorMessage(data.error || "Giriş başarısız! Lütfen bilgilerinizi kontrol edin.");
+        setErrorMessage(
+          data.error || "Giriş başarısız! Lütfen bilgilerinizi kontrol edin."
+        );
 
         message.error(data.error || "Giriş başarısız!");
-
         return;
       }
 
       setErrorMessage("");
-
       message.success("Giriş başarılı!");
 
       if (data.token) {
         const storage = values.remember ? localStorage : sessionStorage;
         storage.setItem("token", data.token);
-        storage.setItem("username", data.user?.username || data.user?.email);
+        storage.setItem(
+          "username",
+          data.user?.username || data.user?.email || ""
+        );
       }
 
-      setTimeout(() => navigate("/home"), 300);
+      if (setIsAuthenticated) {
+        setIsAuthenticated(true);
+      }
+
+      navigate("/home");
     } catch (err) {
       console.error("Login fetch error:", err);
-      setErrorMessage("Sunucuya bağlanılamadı veya beklenmedik hata oluştu!");
+      setErrorMessage(
+        "Sunucuya bağlanılamadı veya beklenmedik hata oluştu!"
+      );
       message.error("Sunucuya bağlanılamadı!");
     }
   };
@@ -49,19 +58,22 @@ const Login = () => {
     <div className="h-screen">
       <div className="flex justify-between h-full">
         <div className="xl:px-20 px-10 w-full flex flex-col h-full justify-center relative">
-           <div className="text-center mb-8">
-              <div className="flex justify-center mb-4">
-                <img
-                  src="/images/Konya_Teknik_Üniversitesi_logo.png"
-                  alt="Konya Teknik Üniversitesi Logosu"
-                  className="h-16 w-auto transition-all duration-300 hover:scale-105"
-                />
-              </div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-2">
-                Makale Sistemi
-              </h1>
-              <p className="text-gray-600 text-lg">Akademik Yönetim Platformu</p>
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <img
+                src="/images/Konya_Teknik_Üniversitesi_logo.png"
+                alt="Konya Teknik Üniversitesi Logosu"
+                className="h-16 w-auto transition-all duration-300 hover:scale-105"
+              />
             </div>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+              Makale Sistemi
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Akademik Yönetim Platformu
+            </p>
+          </div>
+
           {errorMessage && (
             <div className="mb-4">
               <Alert
@@ -94,7 +106,11 @@ const Login = () => {
               <Input.Password />
             </Form.Item>
 
-            <Form.Item name="remember" valuePropName="checked" initialValue={false}>
+            <Form.Item
+              name="remember"
+              valuePropName="checked"
+              initialValue={false}
+            >
               <div className="flex justify-between items-center">
                 <Checkbox>Beni Hatırla</Checkbox>
                 <Link>Şifrenizi mi unuttunuz?</Link>
@@ -102,7 +118,12 @@ const Login = () => {
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" htmlType="submit" className="w-full" size="large">
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="w-full"
+                size="large"
+              >
                 Giriş Yap
               </Button>
             </Form.Item>
