@@ -5,106 +5,70 @@ module.exports = (db) => {
 
   router.get("/categories", async (req, res) => {
     try {
-      const [ustResults] = await db
-        .promise()
-        .query("SELECT * FROM ust_aktiviteler ORDER BY id ASC");
-      const [altResults] = await db
-        .promise()
-        .query("SELECT * FROM alt_aktiviteler ORDER BY id ASC");
-      const [aktResults] = await db
-        .promise()
-        .query("SELECT * FROM aktivite ORDER BY id ASC");
+      const [ust] = await db.promise().query("SELECT * FROM ust_aktiviteler");
+      const [alt] = await db.promise().query("SELECT * FROM alt_aktiviteler");
+      const [akt] = await db.promise().query("SELECT * FROM aktivite");
 
-      const allAktiviteler = [...altResults, ...aktResults];
+      const normalAlt = alt.filter((x) => !x.kod.startsWith("A-"));
+      const normalAkt = akt.filter((x) => !x.kod.startsWith("A-"));
 
-      const buildHierarchy = (items) => {
-        const map = {};
-        const roots = [];
+      const all = [...normalAlt, ...normalAkt];
 
-        items.forEach((item) => {
-          item.subcategories = [];
-          map[item.kod] = item;
-        });
+      const map = {};
+      all.forEach((item) => (map[item.kod] = { ...item, subcategories: [] }));
 
-        items.forEach((item) => {
-          const idx = item.kod.lastIndexOf(".");
-          const parent = idx !== -1 ? item.kod.substring(0, idx) : null;
-
-          if (parent && map[parent]) map[parent].subcategories.push(item);
-          else roots.push(item);
-        });
-
-        const sortRecursive = (arr) => {
-          arr.sort((a, b) => a.id - b.id);
-          arr.forEach(
-            (i) => i.subcategories.length > 0 && sortRecursive(i.subcategories)
-          );
-        };
-
-        sortRecursive(roots);
-        return roots;
-      };
-
-      const hiyerarsi = buildHierarchy(allAktiviteler);
-
-      ustResults.forEach((ust) => {
-        ust.subcategories = hiyerarsi.filter(
-          (item) => item.kod.startsWith(ust.kod + "-") || item.kod === ust.kod
-        );
+      all.forEach((item) => {
+        const parts = item.kod.split("-");
+        if (parts.length > 1) {
+          const parentCode = parts[0] + "-" + parts[1].split(".")[0];
+          if (map[parentCode] && parentCode !== item.kod) {
+            map[parentCode].subcategories.push(map[item.kod]);
+          }
+        }
       });
 
-      const aRoot = ustResults.find((u) => u.kod === "A");
+      ust.forEach((u) => {
+        if (u.kod !== "A") {
+          u.subcategories = Object.values(map).filter((x) =>
+            x.kod.startsWith(u.kod + "-")
+          );
+        }
+      });
 
+      const aRoot = ust.find((x) => x.kod === "A");
       if (aRoot) {
-        const aSub = aRoot.subcategories;
+        const a1 = [];
+        const a2 = [];
+        const a3 = [];
+        const a4 = [];
+        const a5 = [];
+        const a6 = [];
 
-        const groups = {
-          "A-1": [],
-          "A-2": [],
-          "A-3": [],
-          "A-4": [],
-          "A-5": [],
-          "A-6": [],
-        };
-
-        aSub.forEach((item) => {
-          const kod = item.kod;
-
-          if (kod.startsWith("A-1")) groups["A-1"].push(item);
-          else if (kod.startsWith("A-2")) groups["A-2"].push(item);
-          else if (kod.startsWith("A-3")) groups["A-3"].push(item);
-          else if (kod.startsWith("A-4")) groups["A-4"].push(item);
-          else if (kod.startsWith("A-5")) groups["A-5"].push(item);
-          else if (kod.startsWith("A-6")) groups["A-6"].push(item);
+        alt.forEach((a) => {
+          if (a.kod === "A-1") a1.push(a);
+          if (a.kod === "A-2") a2.push(a);
+          if (a.kod === "A-3") a3.push(a);
+          if (a.kod === "A-4") a4.push(a);
+          if (a.kod === "A-5") a5.push(a);
+          if (a.kod === "A-6") a6.push(a);
         });
 
-        const build = (kod, arr) => {
-          const root = arr.find((x) => x.kod === kod) || {
-            id: null,
-            kod,
-            tanim: kod,
-          };
-
-          const subs = arr.filter((x) => x.kod !== kod);
-
-          return {
-            ...root,
-            subcategories: subs,
-          };
-        };
+        const child = (group, code) =>
+          akt.filter((x) => new RegExp(`^${code}[a-z]$`, "i").test(x.kod));
 
         aRoot.subcategories = [
-          build("A-1", groups["A-1"]),
-          build("A-2", groups["A-2"]),
-          build("A-3", groups["A-3"]),
-          build("A-4", groups["A-4"]),
-          build("A-5", groups["A-5"]),
-          build("A-6", groups["A-6"]),
+          { ...a1[0], subcategories: child(a1, "A-1") },
+          { ...a2[0], subcategories: child(a2, "A-2") },
+          { ...a3[0], subcategories: child(a3, "A-3") },
+          { ...a4[0], subcategories: child(a4, "A-4") },
+          { ...a5[0], subcategories: [] },
+          { ...a6[0], subcategories: [] },
         ];
       }
 
-      res.json(ustResults);
+      res.json(ust);
     } catch (err) {
+      console.error(err);
       res.status(500).json({ error: "Server hatası" });
     }
   });

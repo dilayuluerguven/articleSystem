@@ -33,7 +33,7 @@ export default function A_part() {
 
   const getActivityPath = (allCategories, targetId) => {
     const findPath = (node, targetId, path = []) => {
-      if (node.id === targetId) return [...path, node];
+      if (node.kod === targetId) return [...path, node];
       for (let sub of node.subcategories || []) {
         const found = findPath(sub, targetId, [...path, node]);
         if (found.length) return found;
@@ -45,6 +45,26 @@ export default function A_part() {
       const path = findPath(root, targetId);
 
       if (path.length) {
+        if (root.kod === "A") {
+          const lastNode = path[path.length - 1];
+
+          if (/^A-\d+$/.test(lastNode.kod)) {
+            return {
+              ust_aktivite_id: root.id,
+              alt_aktivite_id: lastNode.id,
+              aktivite_id: null,
+            };
+          }
+
+          if (/^A-\d+[a-z]$/i.test(lastNode.kod)) {
+            return {
+              ust_aktivite_id: root.id,
+              alt_aktivite_id: path[path.length - 2].id,
+              aktivite_id: lastNode.id,
+            };
+          }
+        }
+
         const ust_aktivite_id = path[0]?.id ?? null;
         const alt_aktivite_id = path.length >= 2 ? path[1].id : null;
         const aktivite_id = path.length >= 3 ? path[2].id : null;
@@ -136,7 +156,7 @@ export default function A_part() {
   const renderCategories = (cats) => {
     const disallowedCodes = ["A", "A-1", "A-2", "A-3", "A-4"];
     return cats.map((cat) => (
-      <div key={cat.id} className="mb-4 ml-2">
+      <div key={cat.kod} className="mb-4 ml-2">
         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex items-center gap-3">
             {cat.subcategories && cat.subcategories.length > 0 && (
@@ -166,7 +186,7 @@ export default function A_part() {
           {!disallowedCodes.includes(cat.kod) && (
             <button
               className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
-              onClick={() => addWork(cat, cat.id)}
+              onClick={() => addWork(cat, cat.kod)}
             >
               <PlusOutlined />
               Çalışma Ekle

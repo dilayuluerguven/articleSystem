@@ -13,9 +13,6 @@ module.exports = (db) => {
   const tempDir = path.join(__dirname, "..", "temp");
   if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
-  // =====================================
-  // GET /api/form1 → Son form verisi
-  // =====================================
   router.get("/", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -30,13 +27,12 @@ module.exports = (db) => {
       res.json(rows.length ? rows[0] : null);
     } catch (err) {
       console.error("FORM-1 GET hata:", err);
-      res.status(500).json({ error: "Form-1 bilgileri alınırken hata oluştu." });
+      res
+        .status(500)
+        .json({ error: "Form-1 bilgileri alınırken hata oluştu." });
     }
   });
 
-  // =====================================
-  // POST → Form-1 oluştur
-  // =====================================
   router.post("/", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -64,9 +60,6 @@ module.exports = (db) => {
     }
   });
 
-  // =====================================
-  // PUT → Form güncelle
-  // =====================================
   router.put("/:id", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -103,9 +96,6 @@ module.exports = (db) => {
     }
   });
 
-  // ===========================================================
-  // /doktor/a → Başlıca eserler bilgisi
-  // ===========================================================
   router.get("/doktor/a", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -160,13 +150,12 @@ module.exports = (db) => {
       });
     } catch (err) {
       console.error("FORM-1 /doktor/a hata:", err);
-      res.status(500).json({ error: "Başlıca eserler hesaplanırken hata oluştu." });
+      res
+        .status(500)
+        .json({ error: "Başlıca eserler hesaplanırken hata oluştu." });
     }
   });
 
-  // ===========================================================
-  // /doktor/b → A-1a / A-1b / A-2a / A-2b toplam 60 puan kontrolü
-  // ===========================================================
   router.get("/doktor/b", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -214,9 +203,6 @@ module.exports = (db) => {
     }
   });
 
-  // ===========================================================
-  // /doktor/c → Diğer kontrol
-  // ===========================================================
   router.get("/doktor/c", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -290,11 +276,12 @@ module.exports = (db) => {
       );
 
       const dTotal = dRows.length;
-      const d1Count = dRows.filter((r) => r.yayin_kodu.startsWith("D-1")).length;
+      const d1Count = dRows.filter((r) =>
+        r.yayin_kodu.startsWith("D-1")
+      ).length;
       const beTotal = beRows.length;
 
-      const meetsCondition =
-        dTotal >= 2 && d1Count >= 1 && beTotal >= 2;
+      const meetsCondition = dTotal >= 2 && d1Count >= 1 && beTotal >= 2;
 
       res.json({
         dItems: dRows,
@@ -311,211 +298,194 @@ module.exports = (db) => {
     }
   });
 
-  // ===========================================================
-  // PDF OLUŞTURMA
-  // ===========================================================
-  router.get("/:id/pdf", authMiddleware, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const userId = req.user.id;
+ router.get("/:id/pdf", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
 
-      // Form1 bilgisi + kullanıcı bilgisi
-      const [rows] = await db.promise().query(
-        `
-        SELECT f.*, u.fullname, u.username
-        FROM form1 f
-        JOIN users u ON f.user_id = u.id
-        WHERE f.id = ? AND f.user_id = ?
+    const [rows] = await db.promise().query(
+      `
+      SELECT f.*, u.fullname, u.username
+      FROM form1 f
+      JOIN users u ON f.user_id = u.id
+      WHERE f.id = ? AND f.user_id = ?
       `,
-        [id, userId]
-      );
+      [id, userId]
+    );
 
-      if (!rows.length) {
-        return res.status(404).json({ error: "Kayıt bulunamadı." });
-      }
+    if (!rows.length) return res.status(404).json({ error: "Kayıt bulunamadı." });
 
-      const data = rows[0];
+    const data = rows[0];
 
-      // ================================
-      // A maddesi (başlıca eserler)
-      // ================================
-      const [aRows] = await db.promise().query(
-        `
-        SELECT
-            b.id AS basvuru_id,
-            b.eser,
-            CASE
-              WHEN b.aktivite_id IS NOT NULL THEN a.kod
-              WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
-              ELSE ua.kod
-            END AS yayin_kodu,
-            b.hamPuan,
-            ap.alt_kategori
-        FROM basvuru b
-        JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
-        LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
-        LEFT JOIN aktivite a ON b.aktivite_id = a.id
-        LEFT JOIN akademik_puanlar ap
-            ON ap.id = (
-            SELECT ap2.id
-            FROM akademik_puanlar ap2
-            WHERE
-                (ap2.aktivite_id = b.aktivite_id)
-                OR (ap2.alt_aktivite_id = b.alt_aktivite_id)
-                OR (ap2.ana_aktivite_id = b.ust_aktivite_id)
-            ORDER BY
-                CASE
-                WHEN ap2.aktivite_id = b.aktivite_id THEN 1
-                WHEN ap2.alt_aktivite_id = b.alt_aktivite_id THEN 2
-                ELSE 3
-                END
-            LIMIT 1
-            )
-        WHERE b.user_id = ?
-            AND b.main_selection = 'baslicaEser'
-        ORDER BY b.id DESC
-        `,
-        [userId]
-      );
+    const [aRows] = await db.promise().query(
+      `
+      SELECT
+        CASE
+          WHEN b.aktivite_id IS NOT NULL THEN a.kod
+          WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+          ELSE ua.kod
+        END AS yayin_kodu,
+        b.hamPuan,
+        ap.alt_kategori
+      FROM basvuru b
+      JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
+      LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
+      LEFT JOIN aktivite a ON b.aktivite_id = a.id
+      LEFT JOIN akademik_puanlar ap
+        ON ap.id = (
+          SELECT ap2.id FROM akademik_puanlar ap2
+          WHERE 
+            ap2.aktivite_id = b.aktivite_id OR
+            ap2.alt_aktivite_id = b.alt_aktivite_id OR
+            ap2.ana_aktivite_id = b.ust_aktivite_id
+          LIMIT 1
+        )
+      WHERE b.user_id = ? AND b.main_selection = 'baslicaEser'
+      ORDER BY b.id DESC
+      `,
+      [userId]
+    );
 
-      let aYayinKodlariText = "";
-      let aPuanlarText = "";
-
-      if (!aRows.length) {
-        aYayinKodlariText = "Başlıca eser yok";
-        aPuanlarText = "-";
-      } else {
-        const kodSatirlari = [];
-        const puanSatirlari = [];
-
-        aRows.forEach((r) => {
-          let kodStr = r.yayin_kodu || "";
-          if (r.alt_kategori) {
-            kodStr += ` (${r.alt_kategori.trim()})`;
-          }
-          kodSatirlari.push(kodStr);
-
-          if (r.hamPuan != null) {
-            puanSatirlari.push(Number(r.hamPuan).toFixed(2));
-          } else {
-            puanSatirlari.push("-");
-          }
-        });
-
-        aYayinKodlariText = kodSatirlari.join("\n");
-        aPuanlarText = puanSatirlari.join("\n");
-      }
-
-      // ================================
-      // B maddesi — A-1a/A-1b/A-2a/A-2b ≥60 puan
-      // ================================
-
-      const [bRows] = await db.promise().query(
-        `
-        SELECT
-          b.id AS basvuru_id,
-          b.eser,
-          CASE
-            WHEN b.aktivite_id IS NOT NULL THEN a.kod
-            WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
-            ELSE ua.kod
-          END AS yayin_kodu,
-          b.hamPuan
-        FROM basvuru b
-        JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
-        LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
-        LEFT JOIN aktivite a ON b.aktivite_id = a.id
-        WHERE b.user_id = ?
-          AND (
-            (CASE
-              WHEN b.aktivite_id IS NOT NULL THEN a.kod
-              WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
-              ELSE ua.kod
-            END) IN ('A-1a', 'A-1b', 'A-2a', 'A-2b')
+    const a_yayin_kodlari = aRows.length
+      ? aRows
+          .map((r) =>
+            r.alt_kategori
+              ? `${r.yayin_kodu} (${r.alt_kategori.trim()})`
+              : r.yayin_kodu
           )
-        ORDER BY b.id DESC
+          .join("\n")
+      : "Başlıca eser yok";
+
+    const a_puanlar = aRows.length
+      ? aRows.map((r) => Number(r.hamPuan || 0).toFixed(2)).join("\n")
+      : "-";
+
+    const [bRows] = await db.promise().query(
+      `
+      SELECT
+        CASE
+          WHEN b.aktivite_id IS NOT NULL THEN a.kod
+          WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+          ELSE ua.kod
+        END AS yayin_kodu,
+        b.hamPuan
+      FROM basvuru b
+      JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
+      LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
+      LEFT JOIN aktivite a ON b.aktivite_id = a.id
+      WHERE b.user_id = ?
+      AND (
+        (CASE
+          WHEN b.aktivite_id IS NOT NULL THEN a.kod
+          WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+          ELSE ua.kod
+        END) IN ('A-1a','A-1b','A-2a','A-2b')
+      )
+      ORDER BY b.id DESC
       `,
-        [userId]
-      );
+      [userId]
+    );
 
-      let bKodlariText = "";
-      let bPuanText = "";
-      let bToplam = 0;
+    const b_yayin_kodlari = bRows.length
+      ? bRows.map((r) => r.yayin_kodu).join("\n")
+      : "A-1a/A-1b/A-2a/A-2b yok";
 
-      if (!bRows.length) {
-        bKodlariText = "A-1a/A-1b/A-2a/A-2b yayını yok";
-        bPuanText = "-";
-      } else {
-        bKodlariText = bRows.map((r) => r.yayin_kodu).join("\n");
-        bPuanText = bRows
-          .map((r) => Number(r.hamPuan || 0).toFixed(2))
-          .join("\n");
-        bToplam = bRows.reduce((a, r) => a + (r.hamPuan || 0), 0);
-      }
+    const b_puanlar = bRows.length
+      ? bRows.map((r) => Number(r.hamPuan || 0).toFixed(2)).join("\n")
+      : "-";
 
-      const bUygunMu = bToplam >= 60 ? "Evet (≥60)" : "Hayır (<60)";
+    const [cRows] = await db.promise().query(
+      `
+      SELECT
+        CASE
+          WHEN b.aktivite_id IS NOT NULL THEN a.kod
+          WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+          ELSE ua.kod
+        END AS yayin_kodu,
+        b.hamPuan
+      FROM basvuru b
+      JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
+      LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
+      LEFT JOIN aktivite a ON b.aktivite_id = a.id
+      WHERE b.user_id = ?
+      AND (
+        (CASE
+          WHEN b.aktivite_id IS NOT NULL THEN a.kod
+          WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+          ELSE ua.kod
+        END) LIKE 'D-1%' OR
+        (CASE
+          WHEN b.aktivite_id IS NOT NULL THEN a.kod
+          WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+          ELSE ua.kod
+        END) LIKE 'D-2%' OR
+        (CASE
+          WHEN b.aktivite_id IS NOT NULL THEN a.kod
+          WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+          ELSE ua.kod
+        END) LIKE 'B-1%' OR
+        (CASE
+          WHEN b.aktivite_id IS NOT NULL THEN a.kod
+          WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+          ELSE ua.kod
+        END) LIKE 'E-1%'
+      )
+      ORDER BY b.id DESC
+      `,
+      [userId]
+    );
 
-      // ================================
-      // Word İşleme
-      // ================================
-      const content = fs.readFileSync(templatePath, "binary");
-      const zip = new PizZip(content);
-      const doc = new Docxtemplater(zip, {
-        paragraphLoop: true,
-        linebreaks: true,
+    const c_yayin_kodlari = cRows.length
+      ? cRows.map((r) => r.yayin_kodu).join("\n")
+      : "C maddesi yayını yok";
+
+    const c_puanlar = cRows.length
+      ? cRows.map((r) => Number(r.hamPuan || 0).toFixed(2)).join("\n")
+      : "-";
+
+    const content = fs.readFileSync(templatePath, "binary");
+    const zip = new PizZip(content);
+    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+    doc.render({
+      tarih: new Date(data.tarih).toLocaleDateString("tr-TR"),
+      aday_ad_soyad: data.fullname || data.username,
+      a_yayin_kodlari,
+      a_puanlar,
+      b_yayin_kodlari,
+      b_puanlar,
+      c_yayin_kodlari,
+      c_puanlar,
+    });
+
+    const buf = doc.getZip().generate({ type: "nodebuffer" });
+
+    const safeName = (data.fullname || data.username || "kullanici").replace(
+      /[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ]/g,
+      "_"
+    );
+
+    const docxPath = path.join(tempDir, `form1-${safeName}.docx`);
+    const pdfPath = path.join(tempDir, `form1-${safeName}.pdf`);
+
+    fs.writeFileSync(docxPath, buf);
+
+    const command = `soffice --headless --convert-to pdf --outdir "${tempDir}" "${docxPath}"`;
+
+    exec(command, () => {
+      fs.readFile(pdfPath, (err2, pdfBuffer) => {
+        if (err2) return res.status(500).json({ error: "PDF okunamadı." });
+
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `attachment; filename="FORM-1-${safeName}.pdf"`);
+        res.send(pdfBuffer);
       });
+    });
+  } catch (err) {
+    res.status(500).json({ error: "PDF oluşturulurken hata oluştu." });
+  }
+});
 
-      doc.render({
-        tarih: new Date(data.tarih).toLocaleDateString("tr-TR"),
-        aday_ad_soyad: data.fullname || data.username,
-
-        a_yayin_kodlari: aYayinKodlariText,
-        a_puanlar: aPuanlarText,
-
-        a_b_yayin_kodlari: bKodlariText,
-        a_b_puanlar: bPuanText,
-        a_b_toplam: bToplam.toFixed(2),
-        a_b_uygun_mu: bUygunMu,
-      });
-
-      const buf = doc.getZip().generate({ type: "nodebuffer" });
-
-      const safeName = (data.fullname || data.username || "kullanici").replace(
-        /[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ]/g,
-        "_"
-      );
-
-      const docxPath = path.join(tempDir, `form1-${safeName}.docx`);
-      const pdfPath = path.join(tempDir, `form1-${safeName}.pdf`);
-
-      fs.writeFileSync(docxPath, buf);
-
-      const command = `soffice --headless --convert-to pdf --outdir "${tempDir}" "${docxPath}"`;
-
-      exec(command, (err) => {
-        if (err) {
-          console.error("LibreOffice hata:", err);
-          return res.status(500).json({ error: "PDF oluşturulamadı." });
-        }
-
-        fs.readFile(pdfPath, (err2, pdfBuffer) => {
-          if (err2) {
-            return res.status(500).json({ error: "PDF okunamadı." });
-          }
-
-          res.setHeader("Content-Type", "application/pdf");
-          res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="FORM-1-${safeName}.pdf"`
-          );
-          res.send(pdfBuffer);
-        });
-      });
-    } catch (err) {
-      console.error("FORM-1 PDF hata:", err);
-      res.status(500).json({ error: "PDF oluşturulurken hata oluştu." });
-    }
-  });
 
   return router;
 };
