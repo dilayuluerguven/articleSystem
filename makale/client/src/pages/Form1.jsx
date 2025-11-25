@@ -10,8 +10,37 @@ const Form1 = () => {
   const [loadingA, setLoadingA] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [doctorB, setDoctorB] = useState(null);
+  const [loadingDoctorB, setLoadingDoctorB] = useState(false);
+
   const [doctorC, setDoctorC] = useState(null);
   const [loadingDoctorC, setLoadingDoctorC] = useState(false);
+
+  useEffect(() => {
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) return;
+
+    const fetchDoctorB = async () => {
+      try {
+        setLoadingDoctorB(true);
+        const res = await axios.get(
+          "http://localhost:5000/api/form1/doktor/b",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setDoctorB(res.data);
+      } catch (err) {
+        console.error(err);
+        message.error("A-1a / A-1b / A-2a / A-2b şartı alınırken hata oluştu.");
+      } finally {
+        setLoadingDoctorB(false);
+      }
+    };
+
+    fetchDoctorB();
+  }, []);
 
   useEffect(() => {
     const token =
@@ -141,7 +170,6 @@ const Form1 = () => {
       <Header />
       <div className="max-w-4xl mx-auto p-6 text-sm">
         <form onSubmit={handleSubmit}>
-          {/* ÜST BAŞLIK */}
           <h1 className="text-center font-semibold">
             KONYA TEKNİK ÜNİVERSİTESİ AKADEMİK <br />
             ATAMA - YÜKSELTME ÖLÇÜTLERİ ve UYGULAMA ESASLARI
@@ -180,7 +208,7 @@ const Form1 = () => {
             </thead>
 
             <tbody>
-              {/* a) maddesi */}
+              {/* a maddesi */}
               <tr>
                 <td className="border border-black p-2 w-10 align-top">a)</td>
                 <td className="border border-black p-2 align-top">
@@ -239,19 +267,73 @@ const Form1 = () => {
                       ))}
                 </td>
               </tr>
-
-              {/* b) maddesi */}
+              {/* b maddesi */}
               <tr>
                 <td className="border border-black p-2">b)</td>
-                <td className="border border-black p-2">
-                  Tablo 1’deki puanlama sistemine göre A-1a / A-1b / A-2a / A-2b
-                  türü yayınlardan toplam <strong>60 puan</strong> almış olmalı.
-                </td>
-                <td className="border border-black"></td>
-                <td className="border border-black"></td>
-              </tr>
 
-              {/* c) maddesi */}
+                <td className="border border-black p-2 align-top">
+                  Tablo 1’deki puanlama sistemine göre
+                  <strong> A-1a / A-1b / A-2a / A-2b </strong>
+                  türü yayınlardan toplam <strong>60 puan</strong> almış olmalı.
+                  <div className="mt-2 p-2 border border-gray-300 bg-gray-50 text-xs">
+                    <strong>Sizin İçin (Önizleme):</strong>
+
+                    {loadingDoctorB ? (
+                      <div>Yükleniyor...</div>
+                    ) : !doctorB ? (
+                      <div>Veri alınamadı.</div>
+                    ) : (
+                      <div className="space-y-1">
+                        <div>
+                          Toplam Puan:{" "}
+                          <strong>
+                            {Number(doctorB.toplamPuan).toFixed(2)}
+                          </strong>
+                        </div>
+                        <div>
+                          Durum:{" "}
+                          <strong
+                            className={
+                              doctorB.meetsCondition
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }
+                          >
+                            {doctorB.meetsCondition
+                              ? "Şart sağlanıyor"
+                              : "Şart sağlanmıyor"}
+                          </strong>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </td>
+
+                <td className="border border-black p-2 align-top text-xs">
+                  {loadingDoctorB
+                    ? "..."
+                    : !doctorB || doctorB.items.length === 0
+                    ? "Yayın Yok"
+                    : doctorB.items.map((item) => (
+                        <div key={item.basvuru_id}>{item.yayin_kodu}</div>
+                      ))}
+                </td>
+
+                <td className="border border-black p-2 align-top text-xs text-center">
+                  {loadingDoctorB
+                    ? "..."
+                    : !doctorB || doctorB.items.length === 0
+                    ? "-"
+                    : doctorB.items.map((item) => (
+                        <div key={item.basvuru_id}>
+                          {item.hamPuan != null
+                            ? Number(item.hamPuan).toFixed(2)
+                            : "-"}
+                        </div>
+                      ))}
+                </td>
+              </tr>
+              {/* c maddesi */}
               <tr>
                 <td className="border border-black p-2">c)</td>
                 <td className="border border-black p-2 align-top">
@@ -295,7 +377,6 @@ const Form1 = () => {
                   </div>
                 </td>
 
-                {/* Yayın Kodu Sütunu */}
                 <td className="border border-black p-2 align-top text-xs">
                   {loadingDoctorC ? (
                     "..."
@@ -320,7 +401,6 @@ const Form1 = () => {
                   )}
                 </td>
 
-                {/* Faaliyet Puanı Sütunu */}
                 <td className="border border-black p-2 align-top text-xs text-center">
                   {loadingDoctorC ? (
                     "..."
@@ -328,7 +408,6 @@ const Form1 = () => {
                     "-"
                   ) : (
                     <>
-                      {/* D-1/D-2 puanları */}
                       {doctorC.dItems &&
                         doctorC.dItems.map((item) => (
                           <div key={`dp-${item.basvuru_id}`}>
@@ -338,7 +417,6 @@ const Form1 = () => {
                           </div>
                         ))}
 
-                      {/* B-1/E-1 puanları */}
                       {doctorC.beItems &&
                         doctorC.beItems.map((item) => (
                           <div key={`bep-${item.basvuru_id}`}>

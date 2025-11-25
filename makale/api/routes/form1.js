@@ -13,6 +13,9 @@ module.exports = (db) => {
   const tempDir = path.join(__dirname, "..", "temp");
   if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
 
+  // =====================================
+  // GET /api/form1 → Son form verisi
+  // =====================================
   router.get("/", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -27,12 +30,13 @@ module.exports = (db) => {
       res.json(rows.length ? rows[0] : null);
     } catch (err) {
       console.error("FORM-1 GET hata:", err);
-      res
-        .status(500)
-        .json({ error: "Form-1 bilgileri alınırken hata oluştu." });
+      res.status(500).json({ error: "Form-1 bilgileri alınırken hata oluştu." });
     }
   });
 
+  // =====================================
+  // POST → Form-1 oluştur
+  // =====================================
   router.post("/", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -60,6 +64,9 @@ module.exports = (db) => {
     }
   });
 
+  // =====================================
+  // PUT → Form güncelle
+  // =====================================
   router.put("/:id", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -96,6 +103,9 @@ module.exports = (db) => {
     }
   });
 
+  // ===========================================================
+  // /doktor/a → Başlıca eserler bilgisi
+  // ===========================================================
   router.get("/doktor/a", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -150,17 +160,69 @@ module.exports = (db) => {
       });
     } catch (err) {
       console.error("FORM-1 /doktor/a hata:", err);
-      res
-        .status(500)
-        .json({ error: "Başlıca eserler hesaplanırken hata oluştu." });
+      res.status(500).json({ error: "Başlıca eserler hesaplanırken hata oluştu." });
     }
   });
-router.get("/doktor/c", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.id;
 
-    const [dRows] = await db.promise().query(
-      `
+  // ===========================================================
+  // /doktor/b → A-1a / A-1b / A-2a / A-2b toplam 60 puan kontrolü
+  // ===========================================================
+  router.get("/doktor/b", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      const [rows] = await db.promise().query(
+        `
+        SELECT
+          b.id AS basvuru_id,
+          b.eser,
+          CASE
+            WHEN b.aktivite_id IS NOT NULL THEN a.kod
+            WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+            ELSE ua.kod
+          END AS yayin_kodu,
+          b.hamPuan
+        FROM basvuru b
+        JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
+        LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
+        LEFT JOIN aktivite a ON b.aktivite_id = a.id
+        WHERE b.user_id = ?
+          AND (
+            (CASE
+              WHEN b.aktivite_id IS NOT NULL THEN a.kod
+              WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+              ELSE ua.kod
+            END) IN ('A-1a', 'A-1b', 'A-2a', 'A-2b')
+          )
+        ORDER BY b.id DESC
+      `,
+        [userId]
+      );
+
+      const toplamPuan = rows.reduce((acc, x) => acc + (x.hamPuan || 0), 0);
+      const meetsCondition = toplamPuan >= 60;
+
+      res.json({
+        items: rows,
+        toplamPuan,
+        requiredMin: 60,
+        meetsCondition,
+      });
+    } catch (err) {
+      console.error("FORM-1 /doktor/b hata:", err);
+      res.status(500).json({ error: "B maddesi hesaplanırken hata oluştu." });
+    }
+  });
+
+  // ===========================================================
+  // /doktor/c → Diğer kontrol
+  // ===========================================================
+  router.get("/doktor/c", authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      const [dRows] = await db.promise().query(
+        `
       SELECT
         b.id AS basvuru_id,
         b.eser,
@@ -190,11 +252,11 @@ router.get("/doktor/c", authMiddleware, async (req, res) => {
         )
       ORDER BY b.id DESC
       `,
-      [userId]
-    );
+        [userId]
+      );
 
-    const [beRows] = await db.promise().query(
-      `
+      const [beRows] = await db.promise().query(
+        `
       SELECT
         b.id AS basvuru_id,
         b.eser,
@@ -206,7 +268,7 @@ router.get("/doktor/c", authMiddleware, async (req, res) => {
         b.hamPuan
       FROM basvuru b
       JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
-      LEFT JOIN alt_aktiviteLer aa ON b.alt_aktivite_id = aa.id
+      LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
       LEFT JOIN aktivite a ON b.aktivite_id = a.id
       WHERE b.user_id = ?
         AND (
@@ -224,40 +286,40 @@ router.get("/doktor/c", authMiddleware, async (req, res) => {
         )
       ORDER BY b.id DESC
       `,
-      [userId]
-    );
+        [userId]
+      );
 
-    const dTotal = dRows.length;
-    const d1Count = dRows.filter(r => r.yayin_kodu.startsWith("D-1")).length;
-    const beTotal = beRows.length;
+      const dTotal = dRows.length;
+      const d1Count = dRows.filter((r) => r.yayin_kodu.startsWith("D-1")).length;
+      const beTotal = beRows.length;
 
-    const meetsCondition =
-      dTotal >= 2 &&
-      d1Count >= 1 &&
-      beTotal >= 2;
+      const meetsCondition =
+        dTotal >= 2 && d1Count >= 1 && beTotal >= 2;
 
-    res.json({
-      dItems: dRows,
-      beItems: beRows,
-      dTotal,
-      d1Count,
-      beTotal,
-      required: { dMin: 2, d1Min: 1, beMin: 2 },
-      meetsCondition
-    });
-  } catch (err) {
-    console.error("/doktor/c hata:", err);
-    res.status(500).json({ error: "C maddesi hesaplanırken hata oluştu." });
-  }
-});
+      res.json({
+        dItems: dRows,
+        beItems: beRows,
+        dTotal,
+        d1Count,
+        beTotal,
+        required: { dMin: 2, d1Min: 1, beMin: 2 },
+        meetsCondition,
+      });
+    } catch (err) {
+      console.error("/doktor/c hata:", err);
+      res.status(500).json({ error: "C maddesi hesaplanırken hata oluştu." });
+    }
+  });
 
-
-
+  // ===========================================================
+  // PDF OLUŞTURMA
+  // ===========================================================
   router.get("/:id/pdf", authMiddleware, async (req, res) => {
     try {
       const { id } = req.params;
       const userId = req.user.id;
 
+      // Form1 bilgisi + kullanıcı bilgisi
       const [rows] = await db.promise().query(
         `
         SELECT f.*, u.fullname, u.username
@@ -274,14 +336,14 @@ router.get("/doktor/c", authMiddleware, async (req, res) => {
 
       const data = rows[0];
 
+      // ================================
+      // A maddesi (başlıca eserler)
+      // ================================
       const [aRows] = await db.promise().query(
         `
         SELECT
             b.id AS basvuru_id,
             b.eser,
-            b.ust_aktivite_id,
-            b.alt_aktivite_id,
-            b.aktivite_id,
             CASE
               WHEN b.aktivite_id IS NOT NULL THEN a.kod
               WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
@@ -344,6 +406,58 @@ router.get("/doktor/c", authMiddleware, async (req, res) => {
         aPuanlarText = puanSatirlari.join("\n");
       }
 
+      // ================================
+      // B maddesi — A-1a/A-1b/A-2a/A-2b ≥60 puan
+      // ================================
+
+      const [bRows] = await db.promise().query(
+        `
+        SELECT
+          b.id AS basvuru_id,
+          b.eser,
+          CASE
+            WHEN b.aktivite_id IS NOT NULL THEN a.kod
+            WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+            ELSE ua.kod
+          END AS yayin_kodu,
+          b.hamPuan
+        FROM basvuru b
+        JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
+        LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
+        LEFT JOIN aktivite a ON b.aktivite_id = a.id
+        WHERE b.user_id = ?
+          AND (
+            (CASE
+              WHEN b.aktivite_id IS NOT NULL THEN a.kod
+              WHEN b.alt_aktivite_id IS NOT NULL THEN aa.kod
+              ELSE ua.kod
+            END) IN ('A-1a', 'A-1b', 'A-2a', 'A-2b')
+          )
+        ORDER BY b.id DESC
+      `,
+        [userId]
+      );
+
+      let bKodlariText = "";
+      let bPuanText = "";
+      let bToplam = 0;
+
+      if (!bRows.length) {
+        bKodlariText = "A-1a/A-1b/A-2a/A-2b yayını yok";
+        bPuanText = "-";
+      } else {
+        bKodlariText = bRows.map((r) => r.yayin_kodu).join("\n");
+        bPuanText = bRows
+          .map((r) => Number(r.hamPuan || 0).toFixed(2))
+          .join("\n");
+        bToplam = bRows.reduce((a, r) => a + (r.hamPuan || 0), 0);
+      }
+
+      const bUygunMu = bToplam >= 60 ? "Evet (≥60)" : "Hayır (<60)";
+
+      // ================================
+      // Word İşleme
+      // ================================
       const content = fs.readFileSync(templatePath, "binary");
       const zip = new PizZip(content);
       const doc = new Docxtemplater(zip, {
@@ -354,8 +468,14 @@ router.get("/doktor/c", authMiddleware, async (req, res) => {
       doc.render({
         tarih: new Date(data.tarih).toLocaleDateString("tr-TR"),
         aday_ad_soyad: data.fullname || data.username,
+
         a_yayin_kodlari: aYayinKodlariText,
         a_puanlar: aPuanlarText,
+
+        a_b_yayin_kodlari: bKodlariText,
+        a_b_puanlar: bPuanText,
+        a_b_toplam: bToplam.toFixed(2),
+        a_b_uygun_mu: bUygunMu,
       });
 
       const buf = doc.getZip().generate({ type: "nodebuffer" });
