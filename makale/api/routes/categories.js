@@ -5,72 +5,106 @@ module.exports = (db) => {
 
   router.get("/categories", async (req, res) => {
     try {
-      // Üst aktiviteleri al
       const [ustResults] = await db
         .promise()
         .query("SELECT * FROM ust_aktiviteler ORDER BY id ASC");
-
-      // Alt aktiviteleri al
       const [altResults] = await db
         .promise()
         .query("SELECT * FROM alt_aktiviteler ORDER BY id ASC");
-
-      // Aktivite tablosunu al (alt-alt aktiviteler)
       const [aktResults] = await db
         .promise()
         .query("SELECT * FROM aktivite ORDER BY id ASC");
 
-      // Tüm alt ve alt-alt aktiviteleri birleştir
       const allAktiviteler = [...altResults, ...aktResults];
 
-      // Hiyerarşi kurma fonksiyonu (parent kod son noktadan önceki kısmı)
       const buildHierarchy = (items) => {
         const map = {};
         const roots = [];
 
-        // Map oluştur ve subcategories alanını ekle
         items.forEach((item) => {
           item.subcategories = [];
           map[item.kod] = item;
         });
 
-        // Her item için parent kodu bul ve subcategories ekle
         items.forEach((item) => {
-          const lastDotIndex = item.kod.lastIndexOf('.');
-          const parentKod = lastDotIndex !== -1 ? item.kod.substring(0, lastDotIndex) : null;
+          const idx = item.kod.lastIndexOf(".");
+          const parent = idx !== -1 ? item.kod.substring(0, idx) : null;
 
-          if (parentKod && map[parentKod]) {
-            map[parentKod].subcategories.push(item);
-          } else {
-            roots.push(item); // üst seviye
-          }
+          if (parent && map[parent]) map[parent].subcategories.push(item);
+          else roots.push(item);
         });
 
-        // Recursive sıralama
         const sortRecursive = (arr) => {
           arr.sort((a, b) => a.id - b.id);
-          arr.forEach((i) => {
-            if (i.subcategories.length > 0) sortRecursive(i.subcategories);
-          });
+          arr.forEach(
+            (i) => i.subcategories.length > 0 && sortRecursive(i.subcategories)
+          );
         };
-        sortRecursive(roots);
 
+        sortRecursive(roots);
         return roots;
       };
 
-      const hiyerarşi = buildHierarchy(allAktiviteler);
+      const hiyerarsi = buildHierarchy(allAktiviteler);
 
-      // Üst aktivitelerin subcategories alanına bağla
       ustResults.forEach((ust) => {
-        ust.subcategories = hiyerarşi.filter(
-          (item) => item.kod.startsWith(ust.kod + '-') || item.kod === ust.kod
+        ust.subcategories = hiyerarsi.filter(
+          (item) => item.kod.startsWith(ust.kod + "-") || item.kod === ust.kod
         );
       });
 
-      // JSON olarak döndür
+      const aRoot = ustResults.find((u) => u.kod === "A");
+
+      if (aRoot) {
+        const aSub = aRoot.subcategories;
+
+        const groups = {
+          "A-1": [],
+          "A-2": [],
+          "A-3": [],
+          "A-4": [],
+          "A-5": [],
+          "A-6": [],
+        };
+
+        aSub.forEach((item) => {
+          const kod = item.kod;
+
+          if (kod.startsWith("A-1")) groups["A-1"].push(item);
+          else if (kod.startsWith("A-2")) groups["A-2"].push(item);
+          else if (kod.startsWith("A-3")) groups["A-3"].push(item);
+          else if (kod.startsWith("A-4")) groups["A-4"].push(item);
+          else if (kod.startsWith("A-5")) groups["A-5"].push(item);
+          else if (kod.startsWith("A-6")) groups["A-6"].push(item);
+        });
+
+        const build = (kod, arr) => {
+          const root = arr.find((x) => x.kod === kod) || {
+            id: null,
+            kod,
+            tanim: kod,
+          };
+
+          const subs = arr.filter((x) => x.kod !== kod);
+
+          return {
+            ...root,
+            subcategories: subs,
+          };
+        };
+
+        aRoot.subcategories = [
+          build("A-1", groups["A-1"]),
+          build("A-2", groups["A-2"]),
+          build("A-3", groups["A-3"]),
+          build("A-4", groups["A-4"]),
+          build("A-5", groups["A-5"]),
+          build("A-6", groups["A-6"]),
+        ];
+      }
+
       res.json(ustResults);
     } catch (err) {
-      console.error(err);
       res.status(500).json({ error: "Server hatası" });
     }
   });
