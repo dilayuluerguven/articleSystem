@@ -55,13 +55,35 @@ module.exports = (db) => {
         [user_id, data.ust_aktivite_id, data.alt_aktivite_id, data.aktivite_id]
       );
 
-      const orderNumber =
-        sameCategoryRows.findIndex((r) => r.id === data.id) + 1;
+      let orderNumber;
 
+      if (data.aktivite_kod && data.aktivite_kod.startsWith("A-")) {
+        const aktKod = data.aktivite_kod;
+
+        const [aRows] = await db.promise().query(
+          `
+            SELECT b.id, b.created_at
+            FROM basvuru b
+            JOIN aktivite a ON b.aktivite_id = a.id
+            WHERE b.user_id = ?
+            AND a.kod = ?
+            ORDER BY b.created_at ASC
+          `,
+          [user_id, aktKod]
+        );
+
+        orderNumber = aRows.findIndex((r) => r.id === data.id) + 1;
+      } else {
+        orderNumber =
+          sameCategoryRows.findIndex((r) => r.id === data.id) + 1;
+      }
+
+     
       const yayinKodu = `${
         data.aktivite_kod || data.alt_kod || data.ust_kod || "-"
       }:${orderNumber}`;
 
+   
       const templatePath = path.join(__dirname, "../FORM-8-template.docx");
       const content = fs.readFileSync(templatePath, "binary");
       const zip = new PizZip(content);
@@ -126,7 +148,6 @@ module.exports = (db) => {
             return res.status(500).json({ error: "PDF oluşturulamadı" });
           }
 
-          console.log("PDF başarıyla oluşturuldu:", outputPdf);
           res.download(outputPdf, `Form8_${data.username}.pdf`);
         }
       );
