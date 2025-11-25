@@ -59,6 +59,93 @@ module.exports = (db) => {
       res.status(500).json({ error: "Form kaydedilirken hata oluştu." });
     }
   });
+  router.post("/:id/pdf", authMiddleware, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+
+      const {
+        a_yayin_kodlari,
+        a_puanlar,
+        b_yayin_kodlari,
+        b_puanlar,
+        c_yayin_kodlari,
+        c_puanlar,
+        d_yayin_kodlari,
+        d_puanlar,
+      } = req.body;
+
+      const [rows] = await db.promise().query(
+        `
+      SELECT f.*, u.fullname, u.username
+      FROM form1 f
+      JOIN users u ON f.user_id = u.id
+      WHERE f.id = ? AND f.user_id = ?
+      `,
+        [id, userId]
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({ error: "Kayıt bulunamadı." });
+      }
+
+      const data = rows[0];
+
+      const content = fs.readFileSync(templatePath, "binary");
+      const zip = new PizZip(content);
+      const doc = new Docxtemplater(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
+      });
+
+      doc.render({
+        tarih: new Date(data.tarih).toLocaleDateString("tr-TR"),
+        aday_ad_soyad: data.fullname || data.username,
+
+        a_yayin_kodlari,
+        a_puanlar,
+
+        b_yayin_kodlari,
+        b_puanlar,
+
+        c_yayin_kodlari,
+        c_puanlar,
+
+        d_yayin_kodlari: d_yayin_kodlari || "-",
+        d_puanlar: d_puanlar || "-",
+      });
+
+      const buf = doc.getZip().generate({ type: "nodebuffer" });
+
+      const safeName = (data.fullname || data.username || "kullanici").replace(
+        /[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ]/g,
+        "_"
+      );
+
+      const docxPath = path.join(tempDir, `form1-${safeName}.docx`);
+      const pdfPath = path.join(tempDir, `form1-${safeName}.pdf`);
+
+      fs.writeFileSync(docxPath, buf);
+
+      const command = `soffice --headless --convert-to pdf --outdir "${tempDir}" "${docxPath}"`;
+
+      exec(command, () => {
+        fs.readFile(pdfPath, (err2, pdfBuffer) => {
+          if (err2) return res.status(500).json({ error: "PDF okunamadı." });
+
+          res.setHeader("Content-Type", "application/pdf");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="FORM-1-${safeName}.pdf"`
+          );
+          res.send(pdfBuffer);
+        });
+      });
+    } catch (err) {
+      console.error("PDF hata:", err);
+      res.status(500).json({ error: "PDF oluşturulurken hata oluştu." });
+    }
+  });
 
   router.put("/:id", authMiddleware, async (req, res) => {
     try {
@@ -298,27 +385,28 @@ module.exports = (db) => {
     }
   });
 
- router.get("/:id/pdf", authMiddleware, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.user.id;
+  router.get("/:id/pdf", authMiddleware, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
 
-    const [rows] = await db.promise().query(
-      `
+      const [rows] = await db.promise().query(
+        `
       SELECT f.*, u.fullname, u.username
       FROM form1 f
       JOIN users u ON f.user_id = u.id
       WHERE f.id = ? AND f.user_id = ?
       `,
-      [id, userId]
-    );
+        [id, userId]
+      );
 
-    if (!rows.length) return res.status(404).json({ error: "Kayıt bulunamadı." });
+      if (!rows.length)
+        return res.status(404).json({ error: "Kayıt bulunamadı." });
 
-    const data = rows[0];
+      const data = rows[0];
 
-    const [aRows] = await db.promise().query(
-      `
+      const [aRows] = await db.promise().query(
+        `
       SELECT
         CASE
           WHEN b.aktivite_id IS NOT NULL THEN a.kod
@@ -343,25 +431,25 @@ module.exports = (db) => {
       WHERE b.user_id = ? AND b.main_selection = 'baslicaEser'
       ORDER BY b.id DESC
       `,
-      [userId]
-    );
+        [userId]
+      );
 
-    const a_yayin_kodlari = aRows.length
-      ? aRows
-          .map((r) =>
-            r.alt_kategori
-              ? `${r.yayin_kodu} (${r.alt_kategori.trim()})`
-              : r.yayin_kodu
-          )
-          .join("\n")
-      : "Başlıca eser yok";
+      const a_yayin_kodlari = aRows.length
+        ? aRows
+            .map((r) =>
+              r.alt_kategori
+                ? `${r.yayin_kodu} (${r.alt_kategori.trim()})`
+                : r.yayin_kodu
+            )
+            .join("\n")
+        : "Başlıca eser yok";
 
-    const a_puanlar = aRows.length
-      ? aRows.map((r) => Number(r.hamPuan || 0).toFixed(2)).join("\n")
-      : "-";
+      const a_puanlar = aRows.length
+        ? aRows.map((r) => Number(r.hamPuan || 0).toFixed(2)).join("\n")
+        : "-";
 
-    const [bRows] = await db.promise().query(
-      `
+      const [bRows] = await db.promise().query(
+        `
       SELECT
         CASE
           WHEN b.aktivite_id IS NOT NULL THEN a.kod
@@ -383,19 +471,19 @@ module.exports = (db) => {
       )
       ORDER BY b.id DESC
       `,
-      [userId]
-    );
+        [userId]
+      );
 
-    const b_yayin_kodlari = bRows.length
-      ? bRows.map((r) => r.yayin_kodu).join("\n")
-      : "A-1a/A-1b/A-2a/A-2b yok";
+      const b_yayin_kodlari = bRows.length
+        ? bRows.map((r) => r.yayin_kodu).join("\n")
+        : "A-1a/A-1b/A-2a/A-2b yok";
 
-    const b_puanlar = bRows.length
-      ? bRows.map((r) => Number(r.hamPuan || 0).toFixed(2)).join("\n")
-      : "-";
+      const b_puanlar = bRows.length
+        ? bRows.map((r) => Number(r.hamPuan || 0).toFixed(2)).join("\n")
+        : "-";
 
-    const [cRows] = await db.promise().query(
-      `
+      const [cRows] = await db.promise().query(
+        `
       SELECT
         CASE
           WHEN b.aktivite_id IS NOT NULL THEN a.kod
@@ -432,60 +520,66 @@ module.exports = (db) => {
       )
       ORDER BY b.id DESC
       `,
-      [userId]
-    );
+        [userId]
+      );
 
-    const c_yayin_kodlari = cRows.length
-      ? cRows.map((r) => r.yayin_kodu).join("\n")
-      : "C maddesi yayını yok";
+      const c_yayin_kodlari = cRows.length
+        ? cRows.map((r) => r.yayin_kodu).join("\n")
+        : "C maddesi yayını yok";
 
-    const c_puanlar = cRows.length
-      ? cRows.map((r) => Number(r.hamPuan || 0).toFixed(2)).join("\n")
-      : "-";
+      const c_puanlar = cRows.length
+        ? cRows.map((r) => Number(r.hamPuan || 0).toFixed(2)).join("\n")
+        : "-";
 
-    const content = fs.readFileSync(templatePath, "binary");
-    const zip = new PizZip(content);
-    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
-
-    doc.render({
-      tarih: new Date(data.tarih).toLocaleDateString("tr-TR"),
-      aday_ad_soyad: data.fullname || data.username,
-      a_yayin_kodlari,
-      a_puanlar,
-      b_yayin_kodlari,
-      b_puanlar,
-      c_yayin_kodlari,
-      c_puanlar,
-    });
-
-    const buf = doc.getZip().generate({ type: "nodebuffer" });
-
-    const safeName = (data.fullname || data.username || "kullanici").replace(
-      /[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ]/g,
-      "_"
-    );
-
-    const docxPath = path.join(tempDir, `form1-${safeName}.docx`);
-    const pdfPath = path.join(tempDir, `form1-${safeName}.pdf`);
-
-    fs.writeFileSync(docxPath, buf);
-
-    const command = `soffice --headless --convert-to pdf --outdir "${tempDir}" "${docxPath}"`;
-
-    exec(command, () => {
-      fs.readFile(pdfPath, (err2, pdfBuffer) => {
-        if (err2) return res.status(500).json({ error: "PDF okunamadı." });
-
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename="FORM-1-${safeName}.pdf"`);
-        res.send(pdfBuffer);
+      const content = fs.readFileSync(templatePath, "binary");
+      const zip = new PizZip(content);
+      const doc = new Docxtemplater(zip, {
+        paragraphLoop: true,
+        linebreaks: true,
       });
-    });
-  } catch (err) {
-    res.status(500).json({ error: "PDF oluşturulurken hata oluştu." });
-  }
-});
 
+      doc.render({
+        tarih: new Date(data.tarih).toLocaleDateString("tr-TR"),
+        aday_ad_soyad: data.fullname || data.username,
+        a_yayin_kodlari,
+        a_puanlar,
+        b_yayin_kodlari,
+        b_puanlar,
+        c_yayin_kodlari,
+        c_puanlar,
+      });
+
+      const buf = doc.getZip().generate({ type: "nodebuffer" });
+
+      const safeName = (data.fullname || data.username || "kullanici").replace(
+        /[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ]/g,
+        "_"
+      );
+
+      const docxPath = path.join(tempDir, `form1-${safeName}.docx`);
+      const pdfPath = path.join(tempDir, `FORM-1-${safeName}.pdf`);
+
+      fs.writeFileSync(docxPath, buf);
+
+      const command = `soffice --headless --convert-to pdf --outdir "${tempDir}" "${docxPath}"`;
+
+      exec(command, () => {
+        fs.readFile(pdfPath, (err2, pdfBuffer) => {
+          if (err2) return res.status(500).json({ error: "PDF okunamadı." });
+
+          res.setHeader("Content-Type", "application/pdf");
+          res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="FORM-1-${safeName}.pdf"`
+          );
+
+          res.send(pdfBuffer);
+        });
+      });
+    } catch (err) {
+      res.status(500).json({ error: "PDF oluşturulurken hata oluştu." });
+    }
+  });
 
   return router;
 };

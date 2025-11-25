@@ -5,7 +5,8 @@ import { message } from "antd";
 
 const Form1 = () => {
   const [formRecord, setFormRecord] = useState(null);
-  const [tarih, setTarih] = useState("");
+  const today = new Date().toLocaleDateString("sv-SE");
+  const [tarih, setTarih] = useState(today);
   const [aItems, setAItems] = useState([]);
   const [loadingA, setLoadingA] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -15,6 +16,9 @@ const Form1 = () => {
 
   const [doctorC, setDoctorC] = useState(null);
   const [loadingDoctorC, setLoadingDoctorC] = useState(false);
+
+  const [dYayinKodlari, setDYayinKodlari] = useState("");
+  const [dPuanlar, setDPuanlar] = useState("");
 
   useEffect(() => {
     const token =
@@ -101,20 +105,42 @@ const Form1 = () => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
 
-    const res = await axios.get(`http://localhost:5000/api/form1/${id}/pdf`, {
-      responseType: "blob",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await axios.post(
+      `http://localhost:5000/api/form1/${id}/pdf`,
+      {
+        a_yayin_kodlari: aItems.map((x) => x.yayin_kodu).join("\n"),
+        a_puanlar: aItems.map((x) => Number(x.puan).toFixed(2)).join("\n"),
+
+        b_yayin_kodlari: doctorB.items.map((x) => x.yayin_kodu).join("\n"),
+        b_puanlar: doctorB.items
+          .map((x) => Number(x.hamPuan).toFixed(2))
+          .join("\n"),
+
+        c_yayin_kodlari: [
+          ...doctorC.dItems.map((x) => x.yayin_kodu),
+          ...doctorC.beItems.map((x) => x.yayin_kodu),
+        ].join("\n"),
+        c_puanlar: [
+          ...doctorC.dItems.map((x) => Number(x.hamPuan).toFixed(2)),
+          ...doctorC.beItems.map((x) => Number(x.hamPuan).toFixed(2)),
+        ].join("\n"),
+
+        d_yayin_kodlari: dYayinKodlari,
+        d_puanlar: dPuanlar,
+      },
+      {
+        responseType: "blob",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     const blob = new Blob([res.data], { type: "application/pdf" });
     const url = window.URL.createObjectURL(blob);
+
     const link = document.createElement("a");
     link.href = url;
     link.download = `FORM-1-${id}.pdf`;
-    document.body.appendChild(link);
     link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
   };
 
   const handleSubmit = async (e) => {
@@ -427,6 +453,52 @@ const Form1 = () => {
                         ))}
                     </>
                   )}
+                </td>
+              </tr>
+              {/* d maddesi */}
+              <tr>
+                <td className="border border-black p-2">d)</td>
+
+                <td className="border border-black p-2 align-top">
+                  Yüksek lisans/doktora tezinden A, B-1, B-2, D-1 veya K
+                  kapsamındaki en az iki faaliyet yapılmış olmalı.
+                  <div className="mt-2 p-2 bg-gray-50 border border-gray-300 text-xs">
+                    <strong>D Maddesi (Siz Doldurun):</strong>
+
+                    <div className="mt-2">
+                      <label>Yayın Kodları:</label>
+                      <textarea
+                        rows={3}
+                        className="w-full border px-2 py-1 mt-1"
+                        value={dYayinKodlari}
+                        onChange={(e) => setDYayinKodlari(e.target.value)}
+                        placeholder="Örnek: 
+                        A-2b 
+                        B-1a"
+                      />
+                    </div>
+
+                    <div className="mt-2">
+                      <label>Puanlar:</label>
+                      <textarea
+                        rows={3}
+                        className="w-full border px-2 py-1 mt-1"
+                        value={dPuanlar}
+                        onChange={(e) => setDPuanlar(e.target.value)}
+                        placeholder="Örnek: 
+                        20.00
+                        15.00"
+                      />
+                    </div>
+                  </div>
+                </td>
+
+                <td className="border border-black p-2 align-top text-xs whitespace-pre-line">
+                  {dYayinKodlari || "-"}
+                </td>
+
+                <td className="border border-black p-2 align-top text-xs whitespace-pre-line">
+                  {dPuanlar || "-"}
                 </td>
               </tr>
             </tbody>
