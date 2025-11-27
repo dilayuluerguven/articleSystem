@@ -7,6 +7,7 @@ import Profile from "./pages/Profile";
 import PrivateRoute from "./components/PrivateRoute";
 import UserProfile from "./pages/UserProfile";
 import Form1 from "./pages/Form1";
+import Form7 from "./pages/form7/Form7";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -16,12 +17,11 @@ function App() {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
     if (token) setIsAuthenticated(true);
-    setAuthChecked(true); // ✅ kontrol bitti
+    setAuthChecked(true); 
   }, []);
 
-  // ✅ Auth kontrolü bitmeden hiçbir route'ı render etme
   if (!authChecked) {
-    return null; // istersen burada loading spinner da koyabilirsin
+    return null; 
   }
 
   return (
@@ -64,6 +64,14 @@ function App() {
           element={
             <PrivateRoute isAuthenticated={isAuthenticated}>
               <Form1 />
+            </PrivateRoute>
+          }
+        />
+         <Route
+          path="/form7"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <Form7 />
             </PrivateRoute>
           }
         />

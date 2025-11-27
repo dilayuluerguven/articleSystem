@@ -53,7 +53,7 @@ module.exports = (db) => {
         [is_first_author, yazar_sayisi]
       );
 
-      const yazarpuanı = yazarRows[0]?.katsayi || 0.0;
+      const yazarPuani = yazarRows[0]?.katsayi || 0.0;
 
      let hamPuan = 0.0;
 let puanId = null;
@@ -96,7 +96,7 @@ if (!puanId && ust_aktivite_id && !isNaN(ust_aktivite_id)) {
   hamPuan = p[0]?.puan || 0.0;
 }
 
-const toplamPuan = parseFloat((hamPuan * yazarpuanı).toFixed(2));
+const toplamPuan = parseFloat((hamPuan * yazarPuani).toFixed(2));
 
 
       await db.promise().query(
@@ -104,7 +104,7 @@ const toplamPuan = parseFloat((hamPuan * yazarpuanı).toFixed(2));
         INSERT INTO basvuru 
         (user_id, ust_aktivite_id, alt_aktivite_id, aktivite_id, eser, yazar_sayisi,
         main_selection, sub_selection, child_selection, workDescription,
-        is_first_author, yazarpuanı, hamPuan, toplamPuan)
+        is_first_author, yazarPuani, hamPuan, toplamPuan)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
@@ -119,7 +119,7 @@ const toplamPuan = parseFloat((hamPuan * yazarpuanı).toFixed(2));
           child_selection || null,
           workDescription || null,
           is_first_author ? 1 : 0,
-          yazarpuanı || 0,
+          yazarPuani || 0,
           hamPuan || 0,
           toplamPuan || 0,
         ]
@@ -130,7 +130,7 @@ const toplamPuan = parseFloat((hamPuan * yazarpuanı).toFixed(2));
         message: "Başvuru başarıyla kaydedildi.",
         file: eser,
         yazar_sayisi,
-        yazarpuanı,
+        yazarPuani,
         hamPuan,
         toplamPuan,
       });
@@ -161,7 +161,7 @@ router.get("/", authMiddleware, async (req, res) => {
         b.workDescription,
         b.is_first_author,
 
-        b.yazarpuanı,
+        b.yazarPuani,
         b.hamPuan,
         b.toplamPuan,
 

@@ -21,8 +21,10 @@ import {
 } from "@ant-design/icons";
 import axios from "axios";
 import { Header } from "../header/header";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
+
 
 const Profile = () => {
   const [applications, setApplications] = useState([]);
@@ -98,69 +100,94 @@ const Profile = () => {
     }
   };
 
-  const renderFilePreview = (fileName) => {
-    if (!fileName) return null;
-    const fileUrl = `http://localhost:5000/uploads/${fileName}`;
-    const isImage = /\.(jpg|jpeg|png|gif)$/i.test(fileName);
-    const isPDF = /\.pdf$/i.test(fileName);
+ const renderFilePreview = (fileName) => {
+  if (!fileName) return null;
 
-    if (isImage) {
-      return (
-        <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-          <img
-            src={fileUrl}
-            alt={fileName}
-            className="w-full h-48 object-cover rounded-lg border border-gray-200 hover:scale-[1.02] transition-transform"
-          />
-        </a>
-      );
-    } else if (isPDF) {
-      return (
-        <iframe
+  const fileUrl = `http://localhost:5000/uploads/${fileName}`;
+
+  // Önce dosya gerçekten var mı kontrol et
+  const [exists, setExists] = useState(null);
+
+  useEffect(() => {
+    const checkFile = async () => {
+      try {
+        await fetch(fileUrl, { method: "HEAD" });
+        setExists(true);
+      } catch (e) {
+        setExists(false);
+      }
+    };
+    checkFile();
+  }, [fileName]);
+
+  if (exists === false) {
+    return (
+      <div className="text-red-500 text-sm italic">
+        Dosya bulunamadı (silinmiş olabilir)
+      </div>
+    );
+  }
+
+  if (exists === null) {
+    return <div className="text-gray-400 text-xs">Yükleniyor...</div>;
+  }
+
+  // Var olan dosyayı göster
+  const isImage = /\.(jpg|jpeg|png|gif)$/i.test(fileName);
+  const isPDF = /\.pdf$/i.test(fileName);
+
+  if (isImage) {
+    return (
+      <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+        <img
           src={fileUrl}
-          title={fileName}
-          className="w-full h-56 border rounded-lg"
+          alt={fileName}
+          className="w-full h-48 object-cover rounded-lg border border-gray-200 hover:scale-[1.02] transition-transform"
         />
-      );
-    } else {
-      return (
-        <a
-          href={fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200"
-        >
-          <span>📎</span>
-          {fileName}
-        </a>
-      );
-    }
-  };
+      </a>
+    );
+  }
+
+  if (isPDF) {
+    return (
+      <a
+        href={fileUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 underline text-sm"
+      >
+        PDF Dosyasını Aç
+      </a>
+    );
+  }
+
+  return (
+    <a
+      href={fileUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg border border-blue-200"
+    >
+      📎 {fileName}
+    </a>
+  );
+};
+
 
   const handleForm7PDF = () => {
-    const token =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) {
-      message.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
-      return;
-    }
+  const token =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
 
-    fetch(`http://localhost:5000/api/form7/pdf`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("PDF oluşturulamadı");
-        return res.blob();
-      })
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob);
-        window.open(url, "_blank");
-      })
-      .catch(() => {
-        message.error("Form-7 PDF indirilemedi");
-      });
-  };
+  if (!token) {
+    message.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
+    return;
+  }
 
+  const url = `http://localhost:5000/api/form7/pdf?token=${token}`;
+  window.open(url, "_blank"); 
+};
+
+const navigate = useNavigate();
   return (
     <>
       <Header />
@@ -183,7 +210,7 @@ const Profile = () => {
               type="primary"
               size="large"
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg shadow-md"
-              onClick={handleForm7PDF}
+               onClick={() => navigate("/form7")}
             >
               <FormOutlined /> Form-7 PDF Oluştur
             </Button>

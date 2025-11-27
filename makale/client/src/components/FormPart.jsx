@@ -120,12 +120,12 @@ const FormPart = () => {
           </p>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 justify-center mt-6">
-              <Button
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium h-14 rounded-lg shadow-md"
-                onClick={handleForm7PDF}
-              >
-                <FormOutlined /> Form-7 PDF Oluştur
-              </Button>
+           <Button
+              className="bg-green-600 hover:bg-green-700 text-white font-medium h-14 rounded-lg shadow-md"
+              onClick={() => navigate("/form7")}
+            >
+              <FormOutlined /> Form-7 PDF Oluştur
+            </Button>
             <Button
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium h-14 rounded-lg shadow-md"
               onClick={() => navigate("/form1")}
