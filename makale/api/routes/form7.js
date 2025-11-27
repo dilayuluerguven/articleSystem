@@ -42,14 +42,12 @@ module.exports = (db) => {
       const counters = {};
 
       rows.forEach((r) => {
-        const groupKey = r.alt_kod || r.ust_kod;
+        const groupKey = r.ust_kod;
 
         if (!grouped[groupKey]) {
           grouped[groupKey] = {
             ust_kod: r.ust_kod,
             ust_tanim: r.ust_tanim,
-            alt_kod: r.alt_kod,
-            alt_tanim: r.alt_tanim,
             items: [],
           };
         }
@@ -61,8 +59,10 @@ module.exports = (db) => {
 
         grouped[groupKey].items.push({
           aktivite_kod: `${baseCode}:${index}`,
+          base_kod: baseCode,
+          alt_kod: r.alt_kod,
+          alt_tanim: r.alt_tanim,
           workDescription: r.workDescription,
-          yazar_sayisi: r.yazar_sayisi,
           hamPuan: r.hamPuan,
           yazarpuani: r.yazarpuani,
           toplamPuan: r.toplamPuan,
@@ -84,9 +84,12 @@ module.exports = (db) => {
         SELECT 
           b.*,
           u.username,
-          ua.kod AS ust_kod, ua.tanim AS ust_tanim,
-          aa.kod AS alt_kod, aa.tanim AS alt_tanim,
-          a.kod AS aktivite_kod, a.tanim AS aktivite_tanim
+          ua.kod AS ust_kod,
+          ua.tanim AS ust_tanim,
+          aa.kod AS alt_kod,
+          aa.tanim AS alt_tanim,
+          a.kod AS aktivite_kod,
+          a.tanim AS aktivite_tanim
         FROM basvuru b
         JOIN users u ON b.user_id = u.id
         LEFT JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
@@ -106,16 +109,13 @@ module.exports = (db) => {
         if (!counter[code]) counter[code] = 1;
         const index = counter[code]++;
 
-        const eser = e.workDescription || "-";
         const puan = e.toplamPuan ?? e.hamPuan ?? "-";
 
         items.push({
           kod: `${code}:${index}`,
-          index,
-          eser,
-          yazar_sayisi: e.yazar_sayisi || "-",
-          yazarpuani: e.yazarPuani || "-",
+          eser: e.workDescription || "-",
           hamPuan: e.hamPuan || "-",
+          yazarpuani: e.yazarPuani || "-",
           toplamPuan: puan,
         });
       });

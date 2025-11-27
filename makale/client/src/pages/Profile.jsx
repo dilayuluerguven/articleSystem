@@ -25,87 +25,10 @@ import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
-
-const Profile = () => {
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const token =
-      localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return;
-    fetchApplications(token);
-  }, []);
-
-  const fetchApplications = async (token) => {
-    try {
-      setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/basvuru", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!Array.isArray(res.data)) {
-        console.error("Beklenmeyen veri formatı:", res.data);
-        message.error("Veri alınırken hata oluştu.");
-        return;
-      }
-      setApplications(numberApplications(res.data));
-    } catch (err) {
-      console.error(err);
-      message.error("Başvurular alınamadı!");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const numberApplications = (apps) => {
-    const sortedForNumbering = [...apps].sort(
-      (a, b) =>
-        new Date(a.created_at || 0).getTime() -
-        new Date(b.created_at || 0).getTime()
-    );
-
-    const counts = {};
-
-    sortedForNumbering.forEach((item) => {
-      const key =
-        item.aktivite_kod || item.alt_kod || item.ust_kod || "Bilinmeyen";
-
-      counts[key] = (counts[key] || 0) + 1;
-
-      item.displayTitle = `${key}:${counts[key]}`;
-    });
-
-    const finalSorted = sortedForNumbering.sort(
-      (a, b) =>
-        new Date(b.created_at || 0).getTime() -
-        new Date(a.created_at || 0).getTime()
-    );
-
-    return finalSorted;
-  };
-
-  const handleDelete = async (id) => {
-    const token =
-      sessionStorage.getItem("token") || localStorage.getItem("token");
-    try {
-      await axios.delete(`http://localhost:5000/api/basvuru/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      message.success("Başvuru silindi");
-      const updated = applications.filter((app) => app.id !== id);
-      setApplications(numberApplications(updated));
-    } catch (err) {
-      console.error("Başvuru silinemedi:", err);
-      message.error("Başvuru silinemedi. Tekrar deneyin.");
-    }
-  };
-
- const renderFilePreview = (fileName) => {
+const FilePreview = ({ fileName }) => {
   if (!fileName) return null;
 
   const fileUrl = `http://localhost:5000/uploads/${fileName}`;
-
-  // Önce dosya gerçekten var mı kontrol et
   const [exists, setExists] = useState(null);
 
   useEffect(() => {
@@ -132,7 +55,6 @@ const Profile = () => {
     return <div className="text-gray-400 text-xs">Yükleniyor...</div>;
   }
 
-  // Var olan dosyayı göster
   const isImage = /\.(jpg|jpeg|png|gif)$/i.test(fileName);
   const isPDF = /\.pdf$/i.test(fileName);
 
@@ -173,21 +95,92 @@ const Profile = () => {
   );
 };
 
+const Profile = () => {
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
+    if (!token) return;
+    fetchApplications(token);
+  }, []);
+
+  const fetchApplications = async (token) => {
+    try {
+      setLoading(true);
+      const res = await axios.get("http://localhost:5000/api/basvuru", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!Array.isArray(res.data)) {
+        console.error("Beklenmeyen veri formatı:", res.data);
+        message.error("Veri alınırken hata oluştu.");
+        return;
+      }
+      setApplications(numberApplications(res.data));
+    } catch (err) {
+      console.error(err);
+      message.error("Başvurular alınamadı!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const numberApplications = (apps) => {
+    const sortedForNumbering = [...apps].sort(
+      (a, b) =>
+        new Date(a.created_at || 0).getTime() -
+        new Date(b.created_at || 0).getTime()
+    );
+
+    const counts = {};
+
+    sortedForNumbering.forEach((item) => {
+      const key =
+        item.aktivite_kod || item.alt_kod || item.ust_kod || "Bilinmeyen";
+      counts[key] = (counts[key] || 0) + 1;
+      item.displayTitle = `${key}:${counts[key]}`;
+    });
+
+    return sortedForNumbering.sort(
+      (a, b) =>
+        new Date(b.created_at || 0).getTime() -
+        new Date(a.created_at || 0).getTime()
+    );
+  };
+
+  const handleDelete = async (id) => {
+    const token =
+      sessionStorage.getItem("token") || localStorage.getItem("token");
+    try {
+      await axios.delete(`http://localhost:5000/api/basvuru/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      message.success("Başvuru silindi");
+
+      const updated = applications.filter((app) => app.id !== id);
+      setApplications(numberApplications(updated));
+    } catch (err) {
+      console.error("Başvuru silinemedi:", err);
+      message.error("Başvuru silinemedi. Tekrar deneyin.");
+    }
+  };
 
   const handleForm7PDF = () => {
-  const token =
-    localStorage.getItem("token") || sessionStorage.getItem("token");
+    const token =
+      localStorage.getItem("token") || sessionStorage.getItem("token");
 
-  if (!token) {
-    message.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
-    return;
-  }
+    if (!token) {
+      message.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
+      return;
+    }
 
-  const url = `http://localhost:5000/api/form7/pdf?token=${token}`;
-  window.open(url, "_blank"); 
-};
+    const url = `http://localhost:5000/api/form7/pdf?token=${token}`;
+    window.open(url, "_blank");
+  };
 
-const navigate = useNavigate();
   return (
     <>
       <Header />
@@ -210,7 +203,7 @@ const navigate = useNavigate();
               type="primary"
               size="large"
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg shadow-md"
-               onClick={() => navigate("/form7")}
+              onClick={() => navigate("/form7")}
             >
               <FormOutlined /> Form-7 PDF Oluştur
             </Button>
@@ -255,17 +248,7 @@ const navigate = useNavigate();
                         {(item.aktivite_tanim ||
                           item.alt_tanim ||
                           item.ust_tanim) && (
-                          <p
-                            className="
-                              text-sm text-gray-600 italic
-                              leading-snug 
-                              break-words
-                              overflow-hidden
-                              text-ellipsis
-                              line-clamp-2
-                              min-h-[2.8em]
-                            "
-                          >
+                          <p className="text-sm text-gray-600 italic line-clamp-2">
                             {item.aktivite_tanim ||
                               item.alt_tanim ||
                               item.ust_tanim}
@@ -298,46 +281,36 @@ const navigate = useNavigate();
                       <div className="flex-1 flex flex-col gap-4 overflow-hidden">
                         {item.eser && (
                           <div className="h-[150px] flex justify-center items-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
-                            {renderFilePreview(item.eser)}
+                            <FilePreview fileName={item.eser} />
                           </div>
                         )}
 
-                        <div className="flex-1 flex flex-col gap-4">
-                          {item.workDescription && (
-                            <div className="flex-1 min-h-[80px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-2">
-                              <h4 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-100">
-                                Künye
-                              </h4>
-                              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                                {item.workDescription}
-                              </p>
-                            </div>
-                          )}
-                        </div>
+                        {item.workDescription && (
+                          <div className="flex-1 overflow-y-auto pr-2">
+                            <h4 className="text-sm font-semibold text-gray-800 mb-2 pb-1 border-b border-gray-100">
+                              Künye
+                            </h4>
+                            <p className="text-sm text-gray-700 whitespace-pre-line">
+                              {item.workDescription}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       <div className="pt-4 mt-2 border-t border-gray-200">
                         <div className="grid grid-cols-5 gap-3 text-center">
-                          <div className="space-y-1">
-                            <div className="flex flex-col items-center text-gray-600">
-                              <UserOutlined className="text-lg mb-1" />
-                              <span className="text-xs font-semibold">
-                                Yazarlar
-                              </span>
-                            </div>
-                            <p className="text-lg font-bold text-gray-900">
-                              {item.yazar_sayisi || "0"}
+                          <div>
+                            <UserOutlined className="text-lg mb-1 text-gray-600" />
+                            <p className="text-xs">Yazar</p>
+                            <p className="text-lg font-bold">
+                              {item.yazar_sayisi ?? 0}
                             </p>
                           </div>
 
-                          <div className="space-y-1">
-                            <div className="flex flex-col items-center text-gray-600">
-                              <CalendarOutlined className="text-lg mb-1" />
-                              <span className="text-xs font-semibold">
-                                Tarih
-                              </span>
-                            </div>
-                            <p className="text-sm font-semibold text-gray-900">
+                          <div>
+                            <CalendarOutlined className="text-lg mb-1 text-gray-600" />
+                            <p className="text-xs">Tarih</p>
+                            <p className="text-sm font-semibold">
                               {item.created_at
                                 ? new Date(item.created_at).toLocaleDateString(
                                     "tr-TR"
@@ -346,35 +319,25 @@ const navigate = useNavigate();
                             </p>
                           </div>
 
-                          <div className="space-y-1">
-                            <div className="flex flex-col items-center text-gray-600">
-                              <BookOutlined className="text-lg mb-1" />
-                              <span className="text-xs font-semibold">Ham</span>
-                            </div>
+                          <div>
+                            <BookOutlined className="text-lg mb-1 text-gray-600" />
+                            <p className="text-xs">Ham</p>
                             <p className="text-lg font-bold text-blue-700">
                               {item.hamPuan ?? "-"}
                             </p>
                           </div>
 
-                          <div className="space-y-1">
-                            <div className="flex flex-col items-center text-gray-600">
-                              <TeamOutlined className="text-lg mb-1" />
-                              <span className="text-xs font-semibold">
-                                Yazar
-                              </span>
-                            </div>
+                          <div>
+                            <TeamOutlined className="text-lg mb-1 text-gray-600" />
+                            <p className="text-xs">Yazar</p>
                             <p className="text-lg font-bold text-indigo-700">
-                              {item.yazarpuanı ?? "-"}
+                              {item.yazarPuani ?? "-"}
                             </p>
                           </div>
 
-                          <div className="space-y-1">
-                            <div className="flex flex-col items-center text-gray-600">
-                              <StarOutlined className="text-lg mb-1" />
-                              <span className="text-xs font-semibold">
-                                Toplam
-                              </span>
-                            </div>
+                          <div>
+                            <StarOutlined className="text-lg mb-1 text-gray-600" />
+                            <p className="text-xs">Toplam</p>
                             <p className="text-lg font-bold text-green-700">
                               {item.toplamPuan ?? "-"}
                             </p>
@@ -397,7 +360,6 @@ const navigate = useNavigate();
                               );
                               return;
                             }
-
                             window.open(
                               `http://localhost:5000/api/form8/${item.id}/pdf?token=${token}`,
                               "_blank"

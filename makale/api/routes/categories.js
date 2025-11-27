@@ -5,68 +5,80 @@ module.exports = (db) => {
 
   router.get("/categories", async (req, res) => {
     try {
-      const [ust] = await db.promise().query("SELECT * FROM ust_aktiviteler");
-      const [alt] = await db.promise().query("SELECT * FROM alt_aktiviteler");
-      const [akt] = await db.promise().query("SELECT * FROM aktivite");
+      const [ustResults] = await db
+        .promise()
+        .query("SELECT * FROM ust_aktiviteler ORDER BY id ASC");
 
-      const normalAlt = alt.filter((x) => !x.kod.startsWith("A-"));
-      const normalAkt = akt.filter((x) => !x.kod.startsWith("A-"));
+      const [altResults] = await db
+        .promise()
+        .query("SELECT * FROM alt_aktiviteler ORDER BY id ASC");
 
-      const all = [...normalAlt, ...normalAkt];
+      const [aktResults] = await db
+        .promise()
+        .query("SELECT * FROM aktivite ORDER BY id ASC");
 
-      const map = {};
-      all.forEach((item) => (map[item.kod] = { ...item, subcategories: [] }));
+      const allAktiviteler = [...altResults, ...aktResults];
 
-      all.forEach((item) => {
-        const parts = item.kod.split("-");
-        if (parts.length > 1) {
-          const parentCode = parts[0] + "-" + parts[1].split(".")[0];
-          if (map[parentCode] && parentCode !== item.kod) {
-            map[parentCode].subcategories.push(map[item.kod]);
+      const buildHierarchy = (items) => {
+        const map = {};
+        const roots = [];
+
+        const getParentKod = (kod) => {
+          if (/^A-\d+[a-z]+$/i.test(kod)) {
+            return kod.match(/^A-\d+/i)[0];
           }
-        }
-      });
 
-      ust.forEach((u) => {
-        if (u.kod !== "A") {
-          u.subcategories = Object.values(map).filter((x) =>
-            x.kod.startsWith(u.kod + "-")
-          );
-        }
-      });
+          if (/^A-\d+\.\d+$/i.test(kod)) return kod.split(".")[0];
 
-      const aRoot = ust.find((x) => x.kod === "A");
-      if (aRoot) {
-        const a1 = [];
-        const a2 = [];
-        const a3 = [];
-        const a4 = [];
-        const a5 = [];
-        const a6 = [];
+          if (/^A-\d+$/.test(kod)) return "A";
 
-        alt.forEach((a) => {
-          if (a.kod === "A-1") a1.push(a);
-          if (a.kod === "A-2") a2.push(a);
-          if (a.kod === "A-3") a3.push(a);
-          if (a.kod === "A-4") a4.push(a);
-          if (a.kod === "A-5") a5.push(a);
-          if (a.kod === "A-6") a6.push(a);
+          if (/^[A-Z]-\d+[a-z]+$/i.test(kod)) {
+            return kod.match(/^[A-Z]-\d+/i)[0];
+          }
+
+          if (kod.includes(".")) return kod.split(".")[0];
+          if (kod.includes("-")) return kod.split("-")[0];
+
+          return null;
+        };
+
+        items.forEach((item) => {
+          item.subcategories = [];
+          map[item.kod] = item;
         });
 
-        const child = (group, code) =>
-          akt.filter((x) => new RegExp(`^${code}[a-z]$`, "i").test(x.kod));
+        items.forEach((item) => {
+          const parentKod = getParentKod(item.kod);
 
-        aRoot.subcategories = [
-          { ...a1[0], subcategories: child(a1, "A-1") },
-          { ...a2[0], subcategories: child(a2, "A-2") },
-          { ...a3[0], subcategories: child(a3, "A-3") },
-          { ...a4[0], subcategories: child(a4, "A-4") },
-          { ...a5[0], subcategories: [] },
-          { ...a6[0], subcategories: [] },
-        ];
-      }
+          if (parentKod && map[parentKod]) {
+            map[parentKod].subcategories.push(item);
+          } else {
+            roots.push(item);
+          }
+        });
 
-      res.json(ust);
+        return roots;
+      };
+
+      const hiyerarsi = buildHierarchy(allAktiviteler);
+
+      ustResults.forEach((ust) => {
+        if (ust.kod === "A") {
+          ust.subcategories = hiyerarsi.filter((item) =>
+            item.kod.startsWith("A-")
+          );
+
+          return;
+        }
+
+        ust.subcategories = hiyerarsi.filter(
+          (item) =>
+            item.kod.startsWith(ust.kod + "-") ||
+            item.kod.startsWith(ust.kod + ".")
+        );
+      });
+
+      res.json(ustResults);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Server hatası" });
