@@ -23,7 +23,6 @@ const Form7 = () => {
         console.log("FORM7 DATA:", res.data);
 
         setItems(res.data);
-
         setLoadingItems(false);
       } catch (err) {
         setLoadingItems(false);
@@ -64,12 +63,26 @@ const Form7 = () => {
       <Header />
 
       <div className="max-w-[1200px] mx-auto p-6 text-sm">
-        <h1 className="text-center font-semibold text-lg mb-6">
-          FORM - 7 ÖNİZLEME
-        </h1>
+        <div className="text-center mb-8">
+          <div className="text-[13px] text-gray-600 leading-tight">
+            <div>KONYA TEKNİK ÜNİVERSİTESİ AKADEMİK</div>
+            <div>ATAMA - YÜKSELTME ÖLÇÜTLERİ ve UYGULAMA ESASLARI</div>
+          </div>
 
-        <div className="p-4 border bg-gray-50 mb-6">
-          <strong>Sizin İçin (Önizleme):</strong>
+          <div className="text-gray-700 font-semibold text-lg mt-2">FORM-7</div>
+
+          <div className="font-bold text-base mt-4">
+            Tablo 1. AKADEMİK ATAMA - YÜKSELTME ÖLÇÜTLERİ PUAN TABLOSU
+          </div>
+        </div>
+        
+
+        <div className="bg-white shadow p-4 mb-8">
+          <Form7Table data={items} />
+        </div>
+
+        <div className="p-4 border bg-gray-50 mt-6">
+          <strong>Özet Önizleme:</strong>
 
           {loadingItems ? (
             <div>Yükleniyor...</div>
@@ -87,10 +100,6 @@ const Form7 = () => {
                 ))}
             </ul>
           )}
-        </div>
-
-        <div className="bg-white shadow p-4">
-          <Form7Table data={items} />
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8">
