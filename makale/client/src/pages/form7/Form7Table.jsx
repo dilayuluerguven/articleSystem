@@ -18,7 +18,6 @@ export default function Form7Table({ data }) {
   });
 
   prepared.sort((a, b) => (a.kod || "").localeCompare(b.kod || ""));
-
   const uniqueBases = [...new Set(prepared.map((i) => i.base))].filter(
     (b) => b !== null
   );
@@ -26,28 +25,17 @@ export default function Form7Table({ data }) {
   return (
     <div className="w-full overflow-x-auto">
       <table className="w-full border border-black border-collapse text-xs">
-        <thead>
-          <tr className="bg-gray-100">
-            <th rowSpan="2" className="border border-black p-2 w-[8%] font-bold align-top">
-              Kod
-            </th>
-            <th rowSpan="2" className="border border-black p-2 w-[50%] font-bold align-top">
-              TANIM
-            </th>
-            <th colSpan="4" className="border border-black p-2 font-bold">
-              Puan
-            </th>
-          </tr>
-
-          <tr className="bg-gray-100">
-            <th className="border border-black p-1 font-bold w-[12%]">Ham Puan</th>
-            <th className="border border-black p-1 font-bold w-[10%]">Doktora sonrası Puan</th>
-            <th className="border border-black p-1 font-bold w-[10%]">Doçentlik sonrası Puan</th>
-            <th className="border border-black p-1 font-bold w-[10%]">Toplam Puan</th>
-          </tr>
-        </thead>
-
         <tbody>
+          <tr className="bg-gray-100 font-bold text-center">
+            <td className="border border-black p-2 w-[8%]">Kod</td>
+            <td className="border border-black p-2 w-[50%]">TANIM</td>
+            <td className="border border-black p-2">Ham Puan</td>
+            <td className="border border-black p-2">Doktora sonrası puan</td>
+            <td className="border border-black p-2">Doçentlik sonrası puan</td>
+            <td className="border border-black p-2">Toplam Puan</td>
+          </tr>
+
+          
           {data.map((group) => (
             <React.Fragment key={group.ust_kod}>
               <tr className="bg-gray-200">
@@ -60,7 +48,7 @@ export default function Form7Table({ data }) {
               </tr>
 
               {uniqueBases
-                .filter((base) => base.startsWith(group.ust_kod))
+                .filter((b) => b.startsWith(group.ust_kod))
                 .map((baseKod) => {
                   const baseItem = group.items.find(
                     (i) => (i.alt_kod || i.aktivite_kod) === baseKod
@@ -93,17 +81,21 @@ export default function Form7Table({ data }) {
                         .filter((row) => row.base === baseKod)
                         .map((row) => (
                           <tr key={row.kod}>
-                            <td className="border border-black p-2 text-center font-semibold">
+                            <td className="border border-black p-2 text-center">
                               {row.kod}
                             </td>
+
                             <td className="border border-black p-2 italic">
                               {row.tanim}
                             </td>
+
                             <td className="border border-black p-2 text-center">
                               {`${row.ham} × ${row.yazar}`}
                             </td>
+
                             <td className="border border-black p-2"></td>
                             <td className="border border-black p-2"></td>
+
                             <td className="border border-black p-2 text-center font-bold">
                               {row.toplam}
                             </td>
