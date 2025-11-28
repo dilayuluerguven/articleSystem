@@ -9,32 +9,43 @@ const authMiddleware = require("../middleware/auth");
 module.exports = (db) => {
   const router = express.Router();
 
+  // ============================
+  //   FORM 7 DATA (FRONTEND)
+  // ============================
   router.get("/data", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
 
       const [rows] = await db.promise().query(
         `
-      SELECT  
-        b.id AS basvuru_id,
-        ua.kod AS ust_kod,
-        ua.tanim AS ust_tanim,
-        aa.kod AS alt_kod,
-        aa.tanim AS alt_tanim,
-        a.kod AS aktivite_kod,
-        a.tanim AS aktivite_tanim,
-        b.workDescription,
-        b.yazar_sayisi,
-        b.hamPuan,
-        b.yazarPuani AS yazarpuani,
-        b.toplamPuan
-      FROM basvuru b
-      LEFT JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
-      LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
-      LEFT JOIN aktivite a ON b.aktivite_id = a.id
-      WHERE b.user_id = ?
-      ORDER BY ua.id, aa.id, a.id
-      `,
+        SELECT  
+          b.id AS basvuru_id,
+
+          ua.kod AS ust_kod,
+          ua.tanim AS ust_tanim,
+
+          aa.kod AS alt_kod,
+          aa.tanim AS alt_tanim,
+
+          a.kod AS aktivite_kod,
+          a.tanim AS aktivite_tanim,
+          a.puan_id,
+
+          ap.puan AS akademik_puan,
+
+          b.workDescription,
+          b.yazar_sayisi,
+          b.hamPuan,
+          b.yazarPuani AS yazarpuani,
+          b.toplamPuan
+        FROM basvuru b
+        LEFT JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
+        LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
+        LEFT JOIN aktivite a ON b.aktivite_id = a.id
+        LEFT JOIN akademik_puanlar ap ON a.puan_id = ap.id
+        WHERE b.user_id = ?
+        ORDER BY ua.id, aa.id, a.id
+        `,
         [userId]
       );
 
@@ -57,24 +68,33 @@ module.exports = (db) => {
         if (!counters[baseCode]) counters[baseCode] = 1;
         const index = counters[baseCode]++;
 
+        // otomatik toplam puan hesaplama
+        const ham = r.akademik_puan ?? r.hamPuan ?? 0;
+        const yazarPuani = r.yazarpuani ?? 1;
+        const toplam = r.toplamPuan ?? Number(ham * yazarPuani).toFixed(2);
+
         grouped[groupKey].items.push({
           aktivite_kod: `${baseCode}:${index}`,
           base_kod: baseCode,
           alt_kod: r.alt_kod,
           alt_tanim: r.alt_tanim,
           workDescription: r.workDescription,
-          hamPuan: r.hamPuan,
-          yazarpuani: r.yazarpuani,
-          toplamPuan: r.toplamPuan,
+          hamPuan: ham,
+          yazarpuani: yazarPuani,
+          toplamPuan: toplam,
         });
       });
 
       res.json(Object.values(grouped));
     } catch (error) {
+      console.log(error);
       res.status(500).json({ error: "Server error" });
     }
   });
 
+  // ============================
+  //       FORM 7 PDF
+  // ============================
   router.get("/pdf", authMiddleware, async (req, res) => {
     try {
       const user_id = req.user?.id;
@@ -89,12 +109,15 @@ module.exports = (db) => {
           aa.kod AS alt_kod,
           aa.tanim AS alt_tanim,
           a.kod AS aktivite_kod,
-          a.tanim AS aktivite_tanim
+          a.tanim AS aktivite_tanim,
+          a.puan_id,
+          ap.puan AS akademik_puan
         FROM basvuru b
         JOIN users u ON b.user_id = u.id
         LEFT JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
         LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
         LEFT JOIN aktivite a ON b.aktivite_id = a.id
+        LEFT JOIN akademik_puanlar ap ON a.puan_id = ap.id
         WHERE b.user_id = ?
         ORDER BY ua.id, aa.id, a.id
         `,
@@ -106,17 +129,21 @@ module.exports = (db) => {
 
       rows.forEach((e) => {
         const code = e.aktivite_kod || e.alt_kod || e.ust_kod;
+
         if (!counter[code]) counter[code] = 1;
         const index = counter[code]++;
 
-        const puan = e.toplamPuan ?? e.hamPuan ?? "-";
+        // otomatik toplam puan
+        const ham = e.akademik_puan ?? e.hamPuan ?? 0;
+        const yazarPuani = e.yazarPuani ?? 1;
+        const toplam = e.toplamPuan ?? Number(ham * yazarPuani).toFixed(2);
 
         items.push({
           kod: `${code}:${index}`,
           eser: e.workDescription || "-",
-          hamPuan: e.hamPuan || "-",
-          yazarpuani: e.yazarPuani || "-",
-          toplamPuan: puan,
+          hamPuan: ham,
+          yazarpuani: yazarPuani,
+          toplamPuan: toplam,
         });
       });
 
@@ -157,6 +184,7 @@ module.exports = (db) => {
         }
       );
     } catch (err) {
+      console.log(err);
       res.status(500).json({ error: "Sunucu hatası" });
     }
   });

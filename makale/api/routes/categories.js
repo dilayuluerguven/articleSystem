@@ -17,7 +17,9 @@ module.exports = (db) => {
         .promise()
         .query("SELECT * FROM aktivite ORDER BY id ASC");
 
-      const allAktiviteler = [...altResults, ...aktResults];
+      const allAktiviteler = [...altResults, ...aktResults].sort((a, b) =>
+        a.kod.localeCompare(b.kod, "en", { numeric: true })
+      );
 
       const buildHierarchy = (items) => {
         const map = {};
@@ -51,6 +53,7 @@ module.exports = (db) => {
           const parentKod = getParentKod(item.kod);
 
           if (parentKod && map[parentKod]) {
+            map[parentKod].subcategories = map[parentKod].subcategories || [];
             map[parentKod].subcategories.push(item);
           } else {
             roots.push(item);

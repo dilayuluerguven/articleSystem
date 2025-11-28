@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import WorkModal from "../utils/WorkModal";
 import {
-  PlusOutlined,
-  EditOutlined,
-  InfoCircleOutlined,
   LoadingOutlined,
   CaretDownOutlined,
   CaretRightOutlined,
@@ -31,53 +28,55 @@ export default function A_part() {
     fetchCategories();
   }, []);
 
-  const getActivityPath = (allCategories, targetId) => {
-    const findPath = (node, targetId, path = []) => {
-      if (node.kod === targetId) return [...path, node];
-      for (let sub of node.subcategories || []) {
-        const found = findPath(sub, targetId, [...path, node]);
-        if (found.length) return found;
+  const getActivityPath = (categories, targetId) => {
+    const Aroot = categories.find((c) => c.kod === "A");
+    if (!Aroot) return {};
+
+    const find = (node, id) => {
+      if (node.id === id) return node;
+      for (const s of node.subcategories || []) {
+        const f = find(s, id);
+        if (f) return f;
       }
-      return [];
+      return null;
     };
 
-    for (let root of allCategories) {
-      const path = findPath(root, targetId);
+    const node = find(Aroot, targetId);
+    if (!node) return {};
 
-      if (path.length) {
-        if (root.kod === "A") {
-          const lastNode = path[path.length - 1];
-
-          if (/^A-\d+$/.test(lastNode.kod)) {
-            return {
-              ust_aktivite_id: root.id,
-              alt_aktivite_id: lastNode.id,
-              aktivite_id: null,
-            };
-          }
-
-          if (/^A-\d+[a-z]$/i.test(lastNode.kod)) {
-            return {
-              ust_aktivite_id: root.id,
-              alt_aktivite_id: path[path.length - 2].id,
-              aktivite_id: lastNode.id,
-            };
-          }
-        }
-
-        const ust_aktivite_id = path[0]?.id ?? null;
-        const alt_aktivite_id = path.length >= 2 ? path[1].id : null;
-        const aktivite_id = path.length >= 3 ? path[2].id : null;
-
-        return { ust_aktivite_id, alt_aktivite_id, aktivite_id };
-      }
+    if (/^A-\d+$/.test(node.kod)) {
+      return {
+        ust_aktivite_id: Aroot.id,
+        alt_aktivite_id: node.id,
+        aktivite_id: null,
+      };
     }
 
-    return { ust_aktivite_id: null, alt_aktivite_id: null, aktivite_id: null };
+    if (/^A-\d+[a-z]$/i.test(node.kod)) {
+      const parentKod = node.kod.match(/^A-\d+/)[0];
+      const parent = Aroot.subcategories.find((x) => x.kod === parentKod);
+      return {
+        ust_aktivite_id: Aroot.id,
+        alt_aktivite_id: parent?.id || null,
+        aktivite_id: node.id,
+      };
+    }
+
+    if (/^A-\d+\.\d+$/.test(node.kod)) {
+      const parentKod = node.kod.split(".")[0];
+      const parent = Aroot.subcategories.find((x) => x.kod === parentKod);
+      return {
+        ust_aktivite_id: Aroot.id,
+        alt_aktivite_id: parent?.id || null,
+        aktivite_id: node.id,
+      };
+    }
+
+    return {};
   };
 
-  const addWork = (category, categoryId) => {
-    setSelectedCategory({ ...category, selectedId: categoryId });
+  const addWork = (category) => {
+    setSelectedCategory({ ...category, selectedId: category.id });
     setSelectedWork(null);
     setIsModalOpen(true);
   };
@@ -99,18 +98,10 @@ export default function A_part() {
   }) => {
     if (!file) return alert("Lütfen dosya seçin!");
 
-    console.log("Seçilen kategori:", selectedCategory);
-
     const { ust_aktivite_id, alt_aktivite_id, aktivite_id } = getActivityPath(
       categories,
       selectedCategory.selectedId
     );
-
-    console.log("Bulunan path:", {
-      ust_aktivite_id,
-      alt_aktivite_id,
-      aktivite_id,
-    });
 
     const formData = new FormData();
     formData.append("ust_aktivite_id", ust_aktivite_id);
@@ -155,14 +146,15 @@ export default function A_part() {
 
   const renderCategories = (cats) => {
     const disallowedCodes = ["A", "A-1", "A-2", "A-3", "A-4"];
+
     return cats.map((cat) => (
-      <div key={cat.kod} className="mb-4 ml-2">
+      <div key={cat.id} className="mb-4 ml-2">
         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300">
           <div className="flex items-center gap-3">
-            {cat.subcategories && cat.subcategories.length > 0 && (
+            {cat.subcategories?.length > 0 && (
               <button
-                className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
                 onClick={() => toggleExpand(cat.id)}
+                className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center"
               >
                 {expanded[cat.id] ? (
                   <CaretDownOutlined />
@@ -171,58 +163,22 @@ export default function A_part() {
                 )}
               </button>
             )}
-            <div className="flex flex-col">
-              <span className="font-bold text-gray-800 text-medium">
+            <div>
+              <span className="font-bold">
                 {cat.kod} - {cat.tanim}
               </span>
-              {cat.subcategories && (
-                <span className="text-xs text-gray-500 mt-1">
-                  {cat.subcategories.length} alt kategori
-                </span>
-              )}
             </div>
           </div>
 
           {!disallowedCodes.includes(cat.kod) && (
-            <button
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
-              onClick={() => addWork(cat, cat.kod)}
-            >
-              <PlusOutlined />
-              Çalışma Ekle
-            </button>
+            <button onClick={() => addWork(cat)}>Çalışma Ekle</button>
           )}
         </div>
 
         {expanded[cat.id] && (
           <div className="ml-8 mt-3 space-y-2 border-l-2 border-blue-200 pl-4">
-            {cat.works &&
-              cat.works.map((work) => (
-                <div
-                  key={work.code}
-                  className="ml-2 mt-2 flex justify-between items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-gray-700 font-normal">
-                      {work.description}
-                    </span>
-                  </div>
-                  <button
-                    className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-3 py-1 rounded-lg text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-1"
-                    onClick={() => editWork(work, cat)}
-                  >
-                    <EditOutlined />
-                    Düzenle
-                  </button>
-                </div>
-              ))}
-
-            {cat.subcategories && (
-              <div className="mt-4 space-y-3">
-                {renderCategories(cat.subcategories)}
-              </div>
-            )}
+            {cat.subcategories?.length > 0 &&
+              renderCategories(cat.subcategories)}
           </div>
         )}
       </div>
@@ -244,14 +200,8 @@ export default function A_part() {
             {categories.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <LoadingOutlined
-                    style={{ fontSize: "2rem", color: "#9ca3af" }}
-                  />
+                  <LoadingOutlined style={{ fontSize: "2rem" }} />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Kategoriler yükleniyor...
-                </h3>
-                <p className="text-gray-500">Lütfen bekleyin</p>
               </div>
             ) : (
               <div className="space-y-4">{renderCategories(categories)}</div>
