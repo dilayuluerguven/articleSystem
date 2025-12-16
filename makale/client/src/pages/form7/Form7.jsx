@@ -20,15 +20,11 @@ const Form7 = () => {
     const fetchData = async () => {
       try {
         const token =
-          localStorage.getItem("token") ||
-          sessionStorage.getItem("token");
+          localStorage.getItem("token") || sessionStorage.getItem("token");
 
-        const res = await axios.get(
-          "http://localhost:5000/api/form7/data",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await axios.get("http://localhost:5000/api/form7/data", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
         setItems(res.data);
       } catch {
@@ -45,18 +41,7 @@ const Form7 = () => {
     <>
       <Header />
 
-      <div ref={pdfRef} className="max-w-[1200px] mx-auto p-6">
-        <div className="text-center mb-6 text-sm font-calibri">
-          <h1 className="font-medium leading-6">
-            KONYA TEKNİK ÜNİVERSİTESİ AKADEMİK <br />
-            ATAMA - YÜKSELTME ÖLÇÜTLERİ ve UYGULAMA ESASLARI
-          </h1>
-
-          <div className="bg-black text-white py-2 mt-3 font-semibold">
-            Tablo 1. AKADEMİK ATAMA - YÜKSELTME ÖLÇÜTLERİ PUAN TABLOSU
-          </div>
-        </div>
-
+      <div ref={pdfRef} className="max-w-[1200px] mx-auto p-6 print-root">
         <Card className="shadow">
           {loading ? (
             <div className="flex justify-center py-10">

@@ -6,14 +6,33 @@ export default function Form7Table({ data }) {
   return (
     <div className="w-full overflow-x-auto">
       <table className="w-full border border-black border-collapse text-[11px]">
-        <thead>
+        <thead className="print-header">
+          <tr>
+            <th colSpan={6} className="p-0 no-header-border">
+              <div className="text-center py-2">
+                <div className="text-[11px] font-bold text-right pr-4">
+                  FORM-7
+                </div>
+                <div className="text-[11px] font-bold">
+                  KONYA TEKNİK ÜNİVERSİTESİ AKADEMİK
+                </div>
+                <div className="text-[10.5px]">
+                  ATAMA - YÜKSELTME ÖLÇÜTLERİ ve UYGULAMA ESASLARI
+                </div>
+                <div className="mt-2 font-bold text-[11px]">
+                  Tablo 1. AKADEMİK ATAMA - YÜKSELTME ÖLÇÜTLERİ PUAN TABLOSU
+                </div>
+              </div>
+            </th>
+          </tr>
+
           <tr className="bg-gray-200 text-center font-bold">
             <th className="border px-1 py-1 w-[7%]">Kod</th>
-            <th className="border px-1 py-1 w-[45%]">TANIM</th>
-            <th className="border px-1 py-1 w-[14%]">Ham Puan</th>
+            <th className="border px-1 py-1 w-[48%]">TANIM</th>
+            <th className="border px-1 py-1 w-[10%]">Ham Puan</th>
             <th className="border px-1 py-1 w-[12%]">Doktora sonrası puan</th>
             <th className="border px-1 py-1 w-[12%]">Doçentlik sonrası puan</th>
-            <th className="border px-1 py-1 w-[10%]">Toplam Puan</th>
+            <th className="border px-1 py-1 w-[11%]">Toplam Puan</th>
           </tr>
         </thead>
 
@@ -27,7 +46,7 @@ export default function Form7Table({ data }) {
                   <td className="border px-1 py-1 text-center">
                     {group.ust_kod}
                   </td>
-                  <td className="border px-1 py-1 underline" colSpan={5}>
+                  <td className="border px-1 py-1 " colSpan={5}>
                     {group.ust_tanim}
                   </td>
                 </tr>
