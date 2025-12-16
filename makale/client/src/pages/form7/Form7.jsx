@@ -40,7 +40,6 @@ const Form7 = () => {
   return (
     <>
       <Header />
-
       <div ref={pdfRef} className="max-w-[1200px] mx-auto p-6 print-root">
         <Card className="shadow">
           {loading ? (
