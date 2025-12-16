@@ -87,53 +87,83 @@ export default function A_part() {
     setIsModalOpen(true);
   };
 
-  const handleOk = async ({
-    mainSelection,
-    subSelection,
-    childSelection,
-    file,
-    yazarSayisi,
-    workDescription,
-    authorPosition,
-  }) => {
-    if (!file) return alert("Lütfen dosya seçin!");
+const handleOk = async ({
+  file,
+  yazarSayisi,
+  workDescription,
+  authorPosition,
+  mainSelection,
+  subSelection,
+  childSelection,
+}) => {
 
-    const { ust_aktivite_id, alt_aktivite_id, aktivite_id } = getActivityPath(
-      categories,
-      selectedCategory.selectedId
-    );
+  if (!file) return alert("Lütfen dosya seçin!");
 
-    const formData = new FormData();
-    formData.append("ust_aktivite_id", ust_aktivite_id);
-    formData.append("alt_aktivite_id", alt_aktivite_id);
-    formData.append("aktivite_id", aktivite_id);
-    formData.append("yazar_sayisi", yazarSayisi);
-    formData.append("main_selection", mainSelection);
-    formData.append("sub_selection", subSelection || "");
-    formData.append("child_selection", childSelection || "");
-    formData.append("file", file);
-    formData.append("workDescription", workDescription);
-    formData.append("authorPosition", authorPosition);
+  const cat = selectedCategory; // Tıklanan kategori (A-1, A-1.1, A-1a)
 
-    const token =
-      sessionStorage.getItem("token") || localStorage.getItem("token");
+  let ust_id = null;
+  let alt_id = null;
+  let akt_id = null;
 
-    try {
-      const res = await fetch("http://localhost:5000/api/basvuru", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+  // --- KATEGORİ ID HESAPLAMA ---
+  if (/^A$/.test(cat.kod)) {
+    // A
+    ust_id = cat.id;
+  }
+  else if (/^A-\d+$/.test(cat.kod)) {
+    // A-1, A-2, A-3
+    ust_id = categories[0].id;
+    alt_id = cat.id;
+  }
+  else {
+    // A-1.1, A-1a gibi en alt seviye
+    const parentKod = cat.kod.match(/^A-\d+/)[0];
+    const parent = categories[0].subcategories.find(x => x.kod === parentKod);
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "DB Hatası");
+    ust_id = categories[0].id;
+    alt_id = parent?.id || null;
+    akt_id = cat.id;
+  }
 
-      alert(data.message);
-      setIsModalOpen(false);
-    } catch (err) {
-      alert("Başvuru kaydedilemedi: " + err.message);
-    }
-  };
+  // --- FORM DATA OLUŞTUR ---
+  const formData = new FormData();
+
+  // kategori ID'leri
+  formData.append("ust_aktivite_id", ust_id);
+  formData.append("alt_aktivite_id", alt_id);
+  formData.append("aktivite_id", akt_id);
+
+  // modal seçimleri → artık NULL gelmeyecek
+  formData.append("main_selection", mainSelection ?? null);
+  formData.append("sub_selection", subSelection ?? null);
+  formData.append("child_selection", childSelection ?? null);
+
+  // diğer bilgiler
+  formData.append("yazar_sayisi", yazarSayisi);
+  formData.append("file", file);
+  formData.append("workDescription", workDescription);
+  formData.append("authorPosition", authorPosition);
+
+  const token =
+    sessionStorage.getItem("token") || localStorage.getItem("token");
+
+  try {
+    const res = await fetch("http://localhost:5000/api/basvuru", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "DB Hatası");
+
+    alert(data.message);
+    setIsModalOpen(false);
+  } catch (err) {
+    alert("Başvuru kaydedilemedi: " + err.message);
+  }
+};
+
 
   const handleCancel = () => {
     formRef.current?.resetFields();

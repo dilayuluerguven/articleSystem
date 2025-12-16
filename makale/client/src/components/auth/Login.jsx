@@ -38,6 +38,8 @@ const Login = ({ setIsAuthenticated }) => {
           "username",
           data.user?.username || data.user?.email || ""
         );
+        // store admin flag for client-side UI
+        storage.setItem("is_admin", data.user?.is_admin ? "1" : "0");
       }
 
       if (setIsAuthenticated) {
