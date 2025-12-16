@@ -12,12 +12,12 @@ import Form3 from "./pages/form3/Form3";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminBasvuru from "./pages/admin/AdminBasvuru";
-import AdminForm3 from "./pages/admin/AdminForm3";
 import AdminRoute from "./components/AdminRoute";
+import AdminTables from "./pages/admin/AdminTables";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false); // ✅ yeni
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     const token =
@@ -118,10 +118,10 @@ function App() {
         />
 
         <Route
-          path="/admin/form3"
+          path="/admin/tables"
           element={
             <AdminRoute isAuthenticated={isAuthenticated}>
-              <AdminForm3 />
+              <AdminTables />
             </AdminRoute>
           }
         />
