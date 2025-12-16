@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Header } from "../../header/header";
-import MaddeRow from "./MaddeRow";
+import MaddeRow from "../../components/utils/MaddeRow";
 
 const Form3 = () => {
   const today = new Date().toLocaleDateString("sv-SE");

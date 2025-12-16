@@ -14,6 +14,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminBasvuru from "./pages/admin/AdminBasvuru";
 import AdminRoute from "./components/AdminRoute";
 import AdminTables from "./pages/admin/AdminTables";
+import Form4 from "./pages/form4/Form4";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -78,6 +79,14 @@ function App() {
           element={
             <PrivateRoute isAuthenticated={isAuthenticated}>
               <Form3 />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/form4"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <Form4 />
             </PrivateRoute>
           }
         />
