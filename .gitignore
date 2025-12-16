@@ -1,2 +1,8 @@
 # Local Netlify folder
 .netlify
+# Generated backend files
+makale/api/temp/
+makale/api/uploads/
+
+# LibreOffice temp files
+makale/api/~$*.docx
