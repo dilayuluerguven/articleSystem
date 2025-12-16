@@ -13,7 +13,6 @@ app.use(cors());
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// MySQL bağlantısı
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -27,14 +26,60 @@ db.connect((err) => {
     return;
   }
   console.log("MySQL database connected");
+  db.query(
+    `
+    CREATE TABLE IF NOT EXISTS form3 (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      user_id INT NOT NULL,
+      tarih DATE DEFAULT NULL,
+      a_yayin_kodlari TEXT,
+      a_puanlar TEXT,
+      b_yayin_kodlari TEXT,
+      b_puanlar TEXT,
+      c_yayin_kodlari TEXT,
+      c_puanlar TEXT,
+      d_yayin_kodlari TEXT,
+      d_puanlar TEXT,
+      e_yayin_kodlari TEXT,
+      e_puanlar TEXT,
+      f_yayin_kodlari TEXT,
+      f_puanlar TEXT,
+      g_yayin_kodlari TEXT,
+      g_puanlar TEXT,
+      h_yayin_kodlari TEXT,
+      h_puanlar TEXT,
+      i_yayin_kodlari TEXT,
+      i_puanlar TEXT,
+      j_yayin_kodlari TEXT,
+      j_puanlar TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NULL DEFAULT NULL
+    ) CHARACTER SET utf8mb4;
+    `,
+    (err2) => {
+      if (err2) console.error("form3 table oluşturulurken hata:", err2);
+    }
+  );
+
+  db.query(
+    `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_admin'`,
+    [process.env.DB_NAME],
+    (err2, rows2) => {
+      if (err2) return console.error("is_admin check hata:", err2);
+      if (!rows2 || rows2.length === 0) {
+        db.query("ALTER TABLE users ADD COLUMN is_admin TINYINT(1) DEFAULT 0", (err3) => {
+          if (err3) console.error("is_admin eklenirken hata:", err3);
+          else console.log("is_admin sütunu eklendi");
+        });
+      }
+    }
+  );
 });
 
-// Test endpoint
 app.get("/", (req, res) => {
   res.send("Backend çalışıyor!");
 });
 
-// Kullanıcı kayıt
 app.post("/register", async (req, res) => {
   const { fullname, username, email, password } = req.body;
 
@@ -138,6 +183,12 @@ app.use("/api/form8", form8Router);
 
 const form7Router = require("./routes/form7")(db);
 app.use("/api/form7", form7Router);
+
+const form3Router = require("./routes/form3")(db);
+app.use("/api/form3", form3Router);
+
+const adminRouter = require("./routes/admin")(db);
+app.use("/api/admin", adminRouter);
 
 const userRoutes = require("./routes/user")(db);
 app.use("/api/user", userRoutes);

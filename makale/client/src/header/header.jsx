@@ -6,6 +6,7 @@ import {
   HomeOutlined,
   FileTextOutlined,
 } from "@ant-design/icons";
+import { SettingOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 
@@ -13,6 +14,7 @@ export const Header = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [updateNotice, setUpdateNotice] = useState(false); 
 
@@ -21,9 +23,12 @@ export const Header = () => {
       sessionStorage.getItem("token") || localStorage.getItem("token");
     const storedUsername =
       sessionStorage.getItem("username") || localStorage.getItem("username");
+    const storedIsAdmin =
+      sessionStorage.getItem("is_admin") || localStorage.getItem("is_admin");
 
     setIsLoggedIn(!!token);
     setUsername(storedUsername || "");
+    setIsAdmin(storedIsAdmin === "1");
 
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
@@ -31,7 +36,10 @@ export const Header = () => {
     const syncUsername = () => {
       const updatedUsername =
         sessionStorage.getItem("username") || localStorage.getItem("username");
+      const updatedIsAdmin =
+        sessionStorage.getItem("is_admin") || localStorage.getItem("is_admin");
       setUsername(updatedUsername || "");
+      setIsAdmin(updatedIsAdmin === "1");
 
       setUpdateNotice(true);
       setTimeout(() => setUpdateNotice(false), 2000);
@@ -127,6 +135,15 @@ export const Header = () => {
                   </span>
                 </div>
               </Tooltip>
+              {isAdmin && (
+                <Tooltip title="Admin Paneli">
+                  <SettingOutlined
+                    style={{ color: "white" }}
+                    className="text-lg cursor-pointer hover:text-yellow-400 transition-colors ml-2"
+                    onClick={() => navigate("/admin")}
+                  />
+                </Tooltip>
+              )}
             </>
           )}
 

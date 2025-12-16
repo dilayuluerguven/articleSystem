@@ -8,6 +8,12 @@ import PrivateRoute from "./components/PrivateRoute";
 import UserProfile from "./pages/UserProfile";
 import Form1 from "./pages/Form1";
 import Form7 from "./pages/form7/Form7";
+import Form3 from "./pages/form3/Form3";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminBasvuru from "./pages/admin/AdminBasvuru";
+import AdminForm3 from "./pages/admin/AdminForm3";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -67,12 +73,56 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/form3"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <Form3 />
+            </PrivateRoute>
+          }
+        />
          <Route
           path="/form7"
           element={
             <PrivateRoute isAuthenticated={isAuthenticated}>
               <Form7 />
             </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute isAuthenticated={isAuthenticated}>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute isAuthenticated={isAuthenticated}>
+              <AdminUsers />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/basvuru"
+          element={
+            <AdminRoute isAuthenticated={isAuthenticated}>
+              <AdminBasvuru />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/form3"
+          element={
+            <AdminRoute isAuthenticated={isAuthenticated}>
+              <AdminForm3 />
+            </AdminRoute>
           }
         />
 
