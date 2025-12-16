@@ -9,9 +9,6 @@ const authMiddleware = require("../middleware/auth");
 module.exports = (db) => {
   const router = express.Router();
 
-  // ============================
-  //   FORM 7 DATA (FRONTEND)
-  // ============================
   router.get("/data", authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id;
@@ -68,7 +65,6 @@ module.exports = (db) => {
         if (!counters[baseCode]) counters[baseCode] = 1;
         const index = counters[baseCode]++;
 
-        // otomatik toplam puan hesaplama
         const ham = r.akademik_puan ?? r.hamPuan ?? 0;
         const yazarPuani = r.yazarpuani ?? 1;
         const toplam = r.toplamPuan ?? Number(ham * yazarPuani).toFixed(2);
@@ -92,9 +88,7 @@ module.exports = (db) => {
     }
   });
 
-  // ============================
-  //       FORM 7 PDF
-  // ============================
+
   router.get("/pdf", authMiddleware, async (req, res) => {
     try {
       const user_id = req.user?.id;
@@ -133,7 +127,6 @@ module.exports = (db) => {
         if (!counter[code]) counter[code] = 1;
         const index = counter[code]++;
 
-        // otomatik toplam puan
         const ham = e.akademik_puan ?? e.hamPuan ?? 0;
         const yazarPuani = e.yazarPuani ?? 1;
         const toplam = e.toplamPuan ?? Number(ham * yazarPuani).toFixed(2);

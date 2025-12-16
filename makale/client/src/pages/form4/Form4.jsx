@@ -160,8 +160,6 @@ const Form4 = () => {
             AKADEMİK ATAMA - YÜKSELTME İÇİN ASGARİ KOŞULLAR
           </div>
 
-         
-
           <p className="mt-4">
             İlgili Yasa ve Yönetmelik hükümleriyle öngörülen asgari koşulları
             sağlamanın yanı sıra;
@@ -169,31 +167,36 @@ const Form4 = () => {
 
           <table className="w-full mt-4 border border-black">
             <thead>
-  <tr>
-    <th colSpan={2} className="border border-black p-2 font-bold text-center">
-      MİMARLIK, PLANLAMA VE TASARIM TEMEL ALANI / <br />
-      SOSYAL, BEŞERİ VE İDARİ BİLİMLER TEMEL ALANI İÇİN <br />
-      DOÇENTLİK
-    </th>
+              <tr>
+                <th
+                  colSpan={2}
+                  className="border border-black p-2 font-bold text-center"
+                >
+                  MİMARLIK, PLANLAMA VE TASARIM TEMEL ALANI / <br />
+                  SOSYAL, BEŞERİ VE İDARİ BİLİMLER TEMEL ALANI İÇİN <br />
+                  DOÇENTLİK
+                </th>
 
-    <th className="border border-black p-2 w-40 text-center font-semibold">
-      Tablo 1’deki <br /> Yayın Kodları
-    </th>
+                <th className="border border-black p-2 w-40 text-center font-semibold">
+                  Tablo 1’deki <br /> Yayın Kodları
+                </th>
 
-    <th className="border border-black p-2 w-40 text-center font-semibold">
-      Her Faaliyetin <br /> Puanı
-    </th>
-  </tr>
+                <th className="border border-black p-2 w-40 text-center font-semibold">
+                  Her Faaliyetin <br /> Puanı
+                </th>
+              </tr>
 
-  <tr>
-    <th colSpan={4} className="border border-black p-2 text-left font-semibold">
-      <span className="font-bold">11. Madde:</span> Ön değerlendirme – Aşağıda
-      sıralanmış olan maddelerde belirtilen koşulları sağlamadıkları
-      saptanan başvurular değerlendirmeye alınmaz.
-    </th>
-  </tr>
-</thead>
-
+              <tr>
+                <th
+                  colSpan={4}
+                  className="border border-black p-2 text-left font-semibold"
+                >
+                  <span className="font-bold">11. Madde:</span> Ön değerlendirme
+                  – Aşağıda sıralanmış olan maddelerde belirtilen koşulları
+                  sağlamadıkları saptanan başvurular değerlendirmeye alınmaz.
+                </th>
+              </tr>
+            </thead>
 
             <tbody>
               <MaddeRow
