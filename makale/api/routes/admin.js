@@ -14,7 +14,7 @@ module.exports = (db) => {
       const [rows] = await db
         .promise()
         .query(
-          "SELECT id, fullname, username, email, is_admin, created_at FROM users ORDER BY id DESC"
+          "SELECT id, fullname, username, email, is_admin, created_at FROM users ORDER BY id ASC"
         );
       res.json(rows);
     } catch (err) {
