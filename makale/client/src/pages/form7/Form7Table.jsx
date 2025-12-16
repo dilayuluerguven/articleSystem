@@ -1,27 +1,7 @@
 import React from "react";
 
 export default function Form7Table({ data }) {
-  const allItems = data.flatMap((g) => g.items || []);
-
-  const prepared = allItems.map((item) => {
-    const total = item.toplamPuan ?? item.hamPuan * item.yazarpuani;
-    const baseKod = item.alt_kod || item.aktivite_kod;
-
-    return {
-      kod: item.aktivite_kod,
-      base: baseKod,
-      tanim: item.workDescription,
-      ham: item.hamPuan,
-      yazar: item.yazarpuani,
-      toplam: Number(total || 0),
-    };
-  });
-
-  prepared.sort((a, b) => (a.kod || "").localeCompare(b.kod || ""));
-
-  const uniqueBases = [...new Set(prepared.map((i) => i.base))].filter(Boolean);
-
-  const genelToplam = prepared.reduce((s, r) => s + r.toplam, 0);
+  let genelToplam = 0;
 
   return (
     <div className="w-full overflow-x-auto">
@@ -41,9 +21,7 @@ export default function Form7Table({ data }) {
           </tr>
 
           {data.map((group) => {
-            const groupTotal = prepared
-              .filter((r) => r.kod?.startsWith(group.ust_kod))
-              .reduce((s, r) => s + r.toplam, 0);
+            let grupToplam = 0;
 
             return (
               <React.Fragment key={group.ust_kod}>
@@ -59,60 +37,50 @@ export default function Form7Table({ data }) {
                   </td>
                 </tr>
 
-                {uniqueBases
-                  .filter((b) => b.startsWith(group.ust_kod))
-                  .map((baseKod) => {
-                    const baseItem = group.items.find(
-                      (i) => (i.alt_kod || i.aktivite_kod) === baseKod
-                    );
+                {group.items.map((item) => (
+                  <React.Fragment key={item.kod}>
+                    <tr className="bg-gray-100">
+                      <td className="border border-black p-2 font-semibold text-center">
+                        {item.kod}
+                      </td>
+                      <td className="border border-black p-2">
+                        {item.tanim}
+                      </td>
+                      <td className="border border-black p-2 text-center">
+                        {item.hamPuan}
+                      </td>
+                      <td className="border border-black p-2"></td>
+                      <td className="border border-black p-2"></td>
+                      <td className="border border-black p-2"></td>
+                    </tr>
 
-                    const tanim =
-                      baseItem?.alt_tanim ||
-                      baseItem?.aktivite_tanim ||
-                      baseItem?.workDescription ||
-                      "";
+                    {item.belgeler.map((b) => {
+                      grupToplam += b.toplam;
+                      genelToplam += b.toplam;
 
-                    return (
-                      <React.Fragment key={baseKod}>
-                        <tr className="bg-gray-100">
-                          <td className="border border-black p-2 text-center font-semibold">
-                            {baseKod}
+                      return (
+                        <tr key={b.kod}>
+                          <td className="border border-black p-2 text-center">
+                            {b.kod}
                           </td>
-                          <td className="border border-black p-2">
-                            {tanim}
+                          <td className="border border-black p-2 italic">
+                            {b.eser}
                           </td>
                           <td className="border border-black p-2 text-center">
-                            {baseItem?.hamPuan || ""}
+                            {b.hesap}
                           </td>
                           <td className="border border-black p-2"></td>
                           <td className="border border-black p-2"></td>
-                          <td className="border border-black p-2"></td>
+                          <td className="border border-black p-2 text-center font-bold">
+                            {b.toplam.toFixed(2)}
+                          </td>
                         </tr>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
 
-                        {prepared
-                          .filter((r) => r.base === baseKod)
-                          .map((r) => (
-                            <tr key={r.kod}>
-                              <td className="border border-black p-2 text-center">
-                                {r.kod}
-                              </td>
-                              <td className="border border-black p-2 italic">
-                                {r.tanim}
-                              </td>
-                              <td className="border border-black p-2 text-center">
-                                {r.ham} × {r.yazar}
-                              </td>
-                              <td className="border border-black p-2"></td>
-                              <td className="border border-black p-2"></td>
-                              <td className="border border-black p-2 text-center font-bold">
-                                {r.toplam.toFixed(2)}
-                              </td>
-                            </tr>
-                          ))}
-                      </React.Fragment>
-                    );
-                  })}
-
+                {/* GRUP TOPLAM */}
                 <tr className="font-bold">
                   <td
                     className="border border-black p-2 text-right"
@@ -121,7 +89,7 @@ export default function Form7Table({ data }) {
                     TOPLAM
                   </td>
                   <td className="border border-black p-2 text-center">
-                    {groupTotal.toFixed(2)}
+                    {grupToplam.toFixed(2)}
                   </td>
                 </tr>
               </React.Fragment>

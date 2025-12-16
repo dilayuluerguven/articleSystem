@@ -9,84 +9,98 @@ const authMiddleware = require("../middleware/auth");
 module.exports = (db) => {
   const router = express.Router();
 
-  router.get("/data", authMiddleware, async (req, res) => {
-    try {
-      const userId = req.user.id;
+ router.get("/data", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
 
-      const [rows] = await db.promise().query(
-        `
-        SELECT  
-          b.id AS basvuru_id,
+    const [rows] = await db.promise().query(
+      `
+      SELECT  
+        b.id AS basvuru_id,
 
-          ua.kod AS ust_kod,
-          ua.tanim AS ust_tanim,
+        ua.kod AS ust_kod,
+        ua.tanim AS ust_tanim,
 
-          aa.kod AS alt_kod,
-          aa.tanim AS alt_tanim,
+        aa.kod AS alt_kod,
+        aa.tanim AS alt_tanim,
 
-          a.kod AS aktivite_kod,
-          a.tanim AS aktivite_tanim,
-          a.puan_id,
+        a.kod AS aktivite_kod,
+        a.tanim AS aktivite_tanim,
 
-          ap.puan AS akademik_puan,
+        ap.puan AS akademik_puan,
 
-          b.workDescription,
-          b.yazar_sayisi,
-          b.hamPuan,
-          b.yazarPuani AS yazarpuani,
-          b.toplamPuan
-        FROM basvuru b
-        LEFT JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
-        LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
-        LEFT JOIN aktivite a ON b.aktivite_id = a.id
-        LEFT JOIN akademik_puanlar ap ON a.puan_id = ap.id
-        WHERE b.user_id = ?
-        ORDER BY ua.id, aa.id, a.id
-        `,
-        [userId]
-      );
+        b.workDescription,
+        b.yazar_sayisi,
+        b.hamPuan,
+        b.yazarPuani AS yazarpuani,
+        b.toplamPuan
+      FROM basvuru b
+      LEFT JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
+      LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
+      LEFT JOIN aktivite a ON b.aktivite_id = a.id
+      LEFT JOIN akademik_puanlar ap ON a.puan_id = ap.id
+      WHERE b.user_id = ?
+      ORDER BY ua.id, aa.id, a.id
+      `,
+      [userId]
+    );
 
-      const grouped = {};
-      const counters = {};
+    const grouped = {};
+    const counters = {};
 
-      rows.forEach((r) => {
-        const groupKey = r.ust_kod;
+    rows.forEach((r) => {
+      const ustKey = r.ust_kod;
 
-        if (!grouped[groupKey]) {
-          grouped[groupKey] = {
-            ust_kod: r.ust_kod,
-            ust_tanim: r.ust_tanim,
-            items: [],
-          };
-        }
+      if (!grouped[ustKey]) {
+        grouped[ustKey] = {
+          ust_kod: r.ust_kod,
+          ust_tanim: r.ust_tanim,
+          items: {},
+        };
+      }
+      const baseKod =
+        r.aktivite_kod ?? r.alt_kod ?? r.ust_kod;
 
-        const baseCode = r.aktivite_kod || r.alt_kod || r.ust_kod;
+      if (!grouped[ustKey].items[baseKod]) {
+        grouped[ustKey].items[baseKod] = {
+          kod: baseKod,
+          tanim:
+            r.aktivite_tanim ??
+            r.alt_tanim ??
+            r.ust_tanim,
+          hamPuan: r.akademik_puan ?? r.hamPuan ?? "",
+          belgeler: [],
+        };
+      }
 
-        if (!counters[baseCode]) counters[baseCode] = 1;
-        const index = counters[baseCode]++;
+      if (!counters[baseKod]) counters[baseKod] = 1;
+      const index = counters[baseKod]++;
 
-        const ham = r.akademik_puan ?? r.hamPuan ?? 0;
-        const yazarPuani = r.yazarpuani ?? 1;
-        const toplam = r.toplamPuan ?? Number(ham * yazarPuani).toFixed(2);
+      const ham = r.akademik_puan ?? r.hamPuan ?? 0;
+      const yazar = r.yazarpuani ?? 1;
+      const toplam = r.toplamPuan ?? Number(ham * yazar).toFixed(2);
 
-        grouped[groupKey].items.push({
-          aktivite_kod: `${baseCode}:${index}`,
-          base_kod: baseCode,
-          alt_kod: r.alt_kod,
-          alt_tanim: r.alt_tanim,
-          workDescription: r.workDescription,
-          hamPuan: ham,
-          yazarpuani: yazarPuani,
-          toplamPuan: toplam,
-        });
+      grouped[ustKey].items[baseKod].belgeler.push({
+        kod: `${baseKod}:${index}`,
+        eser: r.workDescription,
+        hesap: `${ham} × ${yazar}`,
+        toplam: Number(toplam),
       });
+    });
 
-      res.json(Object.values(grouped));
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error: "Server error" });
-    }
-  });
+    const result = Object.values(grouped).map((g) => ({
+      ust_kod: g.ust_kod,
+      ust_tanim: g.ust_tanim,
+      items: Object.values(g.items),
+    }));
+
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 
 
   router.get("/pdf", authMiddleware, async (req, res) => {
