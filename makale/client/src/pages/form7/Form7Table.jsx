@@ -5,90 +5,99 @@ export default function Form7Table({ data }) {
 
   return (
     <div className="w-full overflow-x-auto">
-      <table className="w-full border-2 border-black border-collapse text-xs">
-        <tbody>
-          <tr className="bg-gray-200 font-bold text-center">
-            <td className="border border-black p-2 w-[8%]">Kod</td>
-            <td className="border border-black p-2 w-[52%]">TANIM</td>
-            <td className="border border-black p-2 w-[10%]">Ham Puan</td>
-            <td className="border border-black p-2 w-[10%]">
-              Doktora sonrası puan
-            </td>
-            <td className="border border-black p-2 w-[10%]">
-              Doçentlik sonrası puan
-            </td>
-            <td className="border border-black p-2 w-[10%]">Toplam Puan</td>
+      <table className="w-full border border-black border-collapse text-[11px]">
+        <thead>
+          <tr className="bg-gray-200 text-center font-bold">
+            <th className="border px-1 py-1 w-[7%]">Kod</th>
+            <th className="border px-1 py-1 w-[45%]">TANIM</th>
+            <th className="border px-1 py-1 w-[14%]">Ham Puan</th>
+            <th className="border px-1 py-1 w-[12%]">Doktora sonrası puan</th>
+            <th className="border px-1 py-1 w-[12%]">Doçentlik sonrası puan</th>
+            <th className="border px-1 py-1 w-[10%]">Toplam Puan</th>
           </tr>
+        </thead>
 
+        <tbody>
           {data.map((group) => {
             let grupToplam = 0;
 
             return (
               <React.Fragment key={group.ust_kod}>
-                <tr>
-                  <td className="border border-black p-2 font-bold text-center">
+                <tr className="font-bold">
+                  <td className="border px-1 py-1 text-center">
                     {group.ust_kod}
                   </td>
-                  <td
-                    className="border border-black p-2 font-bold underline"
-                    colSpan={5}
-                  >
+                  <td className="border px-1 py-1 underline" colSpan={5}>
                     {group.ust_tanim}
                   </td>
                 </tr>
 
-                {group.items.map((item) => (
-                  <React.Fragment key={item.kod}>
-                    <tr className="bg-gray-100">
-                      <td className="border border-black p-2 font-semibold text-center">
-                        {item.kod}
-                      </td>
-                      <td className="border border-black p-2">
-                        {item.tanim}
-                      </td>
-                      <td className="border border-black p-2 text-center">
-                        {item.hamPuan}
-                      </td>
-                      <td className="border border-black p-2"></td>
-                      <td className="border border-black p-2"></td>
-                      <td className="border border-black p-2"></td>
-                    </tr>
+                {group.items.map((item) => {
+                  const itemToplam = item.belgeler.reduce(
+                    (s, x) => s + x.toplam,
+                    0
+                  );
 
-                    {item.belgeler.map((b) => {
-                      grupToplam += b.toplam;
-                      genelToplam += b.toplam;
+                  grupToplam += itemToplam;
+                  genelToplam += itemToplam;
 
-                      return (
+                  return (
+                    <React.Fragment key={item.kod}>
+                      <tr className="bg-gray-100">
+                        <td className="border px-1 py-1 text-center">
+                          {item.kod}
+                        </td>
+                        <td className="border px-1 py-1 font-bold">
+                          {item.tanim}
+                        </td>
+                        <td className="border px-1 py-1 text-center font-bold">
+                          {item.hamPuan}
+                        </td>
+                        <td className="border px-1 py-1"></td>
+                        <td className="border px-1 py-1"></td>
+                        <td className="border px-1 py-1"></td>
+                      </tr>
+
+                      {item.belgeler.map((b, idx) => (
                         <tr key={b.kod}>
-                          <td className="border border-black p-2 text-center">
+                          <td className="border px-1 py-1 text-center">
                             {b.kod}
                           </td>
-                          <td className="border border-black p-2 italic">
-                            {b.eser}
-                          </td>
-                          <td className="border border-black p-2 text-center">
+                          <td className="border px-1 py-1 italic">{b.eser}</td>
+                          <td className="border px-1 py-1 text-center ham-puan">
                             {b.hesap}
                           </td>
-                          <td className="border border-black p-2"></td>
-                          <td className="border border-black p-2"></td>
-                          <td className="border border-black p-2 text-center font-bold">
-                            {b.toplam.toFixed(2)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
 
-                {/* GRUP TOPLAM */}
+                          <td className="border px-1 py-1 text-center">
+                            {b.main_selection === "doktoraSonrasi"
+                              ? b.toplam.toFixed(2)
+                              : ""}
+                          </td>
+                          <td className="border px-1 py-1 text-center">
+                            {b.main_selection === "docentlikSonrasi"
+                              ? b.toplam.toFixed(2)
+                              : ""}
+                          </td>
+
+                          {idx === 0 && (
+                            <td
+                              className="border px-1 py-1 text-center font-bold align-middle"
+                              rowSpan={item.belgeler.length}
+                            >
+                              {itemToplam.toFixed(2)}
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </React.Fragment>
+                  );
+                })}
+
                 <tr className="font-bold">
-                  <td
-                    className="border border-black p-2 text-right"
-                    colSpan={5}
-                  >
+                  <td className="border px-1 py-1 text-right" colSpan={5}>
                     TOPLAM
                   </td>
-                  <td className="border border-black p-2 text-center">
+                  <td className="border px-1 py-1 text-center">
                     {grupToplam.toFixed(2)}
                   </td>
                 </tr>
@@ -96,14 +105,11 @@ export default function Form7Table({ data }) {
             );
           })}
 
-          <tr className="font-bold bg-gray-200">
-            <td
-              className="border border-black p-2 text-right"
-              colSpan={5}
-            >
+          <tr className="bg-gray-200 font-bold">
+            <td className="border px-1 py-1 text-right" colSpan={5}>
               GENEL TOPLAM
             </td>
-            <td className="border border-black p-2 text-center">
+            <td className="border px-1 py-1 text-center">
               {genelToplam.toFixed(2)}
             </td>
           </tr>
