@@ -4,45 +4,62 @@ import {
   ProfileOutlined,
   FormOutlined,
   FileDoneOutlined,
+  ArrowRightOutlined,
 } from "@ant-design/icons";
 
 const UpperPart = () => {
   return (
-    <div className="bg-green-200 flex justify-between h-auto w-full p-10 relative">
-      <div className="flex items-center px-5 lg:px-20 gap-10 md:gap-16">
-        {/* Sol taraftaki form resmi */}
-        <div>
-          <img
-            src="/images/formImage.png"
-            alt="Form"
-            className="w-full max-w-xs md:max-w-md select-none"
-          />
+    <div className="bg-gradient-to-br from-indigo-50 via-white to-slate-50 flex justify-center items-center h-auto w-full py-16 px-6 relative overflow-hidden border-b border-slate-200">
+      <div className="absolute top-[-10%] right-[-5%] w-64 h-64 bg-indigo-100 rounded-full blur-3xl opacity-50" />
+      <div className="absolute bottom-[-10%] left-[-5%] w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-50" />
+
+      <div className="max-w-7xl w-full flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+        <div className="flex-1 flex justify-center md:justify-start">
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+            <img
+              src="/images/formImage.png"
+              alt="Form Önizleme"
+              className="relative w-full max-w-xs md:max-w-sm select-none drop-shadow-2xl rounded-xl transition-transform duration-500 hover:scale-105"
+            />
+          </div>
         </div>
 
-        {/* Metin Alanı */}
-        <div className="text-center px-5 md:px-10 select-none">
-          <h2 className="text-4xl md:text-5xl font-semibold italic">
-            Formunuzu Biz Hazırlayalım
+        <div className="flex-[1.5] text-center px-4 select-none">
+          <h2 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tight leading-tight">
+            Formunuzu <span className="text-indigo-600">Biz</span> Hazırlayalım
           </h2>
-          <p className="text-gray-700 text-lg md:text-xl mt-2">
-            Bilgilerinizi girin, formunuzu PDF olarak alın...
+          <p className="text-slate-500 text-lg md:text-2xl mt-6 font-medium max-w-2xl mx-auto leading-relaxed">
+            Bilgilerinizi dijital ortama girin, akademik teşvik formunuzu
+            saniyeler içinde{" "}
+            <span className="font-bold text-slate-700 underline decoration-indigo-300 underline-offset-4">
+              PDF olarak
+            </span>{" "}
+            teslim alın.
           </p>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <div className="flex items-center gap-2 text-slate-400 text-sm font-semibold">
+              <FileDoneOutlined className="text-green-500" /> Otomatik Hesaplama
+              <span className="mx-2 opacity-30">|</span>
+              <ProfileOutlined className="text-blue-500" /> Standart Format
+            </div>
+          </div>
         </div>
 
-        <div>
+        <div className="hidden lg:flex flex-1 justify-end">
           <img
             src="/images/sekil.png"
-            alt="Form"
-            className="w-full max-w-xs md:max-w-md select-none"
+            alt="Grafik Şekil"
+            className="w-full max-w-[280px] opacity-80 select-none animate-pulse-slow"
           />
         </div>
       </div>
 
-      {/* İkonlar */}
-      <FileTextOutlined className="absolute top-6 right-8 text-gray-600 text-xl md:text-2xl rotate-12" />
-      <ProfileOutlined className="absolute bottom-4 right-6 text-gray-600 text-2xl md:text-3xl -rotate-6" />
-      <FormOutlined className="absolute top-16 left-10 text-gray-600 text-xl md:text-2xl" />
-      <FileDoneOutlined className="absolute bottom-10 left-8 text-gray-600 text-xl md:text-2xl rotate-6" />
+      <FileTextOutlined className="absolute top-12 right-12 text-indigo-200 text-4xl rotate-12 hidden md:block" />
+      <ProfileOutlined className="absolute bottom-12 right-24 text-slate-200 text-5xl -rotate-12 hidden md:block" />
+      <FormOutlined className="absolute top-24 left-16 text-blue-200 text-3xl hidden md:block" />
+      <FileDoneOutlined className="absolute bottom-20 left-20 text-indigo-100 text-5xl rotate-6 hidden md:block" />
     </div>
   );
 };
