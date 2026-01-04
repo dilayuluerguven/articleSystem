@@ -5,83 +5,58 @@ module.exports = (db) => {
 
   router.get("/categories", async (req, res) => {
     try {
-      const [ustResults] = await db
+      const [ustler] = await db
         .promise()
-        .query("SELECT * FROM ust_aktiviteler ORDER BY id ASC");
+        .query("SELECT id, kod, tanim FROM ust_aktiviteler ORDER BY id");
 
-      const [altResults] = await db
+      const [altlar] = await db
         .promise()
-        .query("SELECT * FROM alt_aktiviteler ORDER BY id ASC");
+        .query("SELECT id, kod, tanim FROM alt_aktiviteler ORDER BY id");
 
-      const [aktResults] = await db
+      const [aktiviteler] = await db
         .promise()
-        .query("SELECT * FROM aktivite ORDER BY id ASC");
+        .query("SELECT id, kod, tanim FROM aktivite ORDER BY id");
 
-      const allAktiviteler = [...altResults, ...aktResults].sort((a, b) =>
-        a.kod.localeCompare(b.kod, "en", { numeric: true })
-      );
+      // alt_aktiviteler → node list
+      const altNodes = altlar.map((alt) => ({
+        id: alt.id,
+        kod: alt.kod,
+        tanim: alt.tanim,
+        subcategories: [],
+      }));
 
-      const buildHierarchy = (items) => {
-        const map = {};
-        const roots = [];
-
-        const getParentKod = (kod) => {
-          if (/^A-\d+[a-z]+$/i.test(kod)) {
-            return kod.match(/^A-\d+/i)[0];
-          }
-
-          if (/^A-\d+\.\d+$/i.test(kod)) return kod.split(".")[0];
-
-          if (/^A-\d+$/.test(kod)) return "A";
-
-          if (/^[A-Z]-\d+[a-z]+$/i.test(kod)) {
-            return kod.match(/^[A-Z]-\d+/i)[0];
-          }
-
-          if (kod.includes(".")) return kod.split(".")[0];
-          if (kod.includes("-")) return kod.split("-")[0];
-
-          return null;
-        };
-
-        items.forEach((item) => {
-          item.subcategories = [];
-          map[item.kod] = item;
-        });
-
-        items.forEach((item) => {
-          const parentKod = getParentKod(item.kod);
-
-          if (parentKod && map[parentKod]) {
-            map[parentKod].subcategories = map[parentKod].subcategories || [];
-            map[parentKod].subcategories.push(item);
-          } else {
-            roots.push(item);
-          }
-        });
-
-        return roots;
+      const getParentKod = (kod) => {
+        if (/^A-\d+[a-z]+$/i.test(kod)) return kod.match(/^A-\d+/i)[0];
+        if (kod.includes(".")) return kod.split(".")[0];
+        return null;
       };
 
-      const hiyerarsi = buildHierarchy(allAktiviteler);
+      // aktiviteleri SADECE TEK parent'a bağla
+      aktiviteler.forEach((akt) => {
+        const parentKod = getParentKod(akt.kod);
+        if (!parentKod) return;
 
-      ustResults.forEach((ust) => {
-        if (ust.kod === "A") {
-          ust.subcategories = hiyerarsi.filter((item) =>
-            item.kod.startsWith("A-")
-          );
+        const parentAlt = altNodes.find((a) => a.kod === parentKod);
+        if (!parentAlt) return;
 
-          return;
-        }
-
-        ust.subcategories = hiyerarsi.filter(
-          (item) =>
-            item.kod.startsWith(ust.kod + "-") ||
-            item.kod.startsWith(ust.kod + ".")
-        );
+        parentAlt.subcategories.push({
+          id: akt.id,
+          kod: akt.kod,
+          tanim: akt.tanim,
+          subcategories: [],
+        });
       });
 
-      res.json(ustResults);
+      const tree = ustler.map((ust) => ({
+        id: ust.id,
+        kod: ust.kod,
+        tanim: ust.tanim,
+        subcategories: altNodes.filter((alt) =>
+          alt.kod.startsWith(ust.kod + "-")
+        ),
+      }));
+
+      res.json(tree);
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Server hatası" });
