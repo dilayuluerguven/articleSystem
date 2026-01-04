@@ -1,4 +1,5 @@
-import { Button, Carousel, Checkbox, Form, Input, message, Alert } from "antd";
+import { Button, Carousel, Checkbox, Form, Input, Alert } from "antd";
+import { toast } from "react-toastify";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthCarousel from "../../components/auth/AuthCarousel";
@@ -24,12 +25,12 @@ const Login = ({ setIsAuthenticated }) => {
           data.error || "Giriş başarısız! Lütfen bilgilerinizi kontrol edin."
         );
 
-        message.error(data.error || "Giriş başarısız!");
+        toast.error(data.error || "Giriş başarısız!");
         return;
       }
 
       setErrorMessage("");
-      message.success("Giriş başarılı!");
+      toast.success("Giriş başarılı!");
 
       if (data.token) {
         const storage = values.remember ? localStorage : sessionStorage;
@@ -46,13 +47,18 @@ const Login = ({ setIsAuthenticated }) => {
         setIsAuthenticated(true);
       }
 
-      navigate("/home");
+      // Redirect admins to the admin panel, others to home
+      if (data.user?.is_admin) {
+        navigate("/admin");
+      } else {
+        navigate("/home");
+      }
     } catch (err) {
       console.error("Login fetch error:", err);
       setErrorMessage(
         "Sunucuya bağlanılamadı veya beklenmedik hata oluştu!"
       );
-      message.error("Sunucuya bağlanılamadı!");
+      toast.error("Sunucuya bağlanılamadı!");
     }
   };
 

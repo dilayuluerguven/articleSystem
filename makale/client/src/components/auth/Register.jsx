@@ -1,7 +1,8 @@
-import { Button, Carousel, Form, Input, message } from "antd";
+import { Button, Carousel, Form, Input } from "antd";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthCarousel from "../../components/auth/AuthCarousel";
+import { toast } from "react-toastify";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -22,15 +23,18 @@ const Register = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        message.error(data.error || "Kayıt başarısız!");
+        toast.error(data.error || "Kayıt başarısız!");
         return;
       }
 
-      message.success("Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz.");
-      navigate("/login");
+      toast.success("Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz.");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (err) {
       console.error("Register error:", err);
-      message.error("Sunucu hatası!");
+      toast.error("Kayıt sırasında bir hata oluştu!");
     }
   };
 
@@ -39,6 +43,7 @@ const Register = () => {
       <div className="flex justify-between h-full">
         <div className="xl:px-20 px-10 w-full flex flex-col h-full justify-center relative">
           <h1 className="text-center text-5xl font-bold mb-2">LOGO</h1>
+
           <Form layout="vertical" onFinish={onFinish}>
             <Form.Item
               label="Adı Soyadı:"
@@ -49,6 +54,7 @@ const Register = () => {
             >
               <Input />
             </Form.Item>
+
             <Form.Item
               label="Kullanıcı Adı:"
               name="username"
@@ -58,20 +64,28 @@ const Register = () => {
             >
               <Input />
             </Form.Item>
+
             <Form.Item
               label="E-Mail:"
               name="email"
-              rules={[{ required: true, message: "E-Mail Boş Bırakılamaz!" }]}
+              rules={[
+                { required: true, message: "E-Mail Boş Bırakılamaz!" },
+                { type: "email", message: "Geçerli bir e-mail giriniz!" },
+              ]}
             >
               <Input />
             </Form.Item>
+
             <Form.Item
               label="Şifre:"
               name="password"
-              rules={[{ required: true, message: "Şifre Boş Bırakılamaz!" }]}
+              rules={[
+                { required: true, message: "Şifre Boş Bırakılamaz!" },
+              ]}
             >
               <Input.Password />
             </Form.Item>
+
             <Form.Item
               label="Şifre Tekrar:"
               name="passwordAgain"
@@ -83,13 +97,16 @@ const Register = () => {
                     if (!value || getFieldValue("password") === value) {
                       return Promise.resolve();
                     }
-                    return Promise.reject(new Error("Şifreler aynı olmalı!"));
+                    return Promise.reject(
+                      new Error("Şifreler aynı olmalı!")
+                    );
                   },
                 }),
               ]}
             >
               <Input.Password />
             </Form.Item>
+
             <Form.Item>
               <Button
                 type="primary"
@@ -101,6 +118,7 @@ const Register = () => {
               </Button>
             </Form.Item>
           </Form>
+
           <div className="flex justify-center absolute left-0 bottom-10 w-full">
             Bir hesabınız var mı? &nbsp;
             <Link className="text-blue-600" to="/login">
