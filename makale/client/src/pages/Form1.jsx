@@ -148,12 +148,12 @@ const Form1 = () => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
-      alert("Lütfen giriş yapın.");
+      toast.error("Lütfen giriş yapın.");
       return;
     }
 
     if (!tarih) {
-      alert("Lütfen tarih seçin.");
+      toast.error("Lütfen tarih seçin.");
       return;
     }
 
@@ -181,11 +181,11 @@ const Form1 = () => {
       }
 
       setFormRecord(saved);
-      alert("Form kaydedildi. PDF hazırlanıyor...");
+      toast.success("Form kaydedildi. PDF hazırlanıyor...");
       await downloadPdf(saved.id);
     } catch (err) {
       console.error(err);
-      alert("Form kaydedilirken bir hata oluştu.");
+      toast.error("Form kaydedilirken bir hata oluştu.");
     } finally {
       setSaving(false);
     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Header } from "../../header/header";
+import { toast } from "react-toastify";
 import MaddeRow from "../../components/utils/MaddeRow";
 
 const Form4 = () => {
@@ -35,7 +36,7 @@ const Form4 = () => {
 
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return alert("Giriş yapın");
+    if (!token) return toast.error("Giriş yapın");
 
     setSaving(true);
 
@@ -72,7 +73,7 @@ const Form4 = () => {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("PDF error:", err);
-      alert("PDF oluşturulamadı");
+      toast.error("PDF oluşturulamadı");
     } finally {
       setSaving(false);
     }
@@ -81,7 +82,7 @@ const Form4 = () => {
   const handleSave = async () => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return alert("Giriş yapın");
+    if (!token) return toast.error("Giriş yapın");
 
     const payload = {
       tarih,
@@ -105,10 +106,10 @@ const Form4 = () => {
           });
 
       setFormRecord(res.data);
-      alert("Form kaydedildi.");
+      toast.success("Form kaydedildi.");
     } catch (err) {
       console.error("Save error:", err);
-      alert("Form kaydedilemedi.");
+      toast.error("Form kaydedilemedi.");
     }
   };
 

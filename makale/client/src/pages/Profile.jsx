@@ -13,28 +13,34 @@ import {
   BookOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-import { Header } from "../header/header";
-import { useNavigate } from "react-router-dom";
+import { Header } from "../header/header"; 
 
 const { Title, Text } = Typography;
 
 const FilePreview = ({ fileName }) => {
-  if (!fileName) return null;
-
-  const fileUrl = `http://localhost:5000/uploads/${fileName}`;
   const [exists, setExists] = useState(null);
+  const fileUrl = fileName ? `http://localhost:5000/uploads/${fileName}` : null; 
 
   useEffect(() => {
+    if (!fileName) {
+      setExists(null);
+      return;
+    }
+
+    const fileUrl = `http://localhost:5000/uploads/${fileName}`;
     const checkFile = async () => {
       try {
         await fetch(fileUrl, { method: "HEAD" });
         setExists(true);
-      } catch (e) {
+      } catch {
         setExists(false);
       }
     };
+
     checkFile();
   }, [fileName]);
+
+  if (!fileName) return null;
 
   if (exists === false) {
     return (
@@ -91,35 +97,33 @@ const FilePreview = ({ fileName }) => {
 const Profile = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) return;
-    fetchApplications(token);
-  }, []);
 
-  const fetchApplications = async (token) => {
-    try {
-      setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/basvuru", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get("http://localhost:5000/api/basvuru", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      if (!Array.isArray(res.data)) {
-        console.error("Beklenmeyen veri formatı:", res.data);
-        toast.error("Veri alınırken hata oluştu.");
-        return;
+        if (!Array.isArray(res.data)) {
+          console.error("Beklenmeyen veri formatı:", res.data);
+          toast.error("Veri alınırken hata oluştu.");
+          return;
+        }
+        setApplications(numberApplications(res.data));
+      } catch (err) {
+        console.error(err);
+        toast.error("Başvurular alınamadı!");
+      } finally {
+        setLoading(false);
       }
-      setApplications(numberApplications(res.data));
-    } catch (err) {
-      console.error(err);
-      toast.error("Başvurular alınamadı!");
-    } finally {
-      setLoading(false);
-    }
-  };
+    })();
+  }, []);
 
   const numberApplications = (apps) => {
     const sortedForNumbering = [...apps].sort(
@@ -196,7 +200,7 @@ const Profile = () => {
               type="primary"
               size="large"
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg shadow-md"
-              onClick={() => navigate("/form7")}
+              onClick={handleForm7PDF}
             >
               <FormOutlined /> Form-7 PDF Oluştur
             </Button>

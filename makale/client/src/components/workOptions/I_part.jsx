@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import WorkModal from "../utils/WorkModal";
+import { toast } from "react-toastify";
 import {
   PlusOutlined,
   EditOutlined,
@@ -15,6 +16,8 @@ export default function I_part() {
   const [selectedWork, setSelectedWork] = useState(null);
   const [expanded, setExpanded] = useState({});
   const formRef = useRef(null);
+
+  const isAdmin = (sessionStorage.getItem("is_admin") || localStorage.getItem("is_admin")) === "1";
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -54,6 +57,11 @@ export default function I_part() {
   };
 
   const addWork = (category, categoryId) => {
+    if (isAdmin) {
+      toast.error("Admin kullanıcılar başvuru ekleyemez.");
+      return;
+    }
+
     setSelectedCategory({ ...category, selectedId: categoryId });
     setSelectedWork(null);
     setIsModalOpen(true);
@@ -74,7 +82,13 @@ export default function I_part() {
     workDescription,
     authorPosition,
   }) => {
-    if (!file) return alert("Lütfen dosya seçin!");
+    if (isAdmin) {
+      toast.error("Admin kullanıcılar başvuru ekleyemez.");
+      setIsModalOpen(false);
+      return;
+    }
+
+    if (!file) return toast.error("Lütfen dosya seçin!");
 
     const { ust_aktivite_id, alt_aktivite_id, aktivite_id } = getActivityPath(
       categories,
@@ -106,10 +120,10 @@ export default function I_part() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "DB Hatası");
 
-      alert(data.message);
+      toast.success(data.message);
       setIsModalOpen(false);
     } catch (err) {
-      alert("Başvuru kaydedilemedi: " + err.message);
+      toast.error("Başvuru kaydedilemedi: " + err.message);
     }
   };
 
@@ -152,7 +166,7 @@ export default function I_part() {
             </div>
           </div>
 
-          {!disallowedCodes.includes(cat.kod) && (
+          {!isAdmin && !disallowedCodes.includes(cat.kod) && (
             <button
               className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
               onClick={() => addWork(cat, cat.id)}
@@ -199,6 +213,12 @@ export default function I_part() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
+        {isAdmin && (
+          <div className="p-4 mb-4 bg-yellow-50 text-yellow-800 rounded-lg border border-yellow-200">
+            Admin kullanıcılar başvuru ekleyemez.
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8 text-center">
             <p className="text-blue-100 text-lg">

@@ -1,6 +1,7 @@
 import { Modal, Form, Input, Radio, Upload, Select } from "antd";
 import { useState, useEffect } from "react";
 import { InboxOutlined } from "@ant-design/icons";
+import { toast } from "react-toastify";
 
 export default function WorkModal({
   isModalOpen,
@@ -28,6 +29,17 @@ export default function WorkModal({
     setAuthorPosition("ilk");
   }, [isModalOpen, initialCount]);
 
+  // If an admin opens the modal, close it immediately and show error
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const isAdmin =
+      sessionStorage.getItem("is_admin") || localStorage.getItem("is_admin");
+    if (isAdmin === "1") {
+      toast.error("Admin kullanıcılar başvuru ekleyemez.");
+      handleCancel();
+    }
+  }, [isModalOpen, handleCancel]);
+
   const handleMainChange = (e) => {
     setMainSelection(e.target.value);
     setSubSelection(null);
@@ -44,12 +56,21 @@ export default function WorkModal({
   };
 
  const handleModalOk = () => {
+  // Block admins from submitting
+  const isAdmin =
+    sessionStorage.getItem("is_admin") || localStorage.getItem("is_admin");
+  if (isAdmin === "1") {
+    toast.error("Admin kullanıcılar başvuru ekleyemez.");
+    handleCancel();
+    return;
+  }
+
   if (!selectedFile) {
-    alert("Lütfen bir dosya seçin!");
+    toast.error("Lütfen bir dosya seçin!");
     return;
   }
   if (!workDescription.trim()) {
-    alert("Lütfen künyenizi giriniz!");
+    toast.error("Lütfen künyenizi giriniz!");
     return;
   }
 

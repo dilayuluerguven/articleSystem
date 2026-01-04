@@ -179,7 +179,6 @@ const AdminTables = () => {
     <>
       <Header />
       <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <button
@@ -205,7 +204,6 @@ const AdminTables = () => {
           />
         </div>
 
-        {/* Table */}
         <div className="bg-white rounded-xl shadow p-4">
           <div className="flex justify-end mb-4">
             <Button
