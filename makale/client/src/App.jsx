@@ -15,6 +15,8 @@ import AdminBasvuru from "./pages/admin/AdminBasvuru";
 import AdminRoute from "./components/AdminRoute";
 import AdminTables from "./pages/admin/AdminTables";
 import Form4 from "./pages/form4/Form4";
+import Form5 from "./pages/Form5";
+import Form6 from "./pages/Form6";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -87,6 +89,22 @@ function App() {
           element={
             <PrivateRoute isAuthenticated={isAuthenticated}>
               <Form4 />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/form5"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <Form5 />
+            </PrivateRoute>
+          }
+        />
+         <Route
+          path="/form6"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <Form6 />
             </PrivateRoute>
           }
         />
