@@ -80,7 +80,12 @@ const Register = () => {
               label="Şifre:"
               name="password"
               rules={[
-                { required: true, message: "Şifre Boş Bırakılamaz!" },
+                { required: true, message: "Şifre boş bırakılamaz!" },
+                { min: 8, message: "Şifre en az 8 karakter olmalıdır!" },
+                {
+                  pattern: /^(?=.*[a-z])(?=.*[A-Z]).+$/,
+                  message: "Şifre en az 1 büyük ve 1 küçük harf içermelidir!",
+                },
               ]}
             >
               <Input.Password />
@@ -97,9 +102,7 @@ const Register = () => {
                     if (!value || getFieldValue("password") === value) {
                       return Promise.resolve();
                     }
-                    return Promise.reject(
-                      new Error("Şifreler aynı olmalı!")
-                    );
+                    return Promise.reject(new Error("Şifreler aynı olmalı!"));
                   },
                 }),
               ]}
