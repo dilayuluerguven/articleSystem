@@ -110,16 +110,13 @@ const handleOk = async ({
 
   // --- KATEGORİ ID HESAPLAMA ---
   if (/^A$/.test(cat.kod)) {
-    // A
     ust_id = cat.id;
   }
   else if (/^A-\d+$/.test(cat.kod)) {
-    // A-1, A-2, A-3
     ust_id = categories[0].id;
     alt_id = cat.id;
   }
   else {
-    // A-1.1, A-1a gibi en alt seviye
     const parentKod = cat.kod.match(/^A-\d+/)[0];
     const parent = categories[0].subcategories.find(x => x.kod === parentKod);
 
@@ -128,20 +125,16 @@ const handleOk = async ({
     akt_id = cat.id;
   }
 
-  // --- FORM DATA OLUŞTUR ---
   const formData = new FormData();
 
-  // kategori ID'leri
   formData.append("ust_aktivite_id", ust_id);
   formData.append("alt_aktivite_id", alt_id);
   formData.append("aktivite_id", akt_id);
 
-  // modal seçimleri → artık NULL gelmeyecek
   formData.append("main_selection", mainSelection ?? null);
   formData.append("sub_selection", subSelection ?? null);
   formData.append("child_selection", childSelection ?? null);
 
-  // diğer bilgiler
   formData.append("yazar_sayisi", yazarSayisi);
   formData.append("file", file);
   formData.append("workDescription", workDescription);
