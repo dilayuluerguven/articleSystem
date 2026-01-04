@@ -29,7 +29,7 @@ export default function WorkModal({
     setAuthorPosition("ilk");
   }, [isModalOpen, initialCount]);
 
-  // If an admin opens the modal, close it immediately and show error
+ 
   useEffect(() => {
     if (!isModalOpen) return;
     const isAdmin =
@@ -75,28 +75,30 @@ export default function WorkModal({
   }
 
   handleOk({
-    ust_aktivite_id: selectedCategory?.id, 
-    alt_aktivite_id: selectedCategory?.parent_id || null,
-    aktivite_id: childSelection?.id || null,
-    mainSelection,
-    subSelection,
-    childSelection,
-    file: selectedFile,
-    yazarSayisi: count,
-    workDescription,
-    authorPosition,
-  });
+  ust_aktivite_id: selectedCategory.ust_aktivite_id,
+  alt_aktivite_id: selectedCategory.alt_aktivite_id,
+  aktivite_id: selectedCategory.aktivite_id,
+  mainSelection,
+  subSelection,
+  childSelection,
+  file: selectedFile,
+  yazarSayisi: count,
+  workDescription,
+  authorPosition,
+});
+
 };
 
 
   return (
     <Modal
-      title={selectedCategory ? selectedCategory.description : ""}
-      open={isModalOpen}
-      onOk={handleModalOk}
-      onCancel={handleCancel}
-      closable={false}
-    >
+  title={selectedCategory ? selectedCategory.tanim : ""}
+  open={isModalOpen}
+  onOk={handleModalOk}
+  onCancel={handleCancel}
+  closable={false}
+>
+
       {selectedCategory && (
         <Form
           ref={formRef}
