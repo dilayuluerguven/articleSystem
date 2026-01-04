@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { Header } from "../../header/header";
-import { message, Card, Empty, Spin, Button } from "antd";
+import { Card, Empty, Spin, Button } from "antd";
+import { toast } from "react-toastify";
 import { FileTextOutlined, LoadingOutlined } from "@ant-design/icons";
 import Form7Table from "./Form7Table";
 import { useReactToPrint } from "react-to-print";
@@ -28,7 +29,7 @@ const Form7 = () => {
 
         setItems(res.data);
       } catch {
-        message.error("Veriler alınamadı.");
+        toast.error("Veriler alınamadı.");
       } finally {
         setLoading(false);
       }
