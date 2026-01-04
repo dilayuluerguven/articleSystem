@@ -17,6 +17,9 @@ export default function N_part() {
   const [expanded, setExpanded] = useState({});
   const formRef = useRef(null);
 
+  const role = localStorage.getItem("role") || sessionStorage.getItem("role");
+  const isAdmin = role === "admin";
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
