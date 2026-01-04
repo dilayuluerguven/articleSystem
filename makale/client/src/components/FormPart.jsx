@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Checkbox, message, Spin, Button } from "antd";
+import { Checkbox, Spin, Button } from "antd";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import A_part from "./workOptions/A_part";
@@ -66,7 +67,7 @@ const FormPart = () => {
         setCategories(formatted);
       } catch (err) {
         console.error("Kategori çekme hatası:", err);
-        message.error("Kategoriler alınırken hata oluştu!");
+        toast.error("Kategoriler alınırken hata oluştu!");
       } finally {
         setLoading(false);
       }
@@ -91,7 +92,7 @@ const FormPart = () => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) {
-      message.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
+      toast.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
       return;
     }
 
@@ -107,7 +108,7 @@ const FormPart = () => {
         window.open(url, "_blank");
       })
       .catch(() => {
-        message.error("Form-7 PDF indirilemedi");
+        toast.error("Form-7 PDF indirilemedi");
       });
   };
 
