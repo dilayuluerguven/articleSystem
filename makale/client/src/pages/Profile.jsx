@@ -1,13 +1,6 @@
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  List,
-  Spin,
-  Typography,
-  message,
-  Button,
-  Popconfirm,
-} from "antd";
+import { Card, List, Spin, Typography, Button, Popconfirm } from "antd";
+import { toast } from "react-toastify";
 import {
   CalendarOutlined,
   CloudOutlined,
@@ -116,13 +109,13 @@ const Profile = () => {
 
       if (!Array.isArray(res.data)) {
         console.error("Beklenmeyen veri formatı:", res.data);
-        message.error("Veri alınırken hata oluştu.");
+        toast.error("Veri alınırken hata oluştu.");
         return;
       }
       setApplications(numberApplications(res.data));
     } catch (err) {
       console.error(err);
-      message.error("Başvurular alınamadı!");
+      toast.error("Başvurular alınamadı!");
     } finally {
       setLoading(false);
     }
@@ -158,13 +151,13 @@ const Profile = () => {
       await axios.delete(`http://localhost:5000/api/basvuru/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      message.success("Başvuru silindi");
+      toast.success("Başvuru silindi");
 
       const updated = applications.filter((app) => app.id !== id);
       setApplications(numberApplications(updated));
     } catch (err) {
       console.error("Başvuru silinemedi:", err);
-      message.error("Başvuru silinemedi. Tekrar deneyin.");
+      toast.error("Başvuru silinemedi. Tekrar deneyin.");
     }
   };
 
@@ -173,7 +166,7 @@ const Profile = () => {
       localStorage.getItem("token") || sessionStorage.getItem("token");
 
     if (!token) {
-      message.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
+      toast.error("Oturum bulunamadı, lütfen tekrar giriş yapın.");
       return;
     }
 
@@ -262,10 +255,8 @@ const Profile = () => {
                         onConfirm={() => handleDelete(item.id)}
                         okText="Evet"
                         cancelText="Hayır"
-                        okButtonProps={{
-                          className:
-                            "bg-red-500 hover:bg-red-600 border-0 text-white",
-                        }}
+                        placement="top"
+                        getPopupContainer={() => document.body}
                       >
                         <Button
                           danger
@@ -355,7 +346,7 @@ const Profile = () => {
                               localStorage.getItem("token") ||
                               sessionStorage.getItem("token");
                             if (!token) {
-                              message.error(
+                              toast.error(
                                 "Oturum bulunamadı, lütfen tekrar giriş yapın."
                               );
                               return;

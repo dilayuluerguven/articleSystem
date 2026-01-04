@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, message, Spin } from "antd";
+import { Form, Input, Button, Spin } from "antd";
+import { toast } from "react-toastify";
 import {
   UserOutlined,
   MailOutlined,
@@ -25,7 +26,7 @@ const UserProfile = () => {
       const token =
         localStorage.getItem("token") || sessionStorage.getItem("token");
       if (!token) {
-        message.error("Oturum bulunamadı.");
+        toast.error("Oturum bulunamadı.");
         setLoading(false);
         return;
       }
@@ -44,7 +45,7 @@ const UserProfile = () => {
         });
       } catch (err) {
         console.error(err);
-        message.error("Kullanıcı bilgileri alınamadı.");
+        toast.error("Kullanıcı bilgileri alınamadı.");
       } finally {
         setLoading(false);
       }
@@ -55,7 +56,7 @@ const UserProfile = () => {
   const handleSubmit = async (values) => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return message.error("Oturum bulunamadı.");
+    if (!token) return toast.error("Oturum bulunamadı.");
 
     try {
       setSaving(true);
@@ -79,17 +80,14 @@ const UserProfile = () => {
         window.dispatchEvent(new Event("storage"));
       }
 
-      message.success({
-        content: "Profil başarıyla güncellendi!",
-        icon: <CheckCircleOutlined className="text-green-500" />,
-      });
+      toast.success("Profil başarıyla güncellendi!", { icon: <CheckCircleOutlined className="text-green-500" /> });
 
       if (values.password) {
         form.setFieldsValue({ password: "", passwordConfirm: "" });
       }
     } catch (err) {
       console.error(err);
-      message.error("Güncelleme başarısız oldu!");
+      toast.error("Güncelleme başarısız oldu!");
     } finally {
       setSaving(false);
     }
@@ -121,7 +119,7 @@ const currentGetInitial = getInitial;
 
             <div
               className="relative bg-white/90 backdrop-blur-xl border border-white/60 shadow-3xl rounded-4xl 
-            p-8 md:p-12 overflow-hidden h-[90vh] flex flex-col"
+            p-8 md:p-12 overflow-auto min-h-[70vh] md:h-[90vh] flex flex-col"
             >
               <div className="flex-1 overflow-hidden">
                 {loading ? (
@@ -152,7 +150,7 @@ const currentGetInitial = getInitial;
                     </div>
 
                     <div className="grid lg:grid-cols-4 gap-8 h-[calc(90vh-160px)] overflow-hidden">
-                      <div className="lg:col-span-1 space-y-6 overflow-hidden">
+                      <div className="lg:col-span-1 space-y-6 overflow-visible">
                         <div className="rounded-3xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white p-6 shadow-2xl h-auto flex flex-col justify-center items-center transform hover:scale-[1.02] transition duration-300">
                           <div className="relative w-32 h-32 mb-4">
                             <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse-slow opacity-50" />
@@ -173,7 +171,7 @@ const currentGetInitial = getInitial;
                             <InfoCircleOutlined className="mr-2 text-lg" />{" "}
                             İpucu
                           </p>
-                          <p>
+                          <p className="break-words whitespace-normal text-sm">
                             Adı Soyadı alanını güncellediğinizde tüm sistem
                             çıktıları (PDF, raporlar) için bu yeni isim
                             kullanılacaktır. Lütfen doğru giriniz.
