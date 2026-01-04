@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Popconfirm, message } from "antd";
+import { Table, Button, Popconfirm } from "antd";
+import { toast } from "react-toastify";
 import { Header } from "../../header/header";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftOutlined, DeleteOutlined } from "@ant-design/icons";
@@ -22,7 +23,7 @@ const AdminBasvuru = () => {
       const data = await res.json();
       setItems(data || []);
     } catch {
-      message.error("Başvurular yüklenemedi");
+      toast.error("Başvurular yüklenemedi");
     } finally {
       setLoading(false);
     }
@@ -38,10 +39,10 @@ const AdminBasvuru = () => {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      message.success("Başvuru silindi");
+      toast.success("Başvuru silindi");
       fetchItems();
     } catch {
-      message.error("Silme işlemi başarısız");
+      toast.error("Silme işlemi başarısız");
     }
   };
 

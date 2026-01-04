@@ -8,8 +8,8 @@ import {
   InputNumber,
   Select,
   Popconfirm,
-  message,
 } from "antd";
+import { toast } from "react-toastify";
 import {
   PlusOutlined,
   EditOutlined,
@@ -73,7 +73,7 @@ const AdminTables = () => {
 
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
-          message.error("Admin yetkiniz yok");
+          toast.error("Admin yetkiniz yok");
           navigate("/admin");
           return;
         }
@@ -83,7 +83,7 @@ const AdminTables = () => {
       const json = await res.json();
       setData(Array.isArray(json) ? json : []);
     } catch {
-      message.error("Veriler yüklenemedi");
+      toast.error("Veriler yüklenemedi");
       setData([]);
     } finally {
       setLoading(false);
@@ -117,12 +117,12 @@ const AdminTables = () => {
         body: JSON.stringify(values),
       });
 
-      message.success(editing ? "Güncellendi" : "Eklendi");
+      toast.success(editing ? "Güncellendi" : "Eklendi");
       setOpen(false);
       setEditing(null);
       fetchData();
     } catch {
-      message.error("İşlem başarısız");
+      toast.error("İşlem başarısız");
     }
   };
 
@@ -135,10 +135,10 @@ const AdminTables = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      message.success("Silindi");
+      toast.success("Silindi");
       fetchData();
     } catch {
-      message.error("Silinemedi");
+      toast.error("Silinemedi");
     }
   };
 

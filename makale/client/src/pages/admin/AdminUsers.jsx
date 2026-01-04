@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Tag, Popconfirm, message } from "antd";
+import { Table, Button, Tag, Popconfirm } from "antd";
+import { toast } from "react-toastify";
 import {
   UserAddOutlined,
   UserDeleteOutlined,
@@ -26,7 +27,7 @@ const AdminUsers = () => {
       const data = await res.json();
       setUsers(data || []);
     } catch {
-      message.error("Kullanıcılar yüklenemedi");
+      toast.error("Kullanıcılar yüklenemedi");
     } finally {
       setLoading(false);
     }
@@ -46,12 +47,12 @@ const AdminUsers = () => {
         },
         body: JSON.stringify({ is_admin: u.is_admin ? 0 : 1 }),
       });
-      message.success(
+      toast.success(
         u.is_admin ? "Admin yetkisi kaldırıldı" : "Admin yetkisi verildi"
       );
       fetchUsers();
     } catch {
-      message.error("Yetki güncellenemedi");
+      toast.error("Yetki güncellenemedi");
     }
   };
 
@@ -61,10 +62,10 @@ const AdminUsers = () => {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      message.success("Kullanıcı silindi");
+      toast.success("Kullanıcı silindi");
       fetchUsers();
     } catch {
-      message.error("Kullanıcı silinemedi");
+      toast.error("Kullanıcı silinemedi");
     }
   };
 
