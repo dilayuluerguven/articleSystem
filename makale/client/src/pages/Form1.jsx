@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Header } from "../header/header";
-import { message } from "antd";
+import { toast } from "react-toastify";
 
 const Form1 = () => {
   const [formRecord, setFormRecord] = useState(null);
@@ -37,7 +37,7 @@ const Form1 = () => {
         setDoctorB(res.data);
       } catch (err) {
         console.error(err);
-        message.error("A-1a / A-1b / A-2a / A-2b şartı alınırken hata oluştu.");
+        toast.error("A-1a / A-1b / A-2a / A-2b şartı alınırken hata oluştu.");
       } finally {
         setLoadingDoctorB(false);
       }
@@ -63,7 +63,7 @@ const Form1 = () => {
         setDoctorC(res.data);
       } catch (err) {
         console.error(err);
-        message.error("D-1/D-2 ve B-1/E-1 şartı alınırken hata oluştu.");
+        toast.error("D-1/D-2 ve B-1/E-1 şartı alınırken hata oluştu.");
       } finally {
         setLoadingDoctorC(false);
       }
