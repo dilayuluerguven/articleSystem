@@ -3,157 +3,143 @@ import axios from "axios";
 import { Header } from "../header/header";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { 
-  ArrowLeftOutlined, 
-  FilePdfOutlined, 
-  InfoCircleFilled,
-  SaveOutlined,
-  CheckCircleFilled,
-  ExclamationCircleFilled
+import {
+  ArrowLeftOutlined,
+  CalendarOutlined,
+  FilePdfOutlined
 } from "@ant-design/icons";
-import { Button, Badge, Spin, Typography } from "antd";
+import { Button, Spin, Typography } from "antd";
+import MaddeRow from "../components/utils/MaddeRow";
 
 const { Text } = Typography;
 
 const Form1 = () => {
   const navigate = useNavigate();
-  const [formRecord, setFormRecord] = useState(null);
   const today = new Date().toLocaleDateString("sv-SE");
+
+  const [formRecord, setFormRecord] = useState(null);
   const [tarih, setTarih] = useState(today);
-  const [aItems, setAItems] = useState([]);
-  const [loadingA, setLoadingA] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [doctorB, setDoctorB] = useState(null);
-  const [loadingDoctorB, setLoadingDoctorB] = useState(false);
+  const [fields, setFields] = useState({
+    a: { kodlar: "", puanlar: "" },
+    b: { kodlar: "", puanlar: "" },
+    c: { kodlar: "", puanlar: "" },
+    d: { kodlar: "", puanlar: "" },
+    e: { kodlar: "", puanlar: "" },
+    f: { kodlar: "", puanlar: "" },
+    g: { kodlar: "", puanlar: "" },
+    h: { kodlar: "", puanlar: "" },
+  });
 
-  const [doctorC, setDoctorC] = useState(null);
-  const [loadingDoctorC, setLoadingDoctorC] = useState(false);
-
-  const [dYayinKodlari, setDYayinKodlari] = useState("");
-  const [dPuanlar, setDPuanlar] = useState("");
-
-  useEffect(() => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return;
-
-    const fetchDoctorB = async () => {
-      try {
-        setLoadingDoctorB(true);
-        const res = await axios.get("http://localhost:5000/api/form1/doktor/b", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setDoctorB(res.data);
-      } catch (err) {
-        toast.error("B şartı alınırken hata oluştu.");
-      } finally {
-        setLoadingDoctorB(false);
-      }
-    };
-    fetchDoctorB();
-  }, []);
+  const updateField = (key, type, value) => {
+    setFields((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [type]: value },
+    }));
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) return;
-
-    const fetchDoctorC = async () => {
-      try {
-        setLoadingDoctorC(true);
-        const res = await axios.get("http://localhost:5000/api/form1/doktor/c", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setDoctorC(res.data);
-      } catch (err) {
-        toast.error("C şartı alınırken hata oluştu.");
-      } finally {
-        setLoadingDoctorC(false);
-      }
-    };
-    fetchDoctorC();
-  }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return;
-
     const headers = { Authorization: `Bearer ${token}` };
 
-    axios.get("http://localhost:5000/api/form1", { headers })
-      .then((res) => {
-        if (res.data) {
-          setFormRecord(res.data);
-          setTarih(res.data.tarih ? res.data.tarih.substring(0, 10) : "");
+    const fetchAllData = async () => {
+      try {
+        const [resForm, resA, resB, resC] = await Promise.all([
+          axios.get("http://localhost:5000/api/form1", { headers }),
+          axios.get("http://localhost:5000/api/form1/doktor/a", { headers }),
+          axios.get("http://localhost:5000/api/form1/doktor/b", { headers }),
+          axios.get("http://localhost:5000/api/form1/doktor/c", { headers })
+        ]);
+
+        if (resForm.data) {
+          setFormRecord(resForm.data);
+          setTarih(resForm.data.tarih?.substring(0, 10) || today);
         }
-      });
 
-    axios.get("http://localhost:5000/api/form1/doktor/a", { headers })
-      .then((res) => {
-        setAItems(res.data.items || []);
-        setLoadingA(false);
-      })
-      .catch(() => setLoadingA(false));
-  }, []);
+        setFields(prev => ({
+          ...prev,
+          a: {
+            kodlar: resA.data.items?.map(i => i.yayin_kodu).join("\n") || "",
+            puanlar: resA.data.items?.map(i => Number(i.puan || 0).toFixed(2)).join("\n") || ""
+          },
+          b: {
+            kodlar: resB.data.items?.map(i => i.yayin_kodu).join("\n") || "",
+            puanlar: resB.data.items?.map(i => Number(i.hamPuan || 0).toFixed(2)).join("\n") || ""
+          },
+          c: {
+            kodlar: [
+              ...(resC.data.dItems?.map(i => i.yayin_kodu) || []),
+              ...(resC.data.beItems?.map(i => i.yayin_kodu) || [])
+            ].join("\n") || "",
+            puanlar: [
+              ...(resC.data.dItems?.map(i => Number(i.hamPuan || 0).toFixed(2)) || []),
+              ...(resC.data.beItems?.map(i => Number(i.hamPuan || 0).toFixed(2)) || [])
+            ].join("\n") || ""
+          }
+        }));
+      } catch (err) {
+        toast.error("Veriler çekilirken hata oluştu.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const downloadPdf = async (id) => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    try {
-      const res = await axios.post(
-        `http://localhost:5000/api/form1/${id}/pdf`,
-        {
-          a_yayin_kodlari: aItems.map((x) => x.yayin_kodu).join("\n"),
-          a_puanlar: aItems.map((x) => Number(x.puan).toFixed(2)).join("\n"),
-          b_yayin_kodlari: doctorB?.items.map((x) => x.yayin_kodu).join("\n") || "",
-          b_puanlar: doctorB?.items.map((x) => Number(x.hamPuan).toFixed(2)).join("\n") || "",
-          c_yayin_kodlari: [
-            ...(doctorC?.dItems.map((x) => x.yayin_kodu) || []),
-            ...(doctorC?.beItems.map((x) => x.yayin_kodu) || []),
-          ].join("\n"),
-          c_puanlar: [
-            ...(doctorC?.dItems.map((x) => Number(x.hamPuan).toFixed(2)) || []),
-            ...(doctorC?.beItems.map((x) => Number(x.hamPuan).toFixed(2)) || []),
-          ].join("\n"),
-          d_yayin_kodlari: dYayinKodlari,
-          d_puanlar: dPuanlar,
-        },
-        { responseType: "blob", headers: { Authorization: `Bearer ${token}` } }
-      );
-      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `FORM-1-${id}.pdf`;
-      link.click();
-    } catch (err) {
-      toast.error("PDF indirilirken hata oluştu.");
-    }
-  };
+    fetchAllData();
+  }, [today]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token || !tarih) return toast.error("Eksik bilgi!");
+    if (!token) return;
 
     try {
       setSaving(true);
       const headers = { Authorization: `Bearer ${token}` };
-      const res = formRecord 
+
+      const res = formRecord
         ? await axios.put(`http://localhost:5000/api/form1/${formRecord.id}`, { tarih }, { headers })
         : await axios.post("http://localhost:5000/api/form1", { tarih }, { headers });
-      
+
+      const currentFormId = res.data.id;
+
+      const pdfPayload = Object.keys(fields).reduce((acc, key) => {
+        acc[`${key}_yayin_kodlari`] = fields[key].kodlar || "";
+        acc[`${key}_puanlar`] = fields[key].puanlar || "";
+        return acc;
+      }, {});
+
+      const pdfRes = await axios.post(
+        `http://localhost:5000/api/form1/${currentFormId}/pdf`,
+        pdfPayload,
+        { headers, responseType: "blob" }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([pdfRes.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `FORM-1-${currentFormId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
       setFormRecord(res.data);
-      toast.success("Form kaydedildi!");
-      await downloadPdf(res.data.id);
+      toast.success("Form kaydedildi ve PDF oluşturuldu.");
     } catch (err) {
-      toast.error("Hata oluştu.");
+      toast.error("İşlem sırasında hata oluştu.");
     } finally {
       setSaving(false);
     }
   };
 
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spin size="large" /></div>;
+
   return (
     <div className="min-h-screen bg-[#f1f5f9] pb-20 font-sans antialiased text-slate-900">
       <Header />
-      
       <div className="max-w-5xl mx-auto px-6 pt-10">
         <button
           onClick={() => navigate("/home")}
@@ -169,14 +155,18 @@ const Form1 = () => {
           <div className="text-center mb-12">
             <h1 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tighter uppercase leading-tight">
               KONYA TEKNİK ÜNİVERSİTESİ <br />
-              <span className="text-indigo-600 text-lg tracking-normal font-bold uppercase text-center">AKADEMİK ATAMA - YÜKSELTME ÖLÇÜTLERİ</span>
+              <span className="text-indigo-600 text-lg tracking-normal font-bold uppercase">AKADEMİK ATAMA - YÜKSELTME ÖLÇÜTLERİ </span>
             </h1>
             <div className="w-20 h-1.5 bg-indigo-600 mx-auto rounded-full mt-6 shadow-lg shadow-indigo-200" />
           </div>
 
           <div className="bg-slate-800 text-white py-4 px-6 mb-10 text-center font-black rounded-2xl uppercase tracking-widest text-xs shadow-md">
-            DOKTOR ÖĞRETİM ÜYELİĞİ ÖN DEĞERLENDİRME FORMU
+            DOKTOR ÖĞRETİM ÜYELİĞİ ÖN DEĞERLENDİRME FORMU 
           </div>
+
+          <p className="text-slate-500 text-sm mb-8 italic px-4 border-l-4 border-indigo-500/50 leading-relaxed font-medium">
+            İlgili Yasa ve Yönetmelik hükümleriyle öngörülen asgari koşulları sağlamanın yanı sıra; 
+          </p>
 
           <div className="overflow-x-auto rounded-3xl border border-slate-200 mb-10 bg-slate-50/30">
             <table className="w-full text-left border-collapse text-sm">
@@ -184,126 +174,45 @@ const Form1 = () => {
                 <tr className="bg-slate-100 text-slate-600 uppercase text-[10px] font-black tracking-widest">
                   <th className="p-5 border-b border-slate-200 w-16 text-center">Madde</th>
                   <th className="p-5 border-b border-slate-200">Değerlendirme Koşulu</th>
-                  <th className="p-5 border-b border-slate-200 w-32 text-center">Yayın Kodları</th>
-                  <th className="p-5 border-b border-slate-200 w-32 text-center">Puan</th>
+                  <th className="p-5 border-b border-slate-200 w-40 text-center">Yayın Kodları</th>
+                  <th className="p-5 border-b border-slate-200 w-40 text-center">Puan</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
-                {/* 8-a */}
-                <tr className="bg-white hover:bg-slate-50 transition-colors">
-                  <td className="p-5 align-top text-center font-black text-indigo-600">a)</td>
-                  <td className="p-5 align-top">
-                    <Text className="text-slate-800 font-bold block mb-1">Başlıca Eser Şartı</Text>
-                    <Text className="text-slate-500 text-xs leading-relaxed">Aday, başlıca eser niteliğinde en az 1 adet faaliyet yapmış olmalı.</Text>
-                    <div className="mt-4 p-4 rounded-2xl bg-indigo-50 border border-indigo-100">
-                      <div className="flex items-center gap-2 mb-2 text-indigo-700">
-                        <InfoCircleFilled className="text-xs" />
-                        <span className="text-[10px] font-black uppercase tracking-tighter">Otomatik Önizleme</span>
-                      </div>
-                      {loadingA ? <Spin size="small" /> : (
-                        <ul className="space-y-1">
-                          {aItems.length > 0 ? aItems.map(item => (
-                            <li key={item.basvuru_id} className="text-xs text-indigo-900 font-medium">
-                              • {item.yayin_kodu} saptandı. ({Number(item.puan).toFixed(2)} Puan)
-                            </li>
-                          )) : <li className="text-rose-500 text-xs font-bold italic">Başlıca eser kaydı bulunamadı.</li>}
-                        </ul>
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-5 align-top text-center font-mono text-xs text-indigo-600 font-bold">{aItems.map(i => <div key={i.basvuru_id}>{i.yayin_kodu}</div>)}</td>
-                  <td className="p-5 align-top text-center font-mono text-xs text-slate-800 font-black">{aItems.map(i => <div key={i.basvuru_id}>{Number(i.puan).toFixed(2)}</div>)}</td>
-                </tr>
 
-                {/* 8-b */}
-                <tr className="bg-white hover:bg-slate-50 transition-colors">
-                  <td className="p-5 align-top text-center font-black text-indigo-600">b)</td>
-                  <td className="p-5 align-top">
-                    <Text className="text-slate-800 font-bold block mb-1">Puan Barajı (60 Puan)</Text>
-                    <Text className="text-slate-500 text-xs leading-relaxed">A-1a/b veya A-2a/b yayınlarından 60 puan.</Text>
-                    <div className="mt-3 flex items-center justify-between p-4 rounded-2xl bg-slate-100 border border-slate-200">
-                      <div>
-                        <div className="text-[9px] font-black text-slate-400 uppercase">Toplam Birikim</div>
-                        <div className="text-lg font-black text-slate-800">{Number(doctorB?.toplamPuan || 0).toFixed(2)}</div>
-                      </div>
-                      <Badge 
-                        status={doctorB?.meetsCondition ? "success" : "error"} 
-                        text={<span className={`font-black text-xs uppercase ${doctorB?.meetsCondition ? 'text-emerald-600' : 'text-rose-600'}`}>{doctorB?.meetsCondition ? "Uygun" : "Yetersiz"}</span>} 
-                      />
-                    </div>
-                  </td>
-                  <td className="p-5 align-top text-center font-mono text-xs text-indigo-600 font-bold">{doctorB?.items.map(i => <div key={i.basvuru_id}>{i.yayin_kodu}</div>)}</td>
-                  <td className="p-5 align-top text-center font-mono text-xs text-slate-800 font-black">{doctorB?.items.map(i => <div key={i.basvuru_id}>{Number(i.hamPuan).toFixed(2)}</div>)}</td>
-                </tr>
-
-                {/* 8-c */}
-                <tr className="bg-white hover:bg-slate-50 transition-colors">
-                  <td className="p-5 align-top text-center font-black text-indigo-600">c)</td>
-                  <td className="p-5 align-top">
-                    <Text className="text-slate-800 font-bold block mb-1">Makale ve Bildiri Şartı</Text>
-                    <Text className="text-slate-500 text-xs leading-relaxed">En az 1 adedi D-1 olmak üzere 2 adet D-1/D-2 makale ve 2 adet B-1/E-1 bildiri.</Text>
-                    <div className="mt-3 p-4 rounded-2xl bg-slate-100 border border-slate-200">
-                      <div className="flex justify-between items-center mb-2">
-                         <span className="text-[10px] font-bold text-slate-500 uppercase">Makale: {doctorC?.dTotal} / 2</span>
-                         <span className="text-[10px] font-bold text-slate-500 uppercase">Bildiri: {doctorC?.beTotal} / 2</span>
-                      </div>
-                      <Badge 
-                        status={doctorC?.meetsCondition ? "success" : "error"} 
-                        text={<span className={`font-black text-[10px] uppercase ${doctorC?.meetsCondition ? 'text-emerald-600' : 'text-rose-600'}`}>{doctorC?.meetsCondition ? "Şart Sağlandı" : "Eksik Yayın"}</span>} 
-                      />
-                    </div>
-                  </td>
-                  <td className="p-5 align-top text-center font-mono text-[10px] text-indigo-600 font-bold">
-                    {doctorC?.dItems.map(i => <div key={i.basvuru_id}>{i.yayin_kodu}</div>)}
-                    {doctorC?.beItems.map(i => <div key={i.basvuru_id}>{i.yayin_kodu}</div>)}
-                  </td>
-                  <td className="p-5 align-top text-center font-mono text-[10px] text-slate-800 font-black">
-                    {doctorC?.dItems.map(i => <div key={i.basvuru_id}>{Number(i.hamPuan).toFixed(2)}</div>)}
-                    {doctorC?.beItems.map(i => <div key={i.basvuru_id}>{Number(i.hamPuan).toFixed(2)}</div>)}
-                  </td>
-                </tr>
-
-                {/* 8-d */}
-                <tr className="bg-slate-50/50">
-                  <td className="p-5 align-top text-center font-black text-indigo-600">d)</td>
-                  <td className="p-5 align-top">
-                    <Text className="text-slate-800 font-bold block mb-2">Lisansüstü Tez Çıktıları (Manuel)</Text>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <textarea 
-                        className="bg-white border border-slate-200 rounded-xl p-3 text-xs outline-none focus:border-indigo-500 shadow-sm h-20" 
-                        rows={3} value={dYayinKodlari} onChange={e => setDYayinKodlari(e.target.value)} placeholder="Yayın Kodları"
-                      />
-                      <textarea 
-                        className="bg-white border border-slate-200 rounded-xl p-3 text-xs outline-none focus:border-indigo-500 shadow-sm h-20" 
-                        rows={3} value={dPuanlar} onChange={e => setDPuanlar(e.target.value)} placeholder="Puanlar"
-                      />
-                    </div>
-                  </td>
-                  <td className="p-5 align-top text-center font-mono text-xs text-indigo-600 whitespace-pre-line font-bold">{dYayinKodlari || "-"}</td>
-                  <td className="p-5 align-top text-center font-mono text-xs text-slate-800 whitespace-pre-line font-black">{dPuanlar || "-"}</td>
-                </tr>
+              <tbody className="divide-y divide-slate-200 bg-white">
+                <MaddeRow label="a" field={fields.a} updateField={updateField} text="Aday, başlıca eser niteliğinde en az 1 adet faaliyet yapmış olmalı. " isAuto />
+                <MaddeRow label="b" field={fields.b} updateField={updateField} text="A-1a / A-1b / A-2a / A-2b türü yayınlardan toplam 60 puan almış olmalı. " isAuto />
+                <MaddeRow label="c" field={fields.c} updateField={updateField} text="En az bir adeti D-1 olmak üzere D-1/D-2 türü iki adet araştırma makalesi ve iki adet B-1 / E-1 türü bildiri. " isAuto />
+                <MaddeRow label="d" field={fields.d} updateField={updateField} text="Yüksek lisans ve/veya doktora tezinden A türü, B-1, B-2, D-1 veya K kapsamındaki en az iki faaliyet. " />
+                <MaddeRow label="e" field={fields.e} updateField={updateField} text="Tablo 1’deki K, L ve M faaliyetlerinden en az 15 puan almış olmalı. " />
+                <MaddeRow label="f" field={fields.f} updateField={updateField} text="(A-G arası) + (K+L+M) faaliyetleri için 130 puanı sağlamalı. " />
+                <MaddeRow label="g" field={fields.g} updateField={updateField} text="Başvurduğu bilim alanındaki tüm faaliyetlerden toplamda en az 190 puan sağlamalı. " />
+                <MaddeRow label="h" field={fields.h} updateField={updateField} text="Madde 2.6’yı sağlamalı. " />
               </tbody>
             </table>
           </div>
 
-          <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-8 bg-indigo-50/50 p-8 rounded-[2.5rem] border border-indigo-100">
+          <div className="mt-12 flex flex-col md:flex-row items-center justify-between gap-8 bg-indigo-50/50 p-8 rounded-[2.5rem] border border-indigo-100 shadow-inner">
             <div className="flex flex-col gap-2 w-full md:w-auto">
               <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest ml-1">Belge Tarihi</label>
-              <input
-                type="date"
-                className="bg-white border border-slate-200 px-5 py-3 rounded-2xl outline-none focus:border-indigo-500 text-slate-700 font-bold shadow-sm"
-                value={tarih}
-                onChange={(e) => setTarih(e.target.value)}
-              />
+              <div className="relative">
+                <CalendarOutlined className="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-400" />
+                <input
+                  type="date"
+                  className="bg-white border border-slate-200 pl-10 pr-5 py-3 rounded-2xl outline-none focus:border-indigo-500 text-slate-700 font-bold transition-all w-full shadow-sm"
+                  value={tarih}
+                  onChange={(e) => setTarih(e.target.value)}
+                />
+              </div>
             </div>
 
             <Button
               type="primary"
               htmlType="submit"
               disabled={saving}
-              className="h-16 px-12 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-700 border-none font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-200 transition-all hover:scale-105 active:scale-95 flex items-center gap-3 w-full md:w-auto justify-center"
+              className="h-16 px-10 rounded-[1.5rem] bg-indigo-600 hover:bg-indigo-700 border-none font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-200 transition-all hover:scale-105 active:scale-95 flex items-center gap-3 w-full md:w-auto justify-center"
             >
-              {saving ? <Spin size="small" /> : <><SaveOutlined /> Kaydet ve PDF Oluştur</>}
+              {saving ? <Spin size="small" /> : <><FilePdfOutlined /> Kaydet ve PDF Oluştur</>}
             </Button>
           </div>
         </form>
