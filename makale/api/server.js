@@ -190,6 +190,11 @@ app.use("/api/form3", form3Router);
 const form4Router = require("./routes/form4")(db);
 app.use("/api/form4", form4Router);
 
+app.use("/api/form6", require("./routes/form6")(db));
+const form5Router = require("./routes/form5")(db);
+app.use("/api/form5", form5Router);
+
+
 const adminRouter = require("./routes/admin")(db);
 app.use("/api/admin", adminRouter);
 
