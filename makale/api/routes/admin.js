@@ -52,24 +52,30 @@ module.exports = (db) => {
   });
 
   router.get("/basvuru", async (req, res) => {
-    try {
-      const [rows] = await db.promise().query(`
+  try {
+    const [rows] = await db.promise().query(`
       SELECT
-        b.*, 
-        ua.kod AS ust_kod, 
-        aa.kod AS alt_kod, 
+        b.*,
+        b.user_id,
+        u.fullname,
+        u.username,
+        ua.kod AS ust_kod,
+        aa.kod AS alt_kod,
         a.kod AS aktivite_kod
       FROM basvuru b
+      JOIN users u ON u.id = b.user_id
       LEFT JOIN ust_aktiviteler ua ON b.ust_aktivite_id = ua.id
       LEFT JOIN alt_aktiviteler aa ON b.alt_aktivite_id = aa.id
       LEFT JOIN aktivite a ON b.aktivite_id = a.id
       ORDER BY b.id ASC
     `);
-      res.json(rows);
-    } catch (err) {
-      res.status(500).json({ error: "Başvurular alınamadı" });
-    }
-  });
+
+    res.json(rows);
+  } catch (err) {
+    console.error("ADMIN basvuru hata:", err);
+    res.status(500).json({ error: "Başvurular alınamadı" });
+  }
+});
 
   router.put("/basvuru/:id", async (req, res) => {
     try {

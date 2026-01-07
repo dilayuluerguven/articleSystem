@@ -48,9 +48,25 @@ const AdminBasvuru = () => {
 
   const columns = [
     { title: "ID", dataIndex: "id", width: 70 },
+
+    {
+      title: "Kullanıcı",
+      render: (_, r) => (
+        <div className="leading-tight">
+          <div className="font-medium">
+            {r.fullname || r.username}
+          </div>
+          <div className="text-xs text-gray-500">
+            ID: {r.user_id}
+          </div>
+        </div>
+      ),
+    },
+
     { title: "Eser", dataIndex: "eser" },
     { title: "Kod", dataIndex: "ust_kod" },
     { title: "Toplam Puan", dataIndex: "toplamPuan" },
+
     {
       title: "Tarih",
       dataIndex: "created_at",
