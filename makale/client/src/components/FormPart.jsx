@@ -71,6 +71,7 @@ export default function FormPart() {
     { id: 3, label: "Form-4", path: "/form4" },
     { id: 4, label: "Form-5", path: "/form5" },
     { id: 5, label: "Form-6", path: "/form6" },
+    { id: 6, label: "Form-7", path: "/form7" },
   ];
 
   useEffect(() => {
