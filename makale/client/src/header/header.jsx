@@ -1,24 +1,27 @@
-import { Button, Avatar, Tooltip, Badge } from "antd";
+import React, { useState, useEffect } from "react";
+import { Button, Avatar, Tooltip, Divider } from "antd";
 import {
   LogoutOutlined,
   LoginOutlined,
   UserOutlined,
   HomeOutlined,
   FileTextOutlined,
-  SettingOutlined,
-  SafetyCertificateOutlined,
+  MenuOutlined,
+  CloseOutlined,
+  DashboardOutlined,
 } from "@ant-design/icons";
+import { toast } from "react-toastify";
 import { useNavigate, useLocation } from "react-router-dom";
-import React, { useState, useEffect } from "react";
 
 export const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [updateNotice, setUpdateNotice] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -34,154 +37,202 @@ export const Header = () => {
     checkAuth();
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
+    window.addEventListener("storage", checkAuth);
 
-    const syncUsername = () => {
-      checkAuth();
-      setUpdateNotice(true);
-      setTimeout(() => setUpdateNotice(false), 2000);
-    };
-
-    window.addEventListener("storage", syncUsername);
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("storage", syncUsername);
+      window.removeEventListener("storage", checkAuth);
     };
   }, []);
 
-  const handleLoginLogout = () => {
-    if (isLoggedIn) {
-      sessionStorage.clear();
-      localStorage.clear();
-      setIsLoggedIn(false);
-      setUsername("");
+ const handleLoginLogout = () => {
+  if (isLoggedIn) {
+    toast.success("Çıkış yapıldı, giriş sayfasına yönlendiriliyorsunuz...", {
+      autoClose: 2000,
+    });
+
+    sessionStorage.clear();
+    localStorage.clear();
+    setIsLoggedIn(false);
+    setMenuOpen(false);
+
+    setTimeout(() => {
       navigate("/login");
-    } else {
-      navigate("/login");
-    }
+    }, 2000);
+  } else {
+    navigate("/login");
+  }
+};
+
+
+  const NavItem = ({ path, icon, label, mobile = false }) => {
+    const isActive = location.pathname === path;
+    const activeStyles = isActive
+      ? "text-indigo-400 bg-indigo-500/10"
+      : "text-slate-400 hover:text-white hover:bg-slate-800/50";
+
+    return (
+      <button
+        onClick={() => {
+          navigate(path);
+          setMenuOpen(false);
+        }}
+        className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 font-medium ${activeStyles} ${
+          mobile ? "w-full text-lg py-4 px-6" : "text-[13px]"
+        }`}
+      >
+        {icon}
+        <span>{label}</span>
+      </button>
+    );
   };
 
-  const activeClass = (path) => 
-    location.pathname === path 
-      ? "text-white bg-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.4)]" 
-      : "text-slate-400 hover:text-indigo-400 hover:bg-white/5";
-
   return (
-    <div
-      className={`sticky top-0 z-[100] transition-all duration-500 ${
-        isScrolled
-          ? "bg-[#0f172a]/95 backdrop-blur-xl shadow-2xl py-2"
-          : "bg-[#0f172a] py-4"
-      } border-b border-slate-800`}
-    >
-      {updateNotice && (
-        <div className="fixed top-24 right-6 z-[110] animate-in fade-in slide-in-from-right-4 duration-300">
-          <div className="bg-emerald-500 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-emerald-400/30">
-            <SafetyCertificateOutlined className="text-lg" />
-            <span className="font-bold text-sm">Profil Güncellendi</span>
-          </div>
-        </div>
-      )}
-
-      <header className="w-full px-4 md:px-8 flex justify-between items-center">
-        <div 
-          className="flex items-center group cursor-pointer"
-          onClick={() => navigate("/home")}
-        >
-          <div className="relative flex items-center justify-center">
-            <div className="absolute inset-0 bg-indigo-500/20 rounded-full blur-md group-hover:bg-indigo-500/40 transition-all duration-500"></div>
-            <div className="bg-white p-1.5 rounded-full shadow-lg relative z-10 w-12 h-12 flex items-center justify-center border border-indigo-100/20">
-              <img
-                src="/images/Konya_Teknik_Üniversitesi_logo.png"
-                alt="KTUN Logo"
-                className="h-9 w-auto object-contain transition-transform duration-500 group-hover:scale-110"
-              />
+    <>
+      <div
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${
+          isScrolled
+            ? "bg-[#0f172a]/85 backdrop-blur-md py-2 shadow-2xl border-b border-slate-800/50"
+            : "bg-[#0f172a] py-4 border-b border-transparent"
+        }`}
+      >
+        <header className="max-w-[1400px] mx-auto px-6 flex items-center">
+          <div
+            className="flex items-center group cursor-pointer shrink-0"
+            onClick={() => navigate("/home")}
+          >
+            <img
+              src="/images/Konya_Teknik_Üniversitesi_logo.png"
+              alt="KTUN"
+              className="h-10 transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="ml-3 border-l border-slate-700 pl-3 hidden lg:block">
+              <div className="text-white font-bold text-sm tracking-tight leading-tight">
+                KONYA TEKNİK
+              </div>
+              <div className="text-[9px] text-indigo-400 font-bold uppercase tracking-widest">
+                Üniversitesi
+              </div>
             </div>
           </div>
-          <div className="ml-4 flex flex-col leading-none">
-            <span className="text-white text-lg font-black tracking-tighter uppercase transition-colors group-hover:text-indigo-400">
-              Konya Teknik
-            </span>
-            <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.25em] mt-1">
-              Üniversitesi
-            </span>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-3 md:gap-8">
           {isLoggedIn && (
-            <nav className="hidden md:flex items-center bg-slate-900/50 p-1 rounded-2xl border border-slate-800 shadow-inner">
-              <Tooltip title="Ana Sayfa">
-                <button
-                  onClick={() => navigate("/home")}
-                  className={`p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center ${activeClass("/home")}`}
-                >
-                  <HomeOutlined className="text-lg" />
-                </button>
-              </Tooltip>
-
-              <Tooltip title="Başvurularım">
-                <button
-                  onClick={() => navigate("/profile")}
-                  className={`p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center ${activeClass("/profile")}`}
-                >
-                  <FileTextOutlined className="text-lg" />
-                </button>
-              </Tooltip>
-
+            <nav className="hidden md:flex items-center gap-1 ml-8 flex-1">
+              <NavItem path="/home" icon={<HomeOutlined />} label="Ana Sayfa" />
+              <NavItem path="/profile" icon={<FileTextOutlined />} label="Başvurularım" />
               {isAdmin && (
-                <Tooltip title="Admin Paneli">
-                  <button
-                    onClick={() => navigate("/admin")}
-                    className={`p-2.5 rounded-xl transition-all duration-300 flex items-center justify-center ${activeClass("/admin")}`}
-                  >
-                    <SettingOutlined className="text-lg" />
-                  </button>
-                </Tooltip>
+                <NavItem path="/admin" icon={<DashboardOutlined />} label="Panel" />
               )}
             </nav>
           )}
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 ml-auto">
             {isLoggedIn && (
-              <div 
-                className="flex items-center gap-4 pl-6 border-l border-slate-800 cursor-pointer group"
+              <div
+                className="flex items-center gap-2 cursor-pointer group"
                 onClick={() => navigate("/userprofile")}
               >
-                <div className="flex flex-col items-end hidden sm:flex leading-none">
-                  <span className="text-white text-sm font-black group-hover:text-indigo-400 transition-colors">
+                <div className="flex flex-col items-end mr-1 hidden sm:flex">
+                  <span className="text-slate-200 text-xs font-semibold group-hover:text-indigo-400 transition-colors">
                     {username}
                   </span>
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                  <span className="text-[9px] text-slate-500 uppercase tracking-tighter">
                     {isAdmin ? "Sistem Yöneticisi" : "Akademisyen"}
                   </span>
                 </div>
-                <Badge dot status={isAdmin ? "warning" : "processing"} offset={[-2, 32]}>
-                  <Avatar
-                    size={42}
-                    icon={<UserOutlined />}
-                    className="bg-indigo-600/10 border-2 border-indigo-500/50 text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-lg"
-                  />
-                </Badge>
+                <Avatar
+                  size={36}
+                  icon={<UserOutlined />}
+                  className="bg-slate-800 border border-slate-700 group-hover:border-indigo-500 transition-all shadow-lg"
+                />
               </div>
             )}
 
-            <Button
-              type="primary"
+            <button
               onClick={handleLoginLogout}
-              className={`h-11 px-8 rounded-2xl font-black text-xs uppercase tracking-widest transition-all duration-300 border-none flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 ${
+              className={`hidden sm:flex items-center gap-2 px-5 py-2 rounded-xl font-bold text-xs transition-all active:scale-95 ${
                 isLoggedIn
-                  ? "bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white"
-                  : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-900/40"
+                  ? "text-slate-400 hover:text-red-400 bg-slate-800/50 hover:bg-red-500/10 border border-slate-700 hover:border-red-500/20"
+                  : "text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20"
               }`}
-              icon={isLoggedIn ? <LogoutOutlined /> : <LoginOutlined />}
             >
-              {isLoggedIn ? "Çıkış" : "Giriş"}
-            </Button>
+              {isLoggedIn ? <LogoutOutlined /> : <LoginOutlined />}
+              <span>{isLoggedIn ? "ÇIKIŞ" : "GİRİŞ YAP"}</span>
+            </button>
+
+            <button
+              className="md:hidden p-2 text-slate-300 hover:text-white transition-colors"
+              onClick={() => setMenuOpen(true)}
+            >
+              <MenuOutlined className="text-2xl" />
+            </button>
+          </div>
+        </header>
+      </div>
+
+      <div className={isScrolled ? "h-16" : "h-20"}></div>
+
+      <div
+        className={`fixed inset-0 z-[201] transition-all duration-500 ${
+          menuOpen ? "visible" : "invisible"
+        }`}
+      >
+        <div
+          className={`absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-500 ${
+            menuOpen ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={() => setMenuOpen(false)}
+        ></div>
+
+        <div
+          className={`absolute right-0 top-0 h-full w-72 bg-[#0f172a] shadow-2xl border-l border-slate-800/50 transform transition-transform duration-500 ease-in-out ${
+            menuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex flex-col h-full p-6">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-6 bg-indigo-500 rounded-full"></div>
+                <span className="text-white font-bold text-lg">Menü</span>
+              </div>
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <CloseOutlined />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <NavItem mobile path="/home" icon={<HomeOutlined />} label="Ana Sayfa" />
+              <NavItem mobile path="/profile" icon={<FileTextOutlined />} label="Başvurularım" />
+              {isAdmin && (
+                <NavItem mobile path="/admin" icon={<DashboardOutlined />} label="Admin Paneli" />
+              )}
+            </div>
+
+            <div className="mt-auto">
+              <Divider className="border-slate-800" />
+              <button
+                onClick={handleLoginLogout}
+                className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all duration-300 ${
+                  isLoggedIn
+                    ? "bg-slate-800/40 hover:bg-red-500/10 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-500/30"
+                    : "bg-indigo-600 text-white shadow-xl shadow-indigo-500/20 hover:bg-indigo-500"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {isLoggedIn ? <LogoutOutlined className="text-lg" /> : <LoginOutlined className="text-lg" />}
+                  <span className="font-bold tracking-wide">
+                    {isLoggedIn ? "Oturumu Kapat" : "Giriş Yap"}
+                  </span>
+                </div>
+                <div className="opacity-40">→</div>
+              </button>
+            </div>
           </div>
         </div>
-      </header>
-
-      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent"></div>
-    </div>
+      </div>
+    </>
   );
 };
