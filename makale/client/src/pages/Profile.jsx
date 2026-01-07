@@ -13,13 +13,14 @@ import {
   BookOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-import { Header } from "../header/header"; 
+import { Header } from "../header/header";
+import { useNavigate } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
 const FilePreview = ({ fileName }) => {
   const [exists, setExists] = useState(null);
-  const fileUrl = fileName ? `http://localhost:5000/uploads/${fileName}` : null; 
+  const fileUrl = fileName ? `http://localhost:5000/uploads/${fileName}` : null;
 
   useEffect(() => {
     if (!fileName) {
@@ -164,8 +165,7 @@ const Profile = () => {
       toast.error("Başvuru silinemedi. Tekrar deneyin.");
     }
   };
-
-  const handleForm7PDF = () => {
+  const handleForm8 = async (id) => {
     const token =
       localStorage.getItem("token") || sessionStorage.getItem("token");
 
@@ -174,8 +174,45 @@ const Profile = () => {
       return;
     }
 
-    const url = `http://localhost:5000/api/form7/pdf?token=${token}`;
-    window.open(url, "_blank");
+    const toastId = toast.loading("Form-8 hazırlanıyor...");
+
+    try {
+      const res = await axios.get(`http://localhost:5000/api/form8/${id}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Form-8-${id}.pdf`;
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+
+      toast.update(toastId, {
+        render: "Form-8 PDF indirildi",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    } catch (err) {
+      toast.update(toastId, {
+        render: "Form-8 PDF oluşturulamadı",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    }
+  };
+
+  const navigate = useNavigate();
+
+  const handleForm7PDF = () => {
+    toast.info("Form-7 sayfasına yönlendiriliyorsunuz...");
+    navigate("/form7");
   };
 
   return (
@@ -345,21 +382,7 @@ const Profile = () => {
                           type="primary"
                           icon={<FilePdfOutlined />}
                           className="w-full h-10 text-white font-medium bg-blue-600 hover:bg-blue-700 rounded-lg"
-                          onClick={() => {
-                            const token =
-                              localStorage.getItem("token") ||
-                              sessionStorage.getItem("token");
-                            if (!token) {
-                              toast.error(
-                                "Oturum bulunamadı, lütfen tekrar giriş yapın."
-                              );
-                              return;
-                            }
-                            window.open(
-                              `http://localhost:5000/api/form8/${item.id}/pdf?token=${token}`,
-                              "_blank"
-                            );
-                          }}
+                          onClick={() => handleForm8(item.id)}
                         >
                           Form-8 PDF Oluştur
                         </Button>
