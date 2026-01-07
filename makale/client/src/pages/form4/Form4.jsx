@@ -44,48 +44,47 @@ const Form4 = () => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return toast.error("Giriş yapın");
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+  if (!token) return toast.error("Giriş yapın");
 
-    setSaving(true);
-    try {
-      const apiUrl = formRecord?.id
-        ? `http://localhost:5000/api/form4/${formRecord.id}/pdf`
-        : "http://localhost:5000/api/form4/pdf";
+  setSaving(true);
+  try {
+    const body = {
+      tarih,
+      ...Object.fromEntries(
+        Object.entries(fields).flatMap(([k, v]) => [
+          [`${k}_yayin_kodlari`, v.kodlar],
+          [`${k}_puanlar`, v.puanlar],
+        ])
+      ),
+    };
 
-      const body = formRecord?.id
-        ? {}
-        : {
-            tarih,
-            ...Object.fromEntries(
-              Object.entries(fields).flatMap(([k, v]) => [
-                [`${k}_yayin_kodlari`, v.kodlar],
-                [`${k}_puanlar`, v.puanlar],
-              ])
-            ),
-          };
-
-      const res = await axios.post(apiUrl, body, {
+    const res = await axios.post(
+      "http://localhost:5000/api/form4/pdf",
+      body,
+      {
         responseType: "blob",
         headers: { Authorization: `Bearer ${token}` },
-      });
+      }
+    );
 
-      const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "FORM-4.pdf";
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("PDF error:", err);
-      toast.error("PDF oluşturulamadı");
-    } finally {
-      setSaving(false);
-    }
-  };
+    const blob = new Blob([res.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "FORM-4.pdf";
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success("PDF başarıyla oluşturuldu.");
+  } catch (err) {
+    toast.error("PDF oluşturulamadı");
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   const handleSave = async () => {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -146,6 +145,7 @@ const Form4 = () => {
       toast.info("Veriler otomatik dolduruldu.");
     } catch (err) {
       console.error("Autofill error:", err);
+      toast.error("Otomatik doldurma sırasında hata oluştu.");
     }
   };
 
