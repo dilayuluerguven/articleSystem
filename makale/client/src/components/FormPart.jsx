@@ -17,7 +17,6 @@ import {
   RightOutlined,
   FileTextOutlined,
   FilePdfOutlined,
-  InfoCircleFilled,
   AppstoreOutlined,
   CrownOutlined,
 } from "@ant-design/icons";
