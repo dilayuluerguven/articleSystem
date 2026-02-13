@@ -12,8 +12,11 @@ const port = process.env.PORT || 5000;
 
 app.use(express.json());
 
-app.use(helmet());
-
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+);
 app.use(
   cors({
     origin: ["http://localhost:5173"], 
@@ -206,8 +209,16 @@ const form1Router = require("./routes/form1")(db);
 app.use("/api/form1", form1Router);
 
 const path = require("node:path");
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"), {
+    setHeaders: (res) => {
+      res.removeHeader("Cross-Origin-Resource-Policy");
+      res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+      res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+    },
+  })
+);
 const form8Router = require("./routes/form8")(db);
 app.use("/api/form8", form8Router);
 
