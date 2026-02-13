@@ -1,10 +1,10 @@
 const express = require("express");
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const path = require("node:path");
+const fs = require("node:fs");
 const authMiddleware = require("../middleware/auth");
 
-module.exports = (db) => {
+const basvuruRoutes = (db) => {
   const router = express.Router();
 
   const uploadDir = path.join(__dirname, "..", "uploads");
@@ -29,6 +29,7 @@ module.exports = (db) => {
         ust_aktivite_id,
         alt_aktivite_id,
         aktivite_id,
+        akademik_puan_id,
         yazar_sayisi,
         main_selection,
         sub_selection,
@@ -37,11 +38,93 @@ module.exports = (db) => {
         authorPosition,
       } = req.body;
 
+      ust_aktivite_id = Number(ust_aktivite_id) || null;
+      alt_aktivite_id = Number(alt_aktivite_id) || null;
+      aktivite_id = Number(aktivite_id) || null;
+      akademik_puan_id = Number(akademik_puan_id) || null;
+      yazar_sayisi = Number(yazar_sayisi) || 0;
+
       const eser = req.file ? req.file.filename : null;
       const is_first_author = authorPosition === "ilk" ? 1 : 0;
 
-      const [yazarRows] = await db.promise().query(
-        `
+      let hamPuan = null;
+
+      if (akademik_puan_id) {
+        const [p] = await db
+          .promise()
+          .query("SELECT puan FROM akademik_puanlar WHERE id = ?", [
+            akademik_puan_id,
+          ]);
+
+        hamPuan = p[0]?.puan ?? null;
+      }
+
+      if (hamPuan === null && aktivite_id) {
+        const [aRow] = await db
+          .promise()
+          .query("SELECT puan_id FROM aktivite WHERE id = ?", [aktivite_id]);
+
+        const puanId = aRow[0]?.puan_id;
+
+        if (puanId) {
+          const [p] = await db
+            .promise()
+            .query("SELECT puan FROM akademik_puanlar WHERE id = ?", [puanId]);
+
+          hamPuan = p[0]?.puan ?? null;
+        }
+      }
+
+      if (hamPuan === null && alt_aktivite_id) {
+        const [altRow] = await db
+          .promise()
+          .query("SELECT puan_id FROM alt_aktiviteler WHERE id = ?", [
+            alt_aktivite_id,
+          ]);
+
+        const puanId = altRow[0]?.puan_id;
+
+        if (puanId) {
+          const [p] = await db
+            .promise()
+            .query("SELECT puan FROM akademik_puanlar WHERE id = ?", [puanId]);
+
+          hamPuan = p[0]?.puan ?? null;
+        }
+      }
+
+      if (hamPuan === null && ust_aktivite_id) {
+        const [p] = await db
+          .promise()
+          .query(
+            "SELECT puan FROM akademik_puanlar WHERE ana_aktivite_id = ? ORDER BY puan DESC LIMIT 1",
+            [ust_aktivite_id],
+          );
+
+        hamPuan = p[0]?.puan ?? null;
+      }
+
+      if (hamPuan === null) {
+        return res.status(400).json({
+          success: false,
+          error: "Ham puan hesaplanamadı.",
+        });
+      }
+
+      let yazarPuani = null;
+      let toplamPuan = null;
+
+      if (yazar_sayisi > 10) {
+        if (is_first_author) {
+          yazarPuani = 4 / yazar_sayisi;
+        } else {
+          yazarPuani = 1.4 / yazar_sayisi;
+        }
+
+        toplamPuan = hamPuan * yazarPuani;
+      } else {
+        const [yazarRows] = await db.promise().query(
+          `
         SELECT 
           CASE 
             WHEN ? = 1 THEN ilk_isim 
@@ -50,88 +133,55 @@ module.exports = (db) => {
         FROM yazar_puanlar
         WHERE yazar_sayisi = ?
         `,
-        [is_first_author, yazar_sayisi]
-      );
+          [is_first_author, yazar_sayisi],
+        );
 
-      const yazarPuani = yazarRows[0]?.katsayi || 0.0;
+        const katsayi = yazarRows[0]?.katsayi;
 
-     let hamPuan = 0.0;
-let puanId = null;
+        if (katsayi == null) {
+          return res.status(400).json({
+            success: false,
+            error: "Yazar katsayısı bulunamadı.",
+          });
+        }
 
-if (aktivite_id && !isNaN(aktivite_id)) {
-  const [aRow] = await db
-    .promise()
-    .query("SELECT puan_id FROM aktivite WHERE id = ?", [aktivite_id]);
-  puanId = aRow[0]?.puan_id || null;
+        yazarPuani = katsayi;
+        toplamPuan = hamPuan * katsayi;
+      }
 
-  if (puanId) {
-    const [p] = await db
-      .promise()
-      .query("SELECT puan FROM akademik_puanlar WHERE id = ?", [puanId]);
-    hamPuan = p[0]?.puan || 0.0;
-  }
-}
-
-if (!puanId && alt_aktivite_id && !isNaN(alt_aktivite_id)) {
-  const [altRow] = await db
-    .promise()
-    .query("SELECT puan_id FROM alt_aktiviteler WHERE id = ?", [alt_aktivite_id]);
-  puanId = altRow[0]?.puan_id || null;
-
-  if (puanId) {
-    const [p] = await db
-      .promise()
-      .query("SELECT puan FROM akademik_puanlar WHERE id = ?", [puanId]);
-    hamPuan = p[0]?.puan || 0.0;
-  }
-}
-
-if (!puanId && ust_aktivite_id && !isNaN(ust_aktivite_id)) {
-  const [p] = await db
-    .promise()
-    .query(
-      "SELECT puan FROM akademik_puanlar WHERE ana_aktivite_id = ? ORDER BY puan DESC LIMIT 1",
-      [ust_aktivite_id]
-    );
-  hamPuan = p[0]?.puan || 0.0;
-}
-
-const toplamPuan = parseFloat((hamPuan * yazarPuani).toFixed(2));
-
+      toplamPuan = Number.parseFloat(toplamPuan.toFixed(2));
 
       await db.promise().query(
         `
-        INSERT INTO basvuru 
-        (user_id, ust_aktivite_id, alt_aktivite_id, aktivite_id, eser, yazar_sayisi,
-        main_selection, sub_selection, child_selection, workDescription,
-        is_first_author, yazarPuani, hamPuan, toplamPuan)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
+      INSERT INTO basvuru 
+      (user_id, ust_aktivite_id, alt_aktivite_id, aktivite_id, eser, yazar_sayisi,
+      main_selection, sub_selection, child_selection, workDescription,
+      is_first_author, yazarPuani, hamPuan, toplamPuan)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
         [
           user_id,
-          Number(ust_aktivite_id) || null,
-          Number(alt_aktivite_id) || null,
-          isNaN(Number(aktivite_id)) ? null : Number(aktivite_id),
+          ust_aktivite_id,
+          alt_aktivite_id,
+          aktivite_id,
           eser,
-          Number(yazar_sayisi),
+          yazar_sayisi,
           main_selection || null,
           sub_selection || null,
           child_selection || null,
           workDescription || null,
-          is_first_author ? 1 : 0,
-          yazarPuani || 0,
-          hamPuan || 0,
-          toplamPuan || 0,
-        ]
+          is_first_author,
+          yazarPuani,
+          hamPuan,
+          toplamPuan,
+        ],
       );
 
       res.json({
         success: true,
         message: "Başvuru başarıyla kaydedildi.",
-        file: eser,
-        yazar_sayisi,
-        yazarPuani,
         hamPuan,
+        yazarPuani,
         toplamPuan,
       });
     } catch (err) {
@@ -139,17 +189,15 @@ const toplamPuan = parseFloat((hamPuan * yazarPuani).toFixed(2));
       res.status(500).json({ success: false, error: "Veritabanı hatası" });
     }
   });
+  router.get("/", authMiddleware, async (req, res) => {
+    try {
+      const user_id = req.user?.id;
+      console.log("Token’dan gelen user_id:", user_id);
+      if (!user_id)
+        return res.status(401).json({ error: "Kullanıcı bulunamadı" });
 
-
-router.get("/", authMiddleware, async (req, res) => {
-  try {
-    const user_id = req.user?.id;
-    console.log("Token’dan gelen user_id:", user_id);
-    if (!user_id)
-      return res.status(401).json({ error: "Kullanıcı bulunamadı" });
-
-    const [rows] = await db.promise().query(
-      `
+      const [rows] = await db.promise().query(
+        `
       SELECT 
         b.id,
         b.user_id,
@@ -186,17 +234,16 @@ router.get("/", authMiddleware, async (req, res) => {
       WHERE b.user_id = ?
       ORDER BY b.created_at DESC
       `,
-      [user_id]
-    );
+        [user_id],
+      );
 
-    console.log("DB’den gelen satır sayısı:", rows.length);
-    res.json(rows);
-  } catch (err) {
-    console.error("Başvuru listeleme hatası:", err);
-    res.status(500).json({ error: "Veri çekme hatası" });
-  }
-});
-
+      console.log("DB’den gelen satır sayısı:", rows.length);
+      res.json(rows);
+    } catch (err) {
+      console.error("Başvuru listeleme hatası:", err);
+      res.status(500).json({ error: "Veri çekme hatası" });
+    }
+  });
 
   router.put(
     "/:id",
@@ -255,7 +302,7 @@ router.get("/", authMiddleware, async (req, res) => {
             is_first_author,
             id,
             user_id,
-          ]
+          ],
         );
 
         res.json({ success: true, message: "Başvuru güncellendi", file: eser });
@@ -263,7 +310,7 @@ router.get("/", authMiddleware, async (req, res) => {
         console.error("Başvuru güncelleme hatası:", err);
         res.status(500).json({ error: "Güncelleme işlemi başarısız" });
       }
-    }
+    },
   );
 
   router.delete("/:id", authMiddleware, async (req, res) => {
@@ -300,3 +347,4 @@ router.get("/", authMiddleware, async (req, res) => {
 
   return router;
 };
+module.exports = basvuruRoutes;
