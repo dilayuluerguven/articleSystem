@@ -3,15 +3,38 @@ const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(express.json());
-app.use(cors());
+
+app.use(helmet());
+
+app.use(
+  cors({
+    origin: ["http://localhost:5173"], 
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.",
+});
+
+app.use("/login", authLimiter);
+app.use("/register", authLimiter);
 
 const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET tanımlı değil!");
+}
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -26,6 +49,7 @@ db.connect((err) => {
     return;
   }
   console.log("MySQL database connected");
+
   db.query(
     `
     CREATE TABLE IF NOT EXISTS form3 (
@@ -62,15 +86,20 @@ db.connect((err) => {
   );
 
   db.query(
-    `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_admin'`,
+    `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+     WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_admin'`,
     [process.env.DB_NAME],
     (err2, rows2) => {
       if (err2) return console.error("is_admin check hata:", err2);
       if (!rows2 || rows2.length === 0) {
-        db.query("ALTER TABLE users ADD COLUMN is_admin TINYINT(1) DEFAULT 0", (err3) => {
-          if (err3) console.error("is_admin eklenirken hata:", err3);
-          else console.log("is_admin sütunu eklendi");
-        });
+        db.query(
+          "ALTER TABLE users ADD COLUMN is_admin TINYINT(1) DEFAULT 0",
+          (err3) => {
+            if (err3)
+              console.error("is_admin eklenirken hata:", err3);
+            else console.log("is_admin sütunu eklendi");
+          }
+        );
       }
     }
   );
@@ -101,14 +130,16 @@ app.post("/register", async (req, res) => {
         db.query(
           "INSERT INTO users (fullname, username, email, password) VALUES (?, ?, ?, ?)",
           [fullname, username, email, hashedPassword],
-          (err, result) => {
+          (err) => {
             if (err) {
               console.error("Kayıt hatası:", err);
-              return res
-                .status(500)
-                .json({ error: "Kayıt sırasında hata oluştu" });
+              return res.status(500).json({
+                error: "Kayıt sırasında hata oluştu",
+              });
             }
-            res.status(201).json({ message: "Kullanıcı başarıyla oluşturuldu!" });
+            res
+              .status(201)
+              .json({ message: "Kullanıcı başarıyla oluşturuldu!" });
           }
         );
       }
@@ -119,8 +150,6 @@ app.post("/register", async (req, res) => {
   }
 });
 
-
-// Kullanıcı login
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -128,42 +157,43 @@ app.post("/login", async (req, res) => {
     return res.status(400).json({ error: "Email ve şifre zorunludur" });
 
   try {
-    db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
-      if (err) {
-        console.error("DB error:", err);
-        return res.status(500).json({ error: "Veritabanı hatası" });
+    db.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email],
+      async (err, results) => {
+        if (err)
+          return res.status(500).json({ error: "Veritabanı hatası" });
+
+        if (!results || results.length === 0)
+          return res.status(400).json({ error: "Kullanıcı bulunamadı" });
+
+        const user = results[0];
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch)
+          return res.status(400).json({ error: "Şifre yanlış" });
+
+        const { password: removedPassword, ...userWithoutPassword } = user;
+
+        const token = jwt.sign(
+          { id: user.id, email: user.email },
+          JWT_SECRET,
+          { expiresIn: "1h" }
+        );
+
+        return res.status(200).json({
+          message: "Giriş başarılı!",
+          user: userWithoutPassword,
+          token,
+        });
       }
-
-      if (!results || results.length === 0)
-        return res.status(400).json({ error: "Kullanıcı bulunamadı" });
-
-      const user = results[0];
-      const isMatch = await bcrypt.compare(password, user.password);
-
-      if (!isMatch)
-        return res.status(400).json({ error: "Şifre yanlış" });
-
-      const { password: removedPassword, ...userWithoutPassword } = user;
-      const token = jwt.sign(
-        { id: user.id, email: user.email },
-        JWT_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      return res.status(200).json({
-        message: "Giriş başarılı!",
-        user: userWithoutPassword,
-        token,
-      });
-    });
+    );
   } catch (e) {
-    console.error("Login error:", e);
     return res.status(500).json({ error: "Sunucu hatası" });
   }
 });
 
-
-const categoriesRouter = require("./routes/categories")(db); 
+const categoriesRouter = require("./routes/categories")(db);
 app.use("/api", categoriesRouter);
 
 const basvuruRoutes = require("./routes/basvuru")(db);
@@ -191,17 +221,15 @@ const form4Router = require("./routes/form4")(db);
 app.use("/api/form4", form4Router);
 
 app.use("/api/form6", require("./routes/form6")(db));
+
 const form5Router = require("./routes/form5")(db);
 app.use("/api/form5", form5Router);
-
 
 const adminRouter = require("./routes/admin")(db);
 app.use("/api/admin", adminRouter);
 
 const userRoutes = require("./routes/user")(db);
 app.use("/api/user", userRoutes);
-
-
 
 app.listen(port, () => {
   console.log(`Backend running on http://localhost:${port}`);

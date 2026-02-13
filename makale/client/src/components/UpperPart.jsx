@@ -4,7 +4,6 @@ import {
   ProfileOutlined,
   FormOutlined,
   FileDoneOutlined,
-  ArrowRightOutlined,
 } from "@ant-design/icons";
 
 const UpperPart = () => {
