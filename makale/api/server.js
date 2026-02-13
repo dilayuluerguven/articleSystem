@@ -143,7 +143,7 @@ app.post("/login", async (req, res) => {
       if (!isMatch)
         return res.status(400).json({ error: "Şifre yanlış" });
 
-      const { password: _, ...userWithoutPassword } = user;
+      const { password: removedPassword, ...userWithoutPassword } = user;
       const token = jwt.sign(
         { id: user.id, email: user.email },
         JWT_SECRET,
@@ -175,7 +175,7 @@ app.use("/api", ustAktiviteRouter);
 const form1Router = require("./routes/form1")(db);
 app.use("/api/form1", form1Router);
 
-const path = require("path");
+const path = require("node:path");
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const form8Router = require("./routes/form8")(db);

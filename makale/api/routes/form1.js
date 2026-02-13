@@ -1,12 +1,12 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
-const { exec } = require("child_process");
+const { exec } = require("node:child_process");
 const authMiddleware = require("../middleware/auth");
 
-module.exports = (db) => {
+const form1Routes = (db) => {
   const router = express.Router();
 
   const templatePath = path.join(__dirname, "..", "FORM-1.docx");
@@ -570,3 +570,4 @@ router.post("/:id/pdf", authMiddleware, async (req, res) => {
 
   return router;
 };
+module.exports = form1Routes;

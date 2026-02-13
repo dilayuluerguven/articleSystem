@@ -1,6 +1,6 @@
 const express = require("express");
 
-module.exports = (db) => {
+const categoriesRoutes = (db) => {
   const router = express.Router();
 
   router.get("/categories", async (req, res) => {
@@ -32,12 +32,12 @@ module.exports = (db) => {
       };
 
       // aktiviteleri SADECE TEK parent'a bağla
-      aktiviteler.forEach((akt) => {
+      for (const akt of aktiviteler) {
         const parentKod = getParentKod(akt.kod);
-        if (!parentKod) return;
+        if (!parentKod) continue;
 
         const parentAlt = altNodes.find((a) => a.kod === parentKod);
-        if (!parentAlt) return;
+        if (!parentAlt) continue;
 
         parentAlt.subcategories.push({
           id: akt.id,
@@ -45,8 +45,7 @@ module.exports = (db) => {
           tanim: akt.tanim,
           subcategories: [],
         });
-      });
-
+      }
       const tree = ustler.map((ust) => ({
         id: ust.id,
         kod: ust.kod,
@@ -65,3 +64,4 @@ module.exports = (db) => {
 
   return router;
 };
+module.exports = categoriesRoutes;

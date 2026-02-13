@@ -1,5 +1,4 @@
-// routes/ustAktivite.js
-module.exports = (db) => {
+const ustAktiviteRoutes = (db) => {
   const express = require("express");
   const router = express.Router();
 
@@ -18,3 +17,5 @@ module.exports = (db) => {
 
   return router;
 };
+module.exports = ustAktiviteRoutes;
+

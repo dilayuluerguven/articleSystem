@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const router = express.Router();
 const authMiddleware = require("../middleware/auth"); 
 
-module.exports = (db) => {
+const userRoutes = (db) => {
   router.get("/me", authMiddleware, async (req, res) => {
     try {
       const [rows] = await db
@@ -55,3 +55,4 @@ module.exports = (db) => {
 
   return router;
 };
+module.exports = userRoutes;

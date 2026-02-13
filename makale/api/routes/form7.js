@@ -1,13 +1,19 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
-const { exec } = require("child_process");
+const { exec } = require("node:child_process");
 const authMiddleware = require("../middleware/auth");
 
-module.exports = (db) => {
+const form7Routes = (db) => {
   const router = express.Router();
+
+  const templatePath = path.join(__dirname, "..", "FORM-7.docx");
+  const uploadDir = path.join(__dirname, "..", "uploads");
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+  const sofficePath = String.raw`"C:\Program Files\LibreOffice\program\soffice.exe"`;
 
   router.get("/data", authMiddleware, async (req, res) => {
     try {
@@ -43,7 +49,7 @@ module.exports = (db) => {
       const grouped = {};
       const counters = {};
 
-      rows.forEach((r) => {
+      for (const r of rows) {
         const ustKey = r.ust_kod;
 
         if (!grouped[ustKey]) {
@@ -79,7 +85,7 @@ module.exports = (db) => {
           toplam: Number(toplam),
           main_selection: r.main_selection,
         });
-      });
+      }
 
       const result = Object.values(grouped).map((g) => ({
         ust_kod: g.ust_kod,
@@ -89,13 +95,14 @@ module.exports = (db) => {
 
       res.json(result);
     } catch (err) {
-      res.status(500).json({ error: "Server error" });
+      console.error("FORM7 DATA error:", err);
+      res.status(500).json({ error: "Sunucu hatası" });
     }
   });
 
   router.get("/pdf", authMiddleware, async (req, res) => {
     try {
-      const user_id = req.user.id;
+      const userId = req.user.id;
 
       const [rows] = await db.promise().query(
         `
@@ -115,13 +122,13 @@ module.exports = (db) => {
         WHERE b.user_id = ?
         ORDER BY ua.id, aa.id, a.id
         `,
-        [user_id]
+        [userId]
       );
 
       const items = [];
       const counter = {};
 
-      rows.forEach((e) => {
+      for (const e of rows) {
         const code = e.aktivite_kod || e.alt_kod || e.ust_kod;
 
         if (!counter[code]) counter[code] = 1;
@@ -134,17 +141,15 @@ module.exports = (db) => {
         items.push({
           kod: `${code}:${index}`,
           eser: e.workDescription,
-          ham: ham,
-          yazar: yazar,
-          toplam: toplam,
+          ham,
+          yazar,
+          toplam,
           main_selection: e.main_selection,
         });
-      });
+      }
 
-      const templatePath = path.join(__dirname, "../FORM-7.docx");
       const content = fs.readFileSync(templatePath, "binary");
       const zip = new PizZip(content);
-
       const doc = new Docxtemplater(zip, {
         paragraphLoop: true,
         linebreaks: true,
@@ -152,35 +157,32 @@ module.exports = (db) => {
 
       doc.render({
         items,
-        username: rows[0].username,
+        username: rows[0]?.username ?? "",
       });
 
-      const outputDocx = path.join(
-        __dirname,
-        `../uploads/form7_${user_id}.docx`
-      );
+      const outputDocx = path.join(uploadDir, `form7_${userId}.docx`);
+      const outputPdf = path.join(uploadDir, `form7_${userId}.pdf`);
 
-      fs.writeFileSync(
-        outputDocx,
-        doc.getZip().generate({ type: "nodebuffer" })
-      );
-
-      const outputPdf = outputDocx.replace(".docx", ".pdf");
-      const sofficePath = `"C:\\Program Files\\LibreOffice\\program\\soffice.exe"`;
+      fs.writeFileSync(outputDocx, doc.getZip().generate({ type: "nodebuffer" }));
 
       exec(
-        `${sofficePath} --headless --convert-to pdf "${outputDocx}" --outdir "${path.join(
-          __dirname,
-          "../uploads"
-        )}"`,
-        () => {
-          res.download(outputPdf, `Form7_${rows[0].username}.pdf`);
+        `${sofficePath} --headless --convert-to pdf "${outputDocx}" --outdir "${uploadDir}"`,
+        (error) => {
+          if (error) {
+            console.error("FORM7 PDF convert error:", error);
+            return res.status(500).json({ error: "PDF dönüştürme hatası" });
+          }
+
+          res.download(outputPdf, `Form7_${rows[0]?.username}.pdf`);
         }
       );
     } catch (err) {
+      console.error("FORM7 PDF error:", err);
       res.status(500).json({ error: "Sunucu hatası" });
     }
   });
 
   return router;
 };
+
+module.exports = form7Routes;
