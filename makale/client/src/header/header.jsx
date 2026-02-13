@@ -120,6 +120,8 @@ export const Header = () => {
             <nav className="hidden md:flex items-center gap-1 ml-8 flex-1">
               <NavItem path="/home" icon={<HomeOutlined />} label="Ana Sayfa" />
               <NavItem path="/profile" icon={<FileTextOutlined />} label="Başvurularım" />
+              <NavItem path="/userprofile" icon={<UserOutlined />} label="Profilim" />
+
               {isAdmin && (
                 <NavItem path="/admin" icon={<DashboardOutlined />} label="Panel" />
               )}
