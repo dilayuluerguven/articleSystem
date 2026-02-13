@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Header } from "../../header/header";
 import { toast } from "react-toastify";
@@ -46,7 +46,6 @@ const Form3 = () => {
 
     setSaving(true);
     try {
-      // PDF için güncel payload oluşturma
       const payload = {
         tarih,
         ...Object.fromEntries(
@@ -67,12 +66,12 @@ const Form3 = () => {
       });
 
       const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = "FORM-3-DOCENTLIK.pdf";
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       toast.success("PDF başarıyla oluşturuldu.");
     } catch (err) {
       console.error(err);
@@ -81,33 +80,6 @@ const Form3 = () => {
       setSaving(false);
     }
   };
-
-  const handleSave = async () => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return toast.error("Giriş yapın");
-    setSaving(true);
-    try {
-      const payload = {
-        tarih,
-        ...Object.fromEntries(
-          Object.entries(fields).flatMap(([k, v]) => [
-            [`${k}_yayin_kodlari`, v.kodlar],
-            [`${k}_puanlar`, v.puanlar],
-          ])
-        ),
-      };
-      const res = formRecord?.id
-        ? await axios.put(`http://localhost:5000/api/form3/${formRecord.id}`, payload, { headers: { Authorization: `Bearer ${token}` } })
-        : await axios.post("http://localhost:5000/api/form3", payload, { headers: { Authorization: `Bearer ${token}` } });
-      setFormRecord(res.data);
-      toast.success("Form kaydedildi.");
-    } catch (err) {
-      toast.error("Form kaydedilemedi.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const autoFill = async () => {
     const token = localStorage.getItem("token") || sessionStorage.getItem("token");
     if (!token) return;

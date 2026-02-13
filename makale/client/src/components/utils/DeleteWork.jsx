@@ -1,17 +1,19 @@
 export const handleDeleteWork = (workToDelete, category, setCategories) => {
   setCategories((prevCategories) => {
-    const newCategories = JSON.parse(JSON.stringify(prevCategories));
+    const newCategories = structuredClone(prevCategories);
 
     const findAndDeleteWork = (categories) => {
-      for (let cat of categories) {
+      for (const cat of categories) {
         if (cat.code === category.code) {
           cat.works = cat.works.filter(
             (work) => work.code !== workToDelete.code
           );
 
-          cat.works.forEach((work, index) => {
-            work.code = `${cat.code}:${index + 1}`;
-          });
+          let index = 1;
+          for (const work of cat.works) {
+            work.code = `${cat.code}:${index}`;
+            index++;
+          }
 
           return true;
         }

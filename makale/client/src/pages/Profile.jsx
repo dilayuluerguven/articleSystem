@@ -135,12 +135,12 @@ const Profile = () => {
 
     const counts = {};
 
-    sortedForNumbering.forEach((item) => {
-      const key =
-        item.aktivite_kod || item.alt_kod || item.ust_kod || "Bilinmeyen";
-      counts[key] = (counts[key] || 0) + 1;
-      item.displayTitle = `${key}:${counts[key]}`;
-    });
+   for (const item of sortedForNumbering) {
+  const key = item.aktivite_kod || item.alt_kod || item.ust_kod || "Bilinmeyen";
+  counts[key] = (counts[key] || 0) + 1;
+  item.displayTitle = `${key}:${counts[key]}`;
+}
+
 
     return sortedForNumbering.sort(
       (a, b) =>
@@ -183,14 +183,14 @@ const Profile = () => {
       });
 
       const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
 
       const a = document.createElement("a");
       a.href = url;
       a.download = `Form-8-${id}.pdf`;
       a.click();
-
-      window.URL.revokeObjectURL(url);
+      a.remove();
+      globalThis.URL.revokeObjectURL(url);
 
       toast.update(toastId, {
         render: "Form-8 PDF indirildi",
@@ -199,13 +199,15 @@ const Profile = () => {
         autoClose: 2000,
       });
     } catch (err) {
-      toast.update(toastId, {
-        render: "Form-8 PDF oluşturulamadı",
-        type: "error",
-        isLoading: false,
-        autoClose: 3000,
-      });
-    }
+    console.error("Form-8 oluşturma hatası:", err);
+    toast.update(toastId, {
+    render: "Form-8 PDF oluşturulamadı",
+    type: "error",
+    isLoading: false,
+    autoClose: 3000
+  });
+}
+
   };
 
   const navigate = useNavigate();

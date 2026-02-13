@@ -75,7 +75,7 @@ const UserProfile = () => {
       if (values.username) {
         localStorage.setItem("username", values.username);
         sessionStorage.setItem("username", values.username);
-        window.dispatchEvent(new Event("storage"));
+        globalThis.dispatchEvent(new Event("storage"));
       }
 
       toast.success("Profil başarıyla güncellendi!", { 

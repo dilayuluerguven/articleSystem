@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Button, Avatar, Tooltip, Divider } from "antd";
+import { useState, useEffect } from "react";
+import { Avatar, Divider } from "antd";
 import {
   LogoutOutlined,
   LoginOutlined,
@@ -35,13 +35,13 @@ export const Header = () => {
     };
 
     checkAuth();
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    window.addEventListener("storage", checkAuth);
+    const handleScroll = () => setIsScrolled(globalThis.scrollY > 20);
+    globalThis.addEventListener("scroll", handleScroll);
+    globalThis.addEventListener("storage", checkAuth);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("storage", checkAuth);
+      globalThis.removeEventListener("scroll", handleScroll);
+      globalThis.removeEventListener("storage", checkAuth);
     };
   }, []);
 

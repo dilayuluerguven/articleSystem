@@ -102,29 +102,6 @@ const Form5 = () => {
     }
   };
 
-  const handleSave = async () => {
-    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-    if (!token) return toast.error("Giriş yapın");
-    setSaving(true);
-    try {
-      const payload = {
-        tarih,
-        ...Object.fromEntries(
-          Object.entries(fields).flatMap(([k, v]) => [
-            [`${k}_yayin_kodlari`, v.kodlar],
-            [`${k}_puanlar`, v.puanlar],
-          ])
-        ),
-      };
-      const res = await axios.post("http://localhost:5000/api/form5", payload, { headers: { Authorization: `Bearer ${token}` } });
-      toast.success("Form kaydedildi.");
-    } catch {
-      toast.error("Form kaydedilemedi.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#f1f5f9] pb-20 font-sans antialiased text-slate-900">
       <Header />

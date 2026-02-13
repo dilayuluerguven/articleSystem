@@ -45,9 +45,11 @@ const Form6 = () => {
       }])));
       
       toast.success("Veriler otomatik olarak dolduruldu."); 
-    } catch (e) {
-      toast.error("Veriler sunucudan çekilirken bir hata oluştu."); 
-    }
+      } catch (e) {
+    console.error("Form6 autoFill hatası:", e);  
+    toast.error("Veriler sunucudan çekilirken bir hata oluştu.");
+  }
+
   };
 
   useEffect(() => {
@@ -86,8 +88,9 @@ const Form6 = () => {
       a.download = "FORM-6-PROFESORLUK.pdf";
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      a.remove();
       URL.revokeObjectURL(url);
+
 
       toast.update(toastId, { 
         render: "PDF başarıyla oluşturuldu ve indiriliyor.", 
@@ -96,13 +99,15 @@ const Form6 = () => {
         autoClose: 3000 
       }); 
     } catch (err) {
-      toast.update(toastId, { 
-        render: "PDF oluşturulurken sunucu hatası meydana geldi.", 
-        type: "error", 
-        isLoading: false, 
-        autoClose: 3000 
-      }); 
-    } finally {
+    console.error("Form6 PDF oluşturma hatası:", err); 
+    toast.update(toastId, { 
+      render: "PDF oluşturulurken sunucu hatası meydana geldi.",
+      type: "error",
+      isLoading: false,
+      autoClose: 3000
+    });
+  }
+ finally {
       setSaving(false);
     }
   };

@@ -2,13 +2,11 @@ import { useEffect, useState, useRef } from "react";
 import {
   Button,
   Spin,
-  Card,
   Checkbox,
   Typography,
   Row,
   Col,
   Tooltip,
-  Space,
   Badge,
 } from "antd";
 import {
@@ -36,7 +34,7 @@ export default function FormPart() {
   const [userRole, setUserRole] = useState("");
   const formRef = useRef(null);
 
-  const disallowedCodes = [
+  const disallowedCodes = new Set([
     "A",
     "A-1",
     "A-2",
@@ -62,7 +60,7 @@ export default function FormPart() {
     "O-7",
     "R",
     "S",
-  ];
+  ]);
 
   const formList = [
     { id: 1, label: "Form-1", path: "/form1" },
@@ -88,7 +86,7 @@ export default function FormPart() {
 
   const toggleUst = (kod, id) => {
     setSelectedUst((prev) =>
-      prev.includes(kod) ? prev.filter((k) => k !== kod) : [...prev, kod]
+      prev.includes(kod) ? prev.filter((k) => k !== kod) : [...prev, kod],
     );
     setExpanded((prev) => ({ ...prev, [id]: true }));
   };
@@ -100,7 +98,9 @@ export default function FormPart() {
     } else {
       setSelectedUst(categories.map((c) => c.kod));
       const openAll = {};
-      categories.forEach((c) => (openAll[c.id] = true));
+      for (const c of categories) {
+        openAll[c.id] = true;
+      }
       setExpanded(openAll);
     }
   };
@@ -123,6 +123,7 @@ export default function FormPart() {
       formData.append("sub_selection", payload.subSelection || "");
       formData.append("child_selection", payload.childSelection || "");
       formData.append("workDescription", payload.workDescription);
+      formData.append("akademik_puan_id", payload.akademik_puan_id);
       formData.append("authorPosition", payload.authorPosition);
       formData.append("file", payload.file);
 
@@ -136,6 +137,7 @@ export default function FormPart() {
       toast.success("Başvuru başarıyla eklendi");
       setModalOpen(false);
     } catch (err) {
+      console.error("Modal kapatma hatası:", err);
       toast.error("Başvuru eklenemedi");
     }
   };
@@ -155,7 +157,8 @@ export default function FormPart() {
     }
     setSelectedCategory({
       ust_aktivite_id: ust.id,
-      alt_aktivite_id: isAktivite(node.kod) ? alt?.id : node.id,
+      alt_aktivite_id:
+        node.kod === "P" ? null : isAktivite(node.kod) ? alt?.id : node.id,
       aktivite_id: isAktivite(node.kod) ? node.id : null,
       kod: node.kod,
       tanim: node.tanim,
@@ -163,10 +166,10 @@ export default function FormPart() {
     setModalOpen(true);
   };
 
-  const renderNode = (node, level = 0, ust, currentAlt = null) => {
+  const renderNode = (node, ust, currentAlt = null, level = 0) => {
     const hasChildren = node.subcategories?.length > 0;
     const isExpanded = expanded[node.id];
-    const isDisallowed = disallowedCodes.includes(node.kod);
+    const isDisallowed = disallowedCodes.has(node.kod);
     const nextAlt = isAltAktivite(node.kod) ? node : currentAlt;
 
     return (
@@ -268,7 +271,7 @@ export default function FormPart() {
             />
             <div className="animate-in fade-in slide-in-from-top-4 duration-500 pb-4">
               {node.subcategories.map((child) =>
-                renderNode(child, level + 1, ust, nextAlt)
+                renderNode(child, ust, nextAlt, level + 1),
               )}
             </div>
           </div>
@@ -284,7 +287,7 @@ export default function FormPart() {
         <div key={u.id} className="mb-20 last:mb-0 relative">
           <div className="absolute left-0 top-0 bottom-0 w-2 bg-indigo-500/10 rounded-full -ml-4" />
 
-          {renderNode(u, 0, u, null)}
+          {renderNode(u, u, null, 0)}
         </div>
       ))}
   </div>;
@@ -320,12 +323,12 @@ export default function FormPart() {
                 key={form.id}
                 type="text"
                 icon={<FileTextOutlined style={{ fontSize: 13 }} />}
-                onClick={() => (window.location.href = form.path)}
+                onClick={() => (globalThis.location.href = form.path)}
                 className={`
                   flex items-center h-10 px-5 rounded-xl text-xs font-bold transition-all duration-300
                   hover:bg-white hover:text-indigo-600 hover:shadow-md
                   ${
-                    window.location.pathname === form.path
+                    globalThis.location.pathname === form.path
                       ? "bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200/50 font-black"
                       : "text-slate-500"
                   }
@@ -364,7 +367,7 @@ export default function FormPart() {
               Kategori Rehberi
             </h2>
             <p className="text-indigo-100 text-sm leading-relaxed max-w-xl relative z-10 opacity-90 font-medium italic mx-auto lg:mx-0">
-              Kod numarasını seçmek için kutucuğu işaretleyiniz. Alt
+              Kod numarasını seçmek için kutucuğu işaretleyiniz.Alt
               faaliyetlerde "Ekle" butonunu kullanarak belgelerinizi
               yükleyebilirsiniz.
             </p>
@@ -378,6 +381,8 @@ export default function FormPart() {
               <Col key={ust.id} xs={12} sm={8} md={6} lg={4}>
                 <Tooltip title={ust.tanim} mouseEnterDelay={0.5}>
                   <div
+                    role="button"
+                    tabIndex="0"
                     onClick={() => toggleUst(ust.kod, ust.id)}
                     className={`
                       relative group p-6 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-500 h-full flex flex-col items-center justify-center text-center
@@ -451,7 +456,7 @@ export default function FormPart() {
                 .filter((u) => selectedUst.includes(u.kod))
                 .map((u) => (
                   <div key={u.id} className="mb-12 last:mb-0">
-                    {renderNode(u, 0, u, null)}
+                    {renderNode(u, u, null, 0)}
                   </div>
                 ))}
             </div>

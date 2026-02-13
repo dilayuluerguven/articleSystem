@@ -17,7 +17,8 @@ export default function WorkModal({
   const [selectedFile, setSelectedFile] = useState(null);
   const [count, setCount] = useState(initialCount);
   const [workDescription, setWorkDescription] = useState("");
-  const [authorPosition, setAuthorPosition] = useState("ilk"); 
+  const [authorPosition, setAuthorPosition] = useState("ilk");
+  const [selectedPuanId, setSelectedPuanId] = useState(null);
 
   useEffect(() => {
     setCount(initialCount);
@@ -27,9 +28,9 @@ export default function WorkModal({
     setSelectedFile(null);
     setWorkDescription("");
     setAuthorPosition("ilk");
+    setSelectedPuanId(null);
   }, [isModalOpen, initialCount]);
 
- 
   useEffect(() => {
     if (!isModalOpen) return;
     const isAdmin =
@@ -55,50 +56,48 @@ export default function WorkModal({
     setChildSelection(e.target.value);
   };
 
- const handleModalOk = () => {
-  // Block admins from submitting
-  const isAdmin =
-    sessionStorage.getItem("is_admin") || localStorage.getItem("is_admin");
-  if (isAdmin === "1") {
-    toast.error("Admin kullanıcılar başvuru ekleyemez.");
-    handleCancel();
-    return;
-  }
+  const handleModalOk = () => {
+    const isAdmin =
+      sessionStorage.getItem("is_admin") || localStorage.getItem("is_admin");
+    if (isAdmin === "1") {
+      toast.error("Admin kullanıcılar başvuru ekleyemez.");
+      handleCancel();
+      return;
+    }
 
-  if (!selectedFile) {
-    toast.error("Lütfen bir dosya seçin!");
-    return;
-  }
-  if (!workDescription.trim()) {
-    toast.error("Lütfen künyenizi giriniz!");
-    return;
-  }
+    if (!selectedFile) {
+      toast.error("Lütfen bir dosya seçin!");
+      return;
+    }
+    if (!workDescription.trim()) {
+      toast.error("Lütfen künyenizi giriniz!");
+      return;
+    }
 
-  handleOk({
-  ust_aktivite_id: selectedCategory.ust_aktivite_id,
-  alt_aktivite_id: selectedCategory.alt_aktivite_id,
-  aktivite_id: selectedCategory.aktivite_id,
-  mainSelection,
-  subSelection,
-  childSelection,
-  file: selectedFile,
-  yazarSayisi: count,
-  workDescription,
-  authorPosition,
-});
-
-};
-
+    handleOk({
+      ust_aktivite_id: selectedCategory.ust_aktivite_id,
+      alt_aktivite_id: selectedCategory.alt_aktivite_id,
+      aktivite_id: selectedCategory.aktivite_id,
+      akademik_puan_id: selectedPuanId,
+      mainSelection,
+      subSelection,
+      childSelection,
+      file: selectedFile,
+      yazarSayisi: count,
+      workDescription,
+      authorPosition,
+    });
+  };
 
   return (
     <Modal
-  title={selectedCategory ? selectedCategory.tanim : ""}
-  open={isModalOpen}
-  onOk={handleModalOk}
-  onCancel={handleCancel}
-  closable={false}
->
-
+      title={selectedCategory ? selectedCategory.tanim : ""}
+      open={isModalOpen}
+      onOk={handleModalOk}
+      onCancel={handleCancel}
+      closable={false}
+      destroyOnHidden
+    >
       {selectedCategory && (
         <Form
           ref={formRef}
@@ -107,7 +106,7 @@ export default function WorkModal({
           wrapperCol={{ span: 16 }}
           style={{ maxWidth: 600 }}
           autoComplete="off"
-          onSubmit={(e) => e.preventDefault()} 
+          onSubmit={(e) => e.preventDefault()}
         >
           <Form.Item
             label="Künyeyi giriniz"
@@ -175,7 +174,9 @@ export default function WorkModal({
           <Form.Item
             label="Ana Başlıklar"
             name="mainSelection"
-            rules={[{ required: true, message: "Lütfen bir ana başlık seçiniz!" }]}
+            rules={[
+              { required: true, message: "Lütfen bir ana başlık seçiniz!" },
+            ]}
           >
             <Radio.Group onChange={handleMainChange} value={mainSelection}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -186,23 +187,52 @@ export default function WorkModal({
               </div>
             </Radio.Group>
           </Form.Item>
+          {selectedCategory?.kod === "P" && (
+            <Form.Item
+              label="Kategori"
+              name="pKategori"
+              rules={[{ required: true, message: "Lütfen kategori seçiniz!" }]}
+            >
+              <Select
+                placeholder="Uluslararası/Ulusal"
+                onChange={(value) => setSelectedPuanId(value)}
+                value={selectedPuanId}
+              >
+                <Select.Option value={163}>
+                  Uluslararası (15 Puan)
+                </Select.Option>
+                <Select.Option value={164}>Ulusal (5 Puan)</Select.Option>
+              </Select>
+            </Form.Item>
+          )}
 
           {mainSelection === "baslicaEser" && (
             <Form.Item
               label="Başlıca Eserler"
               name="subSelection"
-              rules={[{ required: true, message: "Lütfen bir alt başlık seçiniz!" }]}
+              rules={[
+                { required: true, message: "Lütfen bir alt başlık seçiniz!" },
+              ]}
             >
               <Radio.Group onChange={handleSubChange} value={subSelection}>
-                <div style={{ display: "flex", flexDirection: "column", paddingLeft: 20 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    paddingLeft: 20,
+                  }}
+                >
                   <Radio value="tekYazarli">Tek Yazarlı Makale</Radio>
                   <Radio value="ogrenciyle">
-                    Danışmanlığını yürüttüğü lisansüstü öğrenciler ile üretilen makaleler
+                    Danışmanlığını yürüttüğü lisansüstü öğrenciler ile üretilen
+                    makaleler
                   </Radio>
                   <Radio value="adayTez">
                     Adayın Kendi Lisansüstü Tezlerinden Ürettiği Makaleler
                   </Radio>
-                  <Radio value="projedenMakale">Projeden Üretilmiş Makale</Radio>
+                  <Radio value="projedenMakale">
+                    Projeden Üretilmiş Makale
+                  </Radio>
                   <Radio value="kitap">Kitap Yazarlığı</Radio>
                 </div>
               </Radio.Group>
@@ -213,12 +243,16 @@ export default function WorkModal({
             <Form.Item
               label="Makale Türü"
               name="childSelection"
-              rules={[{ required: true, message: "Lütfen makale türünü seçiniz!" }]}
+              rules={[
+                { required: true, message: "Lütfen makale türünü seçiniz!" },
+              ]}
               style={{ paddingLeft: 40 }}
             >
               <Radio.Group onChange={handleChildChange} value={childSelection}>
                 <Radio value="tezden">Tezden</Radio>
-                <Radio value="tezHarici">Tez Harici (Öğrencilik devam ederken)</Radio>
+                <Radio value="tezHarici">
+                  Tez Harici (Öğrencilik devam ederken)
+                </Radio>
               </Radio.Group>
             </Form.Item>
           )}
@@ -227,12 +261,16 @@ export default function WorkModal({
             <Form.Item
               label="Tez Türü"
               name="childSelection"
-              rules={[{ required: true, message: "Lütfen tez türünü seçiniz!" }]}
+              rules={[
+                { required: true, message: "Lütfen tez türünü seçiniz!" },
+              ]}
               style={{ paddingLeft: 40 }}
             >
               <Radio.Group onChange={handleChildChange} value={childSelection}>
                 <Radio value="yuksekLisans">Yüksek Lisans Tezinden</Radio>
-                <Radio value="doktora">Doktora/Sanatta Yeterlilik Tezinden</Radio>
+                <Radio value="doktora">
+                  Doktora/Sanatta Yeterlilik Tezinden
+                </Radio>
               </Radio.Group>
             </Form.Item>
           )}
